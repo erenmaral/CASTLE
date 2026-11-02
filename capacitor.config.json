@@ -1,0 +1,7 @@
+{
+  "appId": "com.zafarion.game",
+  "appName": "Zafarion",
+  "webDir": "www",
+  "backgroundColor": "#0b1020",
+  "android": { "backgroundColor": "#0b1020" }
+}

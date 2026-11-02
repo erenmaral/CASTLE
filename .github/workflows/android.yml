@@ -1,0 +1,107 @@
+name: Android APK
+
+# Her push'ta (ve elle tetiklemede) imzali bir APK uretir, Releases'e yukler.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Bagimliliklari kur
+        run: npm ci
+
+      - name: Oyun mantigi duman testi (denge botu)
+        run: node tests/sim-balance.js 2 | tail -5
+
+      - name: Surum bilgisi
+        id: ver
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          echo "name=${BASE}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          sed -i "s/Z.BUILD = 'dev'/Z.BUILD = '${{ github.run_number }}'/" www/js/version.js
+
+      - name: Capacitor senkronizasyonu
+        run: npx cap sync android
+
+      - name: Android SDK bilesenleri
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: Imza anahtari
+        env:
+          KS_B64: ${{ secrets.ZAFARION_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ZAFARION_KEYSTORE_PASSWORD }}
+        run: |
+          KS="$RUNNER_TEMP/zafarion.keystore"
+          if [ -n "$KS_B64" ] && [ -n "$KS_PASS" ]; then
+            echo "$KS_B64" | base64 -d > "$KS"
+            PASS="$KS_PASS"
+            echo "Kalici anahtar kullaniliyor: guncellemeler eski surumun uzerine kurulur."
+          else
+            PASS=$(openssl rand -hex 16)
+            keytool -genkeypair -noprompt -keystore "$KS" -storetype PKCS12 -alias zafarion -keyalg RSA -keysize 2048 \
+              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Zafarion, O=Zafarion, C=TR"
+            echo "::warning::ZAFARION_KEYSTORE_B64 / ZAFARION_KEYSTORE_PASSWORD secret'lari tanimli degil. Gecici anahtar uretildi: bu APK'yi guncellemek icin eskisini once silmek gerekir (kayit gider). README'deki 'Imza anahtari' bolumune bakin."
+          fi
+          echo "::add-mask::$PASS"
+          {
+            echo "ZAFARION_KEYSTORE_FILE=$KS"
+            echo "ZAFARION_KEYSTORE_PASSWORD=$PASS"
+            echo "ZAFARION_KEY_PASSWORD=$PASS"
+            echo "ZAFARION_KEY_ALIAS=zafarion"
+          } >> "$GITHUB_ENV"
+
+      - name: APK derle
+        working-directory: android
+        env:
+          ZAFARION_VERSION_CODE: ${{ github.run_number }}
+          ZAFARION_VERSION_NAME: ${{ steps.ver.outputs.name }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: APK adini duzenle
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/Zafarion-${{ steps.ver.outputs.name }}.apk"
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Zafarion-${{ steps.ver.outputs.name }}
+          path: dist/*.apk
+
+      - name: GitHub Release olustur
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          gh release create "build-${{ github.run_number }}" "dist/Zafarion-${{ steps.ver.outputs.name }}.apk" \
+            --target "${{ github.sha }}" --prerelease \
+            --title "Zafarion ${{ steps.ver.outputs.name }}" \
+            --notes "Otomatik derleme #${{ github.run_number }} — ${MSG}"
