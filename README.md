@@ -9,6 +9,11 @@ Her `push` sonrası GitHub Actions otomatik APK derler:
 (Ayarlar'dan "bilinmeyen kaynaklardan yüklemeye" izin vermek gerekir).
 Tüm sürümler aynı anahtarla imzalandığı için yeni APK eskisinin **üzerine kurulur, kayıtlarınız silinmez**.
 
+## Tarayıcıda oyna (APK gerekmez)
+Oyun GitHub Pages'te yayınlanır: **https://erenmaral.github.io/erenmaral/**
+Telefonda Chrome'da açıp menüden **Ana ekrana ekle / Uygulamayı yükle** deyin: tam ekran, yatay, çevrimdışı çalışan bir uygulama gibi açılır.
+Bir kez yapılacak ayar: depo → **Settings → Pages → Source: GitHub Actions**. (Kayıtlar tarayıcıya özeldir; APK ile tarayıcı sürümü kayıt paylaşmaz.)
+
 ## Geliştirme
 ```bash
 npm ci
@@ -17,6 +22,7 @@ node tests/sim-balance.js 12          # denge botu: bölüm bazında kazanma ora
 node tests/sim-balance.js 8 -2        # 2 seviye geride bir oyuncu
 node tests/sim-balance.js 6 0 endless # sonsuz mod
 node tests/e2e-smoke.js               # Playwright ile ekran görüntülü duman testi
+node tests/pwa-check.js <adres>       # manifest, service worker ve çevrimdışı açılış kontrolü
 python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 ```
 

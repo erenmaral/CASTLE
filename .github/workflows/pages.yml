@@ -1,0 +1,44 @@
+name: Tarayici surumu (GitHub Pages)
+
+# Oyunu https://<kullanici>.github.io/<depo>/ adresinde yayinlar.
+# Bir kez: Settings -> Pages -> Source = "GitHub Actions" secilmeli.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Pages yalnizca varsayilan daldan yayinlanir
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Surum bilgisi ve onbellek adi
+        run: |
+          sed -i "s/Z.BUILD = 'dev'/Z.BUILD = '${{ github.run_number }}'/" www/js/version.js
+          sed -i "s/zafarion-dev/zafarion-${{ github.run_number }}/" www/sw.js
+          grep -n "BUILD" www/js/version.js; grep -n "const CACHE" www/sw.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

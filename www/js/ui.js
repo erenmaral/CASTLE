@@ -273,6 +273,12 @@
       { close: UI.closeModal, go: function () { UI.closeModal(); UI.game.startBattle('endless', 1); } });
   };
 
+  UI.isBrowser = function () {
+    var native = globalThis.Capacitor && globalThis.Capacitor.isNativePlatform && globalThis.Capacitor.isNativePlatform();
+    var standalone = globalThis.matchMedia && (globalThis.matchMedia('(display-mode: standalone)').matches || globalThis.matchMedia('(display-mode: fullscreen)').matches);
+    return !native && !standalone;
+  };
+
   // ---------------------------------------------------------------- Ayarlar
   UI.settingsModal = function () {
     var st = S.data.settings;
@@ -290,6 +296,7 @@
     };
     UI.modal('<h1>Ayarlar</h1>' + row('sound', '🔊 Ses efektleri') + row('music', '🥁 Savaş müziği') + row('vibrate', '📳 Titreşim') +
       '<div class="actions"><button class="btn small red" data-act="reset">Kaydı sıfırla</button><button class="btn gold" data-act="close">Tamam</button></div>' +
+      (UI.isBrowser() ? '<p class="small" style="margin-top:14px">💡 Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.</p>' : '') +
       '<p class="small" style="margin-top:20px">Zafarion v' + Z.VERSION + ' (derleme ' + Z.BUILD + ')<br>Tüm grafik ve sesler kodla üretilmiştir.</p>', acts);
   };
 

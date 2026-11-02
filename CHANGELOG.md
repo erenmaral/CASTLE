@@ -2,6 +2,9 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## Yayınlanmamış
+- 🌐 **Tarayıcı sürümü (GitHub Pages / PWA):** ana ekrana eklenebilir, çevrimdışı çalışır.
+
 ## 0.1.0 — İlk sürüm
 - ⚔️ **Sefer:** 30 bölüm, her 5. bölüm patron. Yıldız sistemi (kale canına göre 1–3 ⭐).
 - 🎯 **Savaş:** 3 koridorlu gerçek zamanlı 2D strateji. Kartı koridora sürükle. Birlik üstünlük döngüsü: 🔱 > 🐎 > 🏹 > 🔱.

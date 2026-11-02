@@ -122,6 +122,11 @@
     Game.last = performance.now();
     requestAnimationFrame(Game.loop);
     Z.ready = true;
+    // Tarayici surumu: cevrimdisi calisma icin service worker (APK icinde ve file:// altinda kapali)
+    var native = globalThis.Capacitor && globalThis.Capacitor.isNativePlatform && globalThis.Capacitor.isNativePlatform();
+    if ('serviceWorker' in navigator && !native && /^https?:$/.test(location.protocol) && location.hostname !== 'localhost') {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* sessizce gec */ });
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })(globalThis.Z = globalThis.Z || {});

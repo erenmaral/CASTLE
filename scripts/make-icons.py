@@ -48,4 +48,10 @@ open(os.path.join(RES, 'values', 'ic_launcher_background.xml'), 'w').write('<?xm
 for f in glob.glob(os.path.join(RES, 'drawable*', 'splash.png')):
     w, h = Image.open(f).size
     im = bg(max(w, h)).crop((0, 0, w, h)); e = emblem(int(min(w, h) * 0.34), 0.05); im.alpha_composite(e, ((w - e.width) // 2, (h - e.height) // 2)); im.convert('RGB').save(f)
+# Web (PWA) ikonlari
+WEB = os.path.join(os.path.dirname(__file__), '..', 'www', 'icons'); os.makedirs(WEB, exist_ok=True)
+for px in (192, 512):
+    im = bg(px); im.alpha_composite(emblem(px, 0.12)); im.save(os.path.join(WEB, 'icon-%d.png' % px))
+mk = bg(512); mk.alpha_composite(emblem(512, 0.26)); mk.save(os.path.join(WEB, 'icon-maskable-512.png'))
+ap = bg(180); ap.alpha_composite(emblem(180, 0.12)); ap.convert('RGB').save(os.path.join(WEB, 'apple-touch-icon.png'))
 print('ikonlar hazir')
