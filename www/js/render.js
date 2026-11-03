@@ -1,147 +1,290 @@
-// Seferhan - canvas cizimi (DIKEY): 3 koridor yan yana, oyuncu kalesi altta, dusman ustte.
+// Seferhan - canvas cizimi (DIKEY): 3 orman yolu yan yana, oyuncu kalesi altta, dusman ustte.
 // Simulasyondaki 'x' (koridor boyunca konum) ekranda yukari dogru y ekseni olur. Tum grafikler kodla cizilir.
 (function (Z) {
   'use strict';
   var C = Z.C, TAU = Math.PI * 2;
-  var DW = 720; // tasarim genisligi (koridor alani)
+  var DW = 720;        // tasarim genisligi (3 koridor x 240)
+  var SPR = 1.28;      // birlik cizim olcegi (telefonda okunabilirlik)
+  var CASTLE_H = 86;   // kale yuksekligi (mantiksal px)
   var PAL = [
-    { main: '#3b82f6', dark: '#1e3a8a', light: '#93c5fd', trim: '#fbbf24' },
-    { main: '#dc2626', dark: '#7f1d1d', light: '#fca5a5', trim: '#9ca3af' }
+    { main: '#3b82f6', dark: '#1d3f94', light: '#9cc4ff', trim: '#fbbf24', metal: '#cfd8e6', metalD: '#6f7f99', hi: '#ffffff', cloth: '#2f6fe0' },
+    { main: '#d62d2d', dark: '#6e1414', light: '#ff9d9d', trim: '#c4cad6', metal: '#69748a', metalD: '#272c3a', hi: '#aab4c8', cloth: '#a82020' }
   ];
-  var SKIN = '#f2c9a0';
-  // Diyar temalari: 0 Yesil Vadi, 1 Kizil Col, 2 Buz Diyari
+  var SKIN = '#f2c9a0', OUT = 'rgba(10,14,28,.78)';
+  // Diyar temalari: 0 Yesil Vadi (orman), 1 Kizil Col, 2 Buz Diyari
   var THEMES = [
-    { sky: ['#16224f', '#7a4a7a', '#f0a35e'], sun: [255, 240, 190], m1: '#4a3a73', m2: '#2f4a5e', g: ['#4f7d36', '#456f2f', '#2d4f22'], lane: '255,240,170', amb: 'none' },
-    { sky: ['#2b1650', '#c2410c', '#fbbf24'], sun: [255, 225, 150], m1: '#7c3f2a', m2: '#5a2d1f', g: ['#cfa95e', '#bb9348', '#8a6a30'], lane: '255,240,200', amb: 'dust' },
-    { sky: ['#0b1d3a', '#3b6ea5', '#cfe8ff'], sun: [220, 240, 255], m1: '#6b8bb0', m2: '#a5bdd8', g: ['#e6f0f9', '#cfdeec', '#9fb6cd'], lane: '190,225,255', amb: 'snow' }
+    { sky: ['#16224f', '#7a4a7a', '#f0a35e'], sun: [255, 240, 190], m1: '#4a3a73', m2: '#2f4a5e', g: ['#3f6f2c', '#37622a', '#264a1f'],
+      road: ['#a98a58', '#8a6c41', '#5a4527'], tree: ['#17402a', '#25613a', '#3f8c4f'], lane: '255,244,190', amb: 'leaf', kind: 'forest', shaft: '255,244,200' },
+    { sky: ['#2b1650', '#c2410c', '#fbbf24'], sun: [255, 225, 150], m1: '#7c3f2a', m2: '#5a2d1f', g: ['#cfaa60', '#bb934a', '#8c6c32'],
+      road: ['#ead6a2', '#d3b97b', '#a58848'], tree: ['#3f6b2e', '#5f8a3a', '#86ad4c'], lane: '255,240,200', amb: 'dust', kind: 'desert', shaft: '255,236,190' },
+    { sky: ['#0b1d3a', '#3b6ea5', '#cfe8ff'], sun: [220, 240, 255], m1: '#6b8bb0', m2: '#a5bdd8', g: ['#e8f1fa', '#d2e0ee', '#a3b9d0'],
+      road: ['#c9d9ea', '#aec3da', '#7f9bb9'], tree: ['#1f3f52', '#2f5d72', '#eef6fd'], lane: '190,225,255', amb: 'snow', kind: 'ice', shaft: '220,240,255' }
   ];
 
+  // ---- yardimcilar ------------------------------------------------------
   function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, TAU); c.fill(); }
   function circ(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
   function rrect(c, x, y, w, h, r) {
     c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
     c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
   }
-  function line(c, x1, y1, x2, y2, w, col) { c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+  function line(c, x1, y1, x2, y2, w, col) { // onceki kontur ayarini bozmadan cizer
+    var ss = c.strokeStyle, lw = c.lineWidth, lc = c.lineCap;
+    c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    c.strokeStyle = ss; c.lineWidth = lw; c.lineCap = lc;
+  }
   function hash(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
+  function seeded(seed) { var s = (seed * 9301 + 49297) % 233280; return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
+  // kontur + dolgu yardimcilari (birlikler icin)
+  function fe(c, col) { c.fillStyle = col; c.fill(); c.stroke(); }
+  function E(c, x, y, rx, ry, col) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, TAU); fe(c, col); }
+  function O(c, x, y, r, col) { c.beginPath(); c.arc(x, y, r, 0, TAU); fe(c, col); }
+  function RR(c, x, y, w, h, r, col) { rrect(c, x, y, w, h, r); fe(c, col); }
+  function poly(c, pts, col) { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.closePath(); fe(c, col); }
+  function outline(c) { c.strokeStyle = OUT; c.lineWidth = 1.3; c.lineJoin = 'round'; c.lineCap = 'round'; }
+  function mgrad(c, x, y, r, p) { // metal parlakligi
+    var g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r * 1.05);
+    g.addColorStop(0, p.hi); g.addColorStop(0.35, p.metal); g.addColorStop(1, p.metalD); return g;
+  }
+  function star(c, x, y, r1, r2, n, rot) {
+    c.beginPath();
+    for (var i = 0; i < n * 2; i++) { var a = rot + i * Math.PI / n, r = i % 2 ? r2 : r1; c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); }
+    c.closePath();
+  }
 
   var R = Z.Render = {
     canvas: null, ctx: null, W: 720, H: 1280, ox: 0, scale: 1, dpr: 1, px: 1, bg: null,
-    eY: 215, pY: 930, s: 0.76,
+    eY: 235, pY: 910, s: 0.72, seed: 1, phase: 0,
     battle: null, parts: [], texts: [], fx: [], shake: 0, time: 0, banner: null,
     selLane: 1, dragLane: -1, active: false, theme: 0, amb: [],
 
     init: function (canvas) { this.canvas = canvas; this.ctx = canvas.getContext('2d'); },
 
-    // stageW/H: mantiksal sahne (en az 720x1280'e sigar), scale: mantiksal -> css piksel
     resize: function (stageW, stageH, scale) {
       this.W = stageW; this.H = stageH; this.scale = scale;
       this.dpr = Math.min(globalThis.devicePixelRatio || 1, 2.5);
       this.ox = (stageW - DW) / 2;
-      this.eY = 215; this.pY = stageH - 350;
+      this.eY = 235; this.pY = stageH - 370;
       this.s = (this.pY - this.eY) / (C.EF - C.PF);
       var pw = Math.round(stageW * scale * this.dpr), ph = Math.round(stageH * scale * this.dpr);
       this.canvas.width = pw; this.canvas.height = ph;
       this.canvas.style.width = Math.round(stageW) + 'px'; this.canvas.style.height = Math.round(stageH) + 'px';
-      this.px = pw / stageW;
+      this.px = pw / stageW; this.sprites = {};
       this.buildBg();
     },
 
     laneX: function (i) { return this.ox + 120 + 240 * i; },
+    // yolun hafif kivrimi (birlikler de bu egriyi izler); kalelerin yakininda duzlesir
+    roadX: function (lane, y) {
+      var f = Math.max(0, Math.min(1, (y - this.eY) / 70, (this.pY - y) / 70));
+      return this.laneX(lane) + 9 * Math.sin(y * 0.0105 + lane * 2.1 + this.phase) * f;
+    },
     Y: function (pos) { return this.pY - (pos - C.PF) * this.s; },
 
     start: function (battle) {
       this.battle = battle; this.parts = []; this.texts = []; this.fx = []; this.shake = 0; this.banner = null;
       this.selLane = 1; this.dragLane = -1; this.active = true;
-      var th = battle.theme || 0;
-      if (th !== this.theme || !this.bg) { this.theme = th; this.buildBg(); }
-      this.amb = []; var n = THEMES[th].amb === 'snow' ? 90 : THEMES[th].amb === 'dust' ? 40 : 0;
-      for (var i = 0; i < n; i++) this.amb.push({ x: Math.random() * this.W, y: Math.random() * this.H, v: 20 + Math.random() * 50, r: 1 + Math.random() * 2.2, ph: Math.random() * 6 });
+      this.theme = battle.theme || 0;
+      this.seed = battle.mode === 'endless' ? (Date.now() % 997) + 3 : battle.level * 13 + 7; // her sefer kendi manzarasi
+      this.buildBg();
+      this.warmQ = []; // sprite kareleri: kart destesi + dusman kademeleri, kare basina birkac tane
+      var self = this, add = function (cls, team) { ['i', 'm', 'a'].forEach(function (st) { for (var q = 0; q < self.SN[st]; q++) self.warmQ.push([cls, team, st, q]); }); };
+      battle.deck.forEach(function (id) { add(Z.UNITS[id].cls, 0); }); battle.tiers().forEach(function (id) { add(Z.UNITS[id].cls, 1); });
+      var T = THEMES[this.theme], n = T.amb === 'snow' ? 90 : T.amb === 'dust' ? 40 : 26;
+      this.amb = [];
+      for (var i = 0; i < n; i++) this.amb.push({ x: Math.random() * this.W, y: Math.random() * this.H, v: 20 + Math.random() * 50, r: 1 + Math.random() * 2.2, ph: Math.random() * 6, c: Math.random() });
     },
     stop: function () { this.active = false; this.battle = null; },
 
-    // ekran (mantiksal sahne) koordinatindan koridor bul; saha disindaysa -1
     laneAt: function (sx, sy) {
       var lx = sx - this.ox;
       if (lx < 0 || lx >= DW || sy < 96 || sy > this.pY + 72) return -1;
       return Math.min(2, Math.floor(lx / 240));
     },
 
-    // ---- Arka plan (bir kez cizilir) ------------------------------------
+    // yol sekli (arka plan + vurgu icin ortak)
+    roadPath: function (g, lane, hw) {
+      var y, w, pts = [];
+      g.beginPath();
+      for (y = this.eY - CASTLE_H + 20; y <= this.pY + CASTLE_H - 20; y += 14) { w = hw + 5 * Math.sin(y * 0.021 + lane * 1.3); g.lineTo(this.roadX(lane, y) - w, y); pts.push([this.roadX(lane, y) + w, y]); }
+      for (var i = pts.length - 1; i >= 0; i--) g.lineTo(pts[i][0], pts[i][1]);
+      g.closePath();
+    },
+
+    // ---- Arka plan: orman, yollar, isik (bir kez cizilir) ----------------
     buildBg: function () {
       var c = document.createElement('canvas'); c.width = this.canvas.width; c.height = this.canvas.height;
-      var g = c.getContext('2d'), W = this.W, H = this.H, ox = this.ox, i, j, T = THEMES[this.theme || 0];
+      var g = c.getContext('2d'), W = this.W, H = this.H, ox = this.ox, i, j, k, T = THEMES[this.theme || 0], rnd = seeded(this.seed || 1);
+      this.phase = ((this.seed || 1) % 7) * 0.9;
       g.setTransform(this.px, 0, 0, this.px, 0, 0);
-      var top = this.eY - 58;
-      // zemin
+      var top = this.eY - CASTLE_H, bot = this.pY + CASTLE_H;
+
+      // 1) zemin + doku
       var gr = g.createLinearGradient(0, top, 0, H);
       gr.addColorStop(0, T.g[0]); gr.addColorStop(0.5, T.g[1]); gr.addColorStop(1, T.g[2]);
       g.fillStyle = gr; g.fillRect(0, 0, W, H);
-      // ufuk: gokyuzu seridi + gunes + daglar (dusman tarafi, ustte)
-      var sky = g.createLinearGradient(0, 0, 0, top + 6);
+      for (i = 0; i < 700; i++) {
+        var sx = rnd() * W, sy = top + rnd() * (H - top);
+        g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.07)'; ell(g, sx, sy, 2 + rnd() * 5, 1 + rnd() * 2.5);
+      }
+
+      // 2) ufuk: gokyuzu, gunes, daglar
+      var sky = g.createLinearGradient(0, 0, 0, top + 10);
       sky.addColorStop(0, T.sky[0]); sky.addColorStop(0.6, T.sky[1]); sky.addColorStop(1, T.sky[2]);
-      g.fillStyle = sky; g.fillRect(0, 0, W, top + 6);
-      var sg = g.createRadialGradient(W * 0.75, top - 10, 4, W * 0.75, top - 10, 110);
+      g.fillStyle = sky; g.fillRect(0, 0, W, top + 10);
+      var sg = g.createRadialGradient(W * 0.75, top - 6, 4, W * 0.75, top - 6, 120);
       sg.addColorStop(0, 'rgba(' + T.sun.join(',') + ',1)'); sg.addColorStop(0.3, 'rgba(' + T.sun.join(',') + ',.45)'); sg.addColorStop(1, 'rgba(' + T.sun.join(',') + ',0)');
-      g.fillStyle = sg; g.fillRect(0, 0, W, top + 6);
+      g.fillStyle = sg; g.fillRect(0, 0, W, top + 10);
       g.fillStyle = 'rgba(255,255,255,.7)';
-      for (i = 0; i < 36; i++) circ(g, hash(i) * W, hash(i + 50) * (top - 30), hash(i + 9) * 1.2 + 0.4);
-      function mount(col, base, amp, seed, step) {
+      for (i = 0; i < 36; i++) circ(g, hash(i + this.seed) * W, hash(i + 50) * (top - 20), hash(i + 9) * 1.2 + 0.4);
+      var mount = function (col, base, amp, seed, step) {
         g.fillStyle = col; g.beginPath(); g.moveTo(0, base + 40);
         for (var x = 0; x <= W + step; x += step) g.lineTo(x, base - amp * (0.35 + hash(x / step + seed) * 0.65));
         g.lineTo(W, base + 40); g.closePath(); g.fill();
-      }
-      mount(T.m1, top + 4, 80, 3, 80); mount(T.m2, top + 8, 46, 11, 54);
+      };
+      mount(T.m1, top + 14, 74, 3 + this.seed, 78); mount(T.m2, top + 20, 42, 11 + this.seed, 52);
       if (this.theme === 2) {
-        g.fillStyle = 'rgba(255,255,255,.75)';
-        for (i = 0; i < Math.ceil(W / 80); i++) { var px2 = i * 80 + 40, hh = 80 * (0.35 + hash(i + 3) * 0.65); g.beginPath(); g.moveTo(px2 - 14, top + 4 - hh + 20); g.lineTo(px2, top + 4 - hh); g.lineTo(px2 + 14, top + 4 - hh + 20); g.fill(); }
+        g.fillStyle = 'rgba(255,255,255,.8)';
+        for (i = 0; i < Math.ceil(W / 78); i++) { var px2 = i * 78 + 39, hh = 74 * (0.35 + hash(i + 3 + this.seed) * 0.65); g.beginPath(); g.moveTo(px2 - 13, top + 14 - hh + 19); g.lineTo(px2, top + 14 - hh); g.lineTo(px2 + 13, top + 14 - hh + 19); g.fill(); }
       }
-      // koridor seritleri
+
+      // 3) orman zemini golgesi (yollar arasi)
+      var strips = [[0, 54], [186, 294], [426, 534], [666, 720]];
+      for (j = 0; j < strips.length; j++) {
+        var a = ox + strips[j][0], b = ox + strips[j][1];
+        var fg = g.createLinearGradient(a, 0, b, 0);
+        fg.addColorStop(0, 'rgba(0,0,0,.20)'); fg.addColorStop(0.5, 'rgba(0,0,0,.34)'); fg.addColorStop(1, 'rgba(0,0,0,.20)');
+        g.fillStyle = fg; g.fillRect(a, top + 30, b - a, bot - top - 60);
+      }
+      if (ox > 2) { g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, top + 30, ox, bot - top - 60); g.fillRect(ox + DW, top + 30, W - ox - DW, bot - top - 60); }
+
+      // 4) goletler (bazi seferlerde)
+      var ponds = [];
+      if (rnd() < 0.65) ponds.push([ox + 240 + (rnd() - 0.5) * 20, top + 220 + rnd() * 260, 40, 26]);
+      if (rnd() < 0.5) ponds.push([ox + 480 + (rnd() - 0.5) * 20, top + 380 + rnd() * 300, 38, 24]);
+      for (i = 0; i < ponds.length; i++) {
+        var pd = ponds[i], wg = g.createRadialGradient(pd[0] - 6, pd[1] - 5, 2, pd[0], pd[1], pd[2]);
+        var wc = this.theme === 2 ? ['#d6efff', '#9ccbe8'] : this.theme === 1 ? ['#6fc3d8', '#2f8aa8'] : ['#5aa6d8', '#2a5f95'];
+        wg.addColorStop(0, wc[0]); wg.addColorStop(1, wc[1]);
+        g.fillStyle = 'rgba(0,0,0,.25)'; ell(g, pd[0] + 3, pd[1] + 4, pd[2] + 4, pd[3] + 3);
+        g.fillStyle = this.theme === 2 ? '#ffffff' : '#5b4a2c'; ell(g, pd[0], pd[1], pd[2] + 5, pd[3] + 4);
+        g.fillStyle = wg; ell(g, pd[0], pd[1], pd[2], pd[3]);
+        g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(pd[0] - 6, pd[1] - 4, pd[2] * 0.5, pd[3] * 0.4, -0.2, 3.4, 5.2); g.stroke();
+      }
+
+      // 5) yollar: toprak/kum/kar, kenar, tekerlek izleri
       for (i = 0; i < 3; i++) {
-        var lx = ox + i * 240;
-        var lg = g.createLinearGradient(lx, 0, lx + 240, 0);
-        lg.addColorStop(0, 'rgba(' + T.lane + ',.03)'); lg.addColorStop(0.5, 'rgba(' + T.lane + ',' + (i === 1 ? 0.16 : 0.12) + ')'); lg.addColorStop(1, 'rgba(' + T.lane + ',.03)');
-        g.fillStyle = lg; g.fillRect(lx, top + 56, 240, this.pY - top - 56 + 6);
-        g.strokeStyle = 'rgba(255,245,210,.14)'; g.lineWidth = 3; g.setLineDash([16, 16]);
-        g.beginPath(); g.moveTo(lx + 120, top + 70); g.lineTo(lx + 120, this.pY); g.stroke(); g.setLineDash([]);
-        for (var k = 0; k < 22; k++) { // ot demetleri / tas
-          var gx = lx + 16 + hash(k * 3 + i * 91) * 208, gy = top + 90 + hash(k + i * 17) * (this.pY - top - 120);
-          if (this.theme === 2) { line(g, gx, gy, gx + 3, gy - 5, 1.6, 'rgba(120,150,180,.6)'); }
-          else if (this.theme === 1) { g.fillStyle = 'rgba(110,80,40,.35)'; ell(g, gx, gy, 5, 2.4); }
-          else { line(g, gx, gy, gx - 3, gy - 7, 1.6, 'rgba(25,60,22,.7)'); line(g, gx, gy, gx + 3, gy - 6, 1.6, 'rgba(25,60,22,.7)'); }
+        this.roadPath(g, i, 66);
+        g.fillStyle = T.road[2]; g.fill();                              // koyu kenar (ceper)
+        this.roadPath(g, i, 61);
+        var lx = this.laneX(i), rg = g.createLinearGradient(lx - 64, 0, lx + 64, 0);
+        rg.addColorStop(0, T.road[1]); rg.addColorStop(0.5, T.road[0]); rg.addColorStop(1, T.road[1]);
+        g.fillStyle = rg; g.fill();
+        for (k = 0; k < 2; k++) { // tekerlek izleri
+          g.strokeStyle = 'rgba(0,0,0,.12)'; g.lineWidth = 4; g.beginPath();
+          for (var yy = this.eY - 40; yy <= this.pY + 40; yy += 14) { var rx = this.roadX(i, yy) + (k ? 22 : -22); if (yy === this.eY - 40) g.moveTo(rx, yy); else g.lineTo(rx, yy); }
+          g.stroke();
         }
-      }
-      // koridor aralarindaki ve kenardaki dekor (agac / kaktus / karli cam)
-      var xs = [ox + 4, ox + 240, ox + 480, ox + 716];
-      for (j = 0; j < xs.length; j++) {
-        for (i = 0; i < Math.ceil((this.pY - top) / 74); i++) {
-          var dx = xs[j] + (hash(i * 7 + j) - 0.5) * 16, dy = top + 90 + i * 74 + hash(i + j * 13) * 30, sc = 0.7 + hash(i + j) * 0.5;
-          if (dy > this.pY - 10) continue;
-          if (this.theme === 1) {
-            g.fillStyle = '#3d6b3a'; g.fillRect(dx - 3 * sc, dy - 22 * sc, 6 * sc, 22 * sc); g.fillRect(dx - 11 * sc, dy - 14 * sc, 5 * sc, 9 * sc); g.fillRect(dx + 6 * sc, dy - 17 * sc, 5 * sc, 10 * sc);
-          } else if (this.theme === 2) {
-            g.fillStyle = '#2c4a5e'; g.beginPath(); g.moveTo(dx, dy - 36 * sc); g.lineTo(dx + 12 * sc, dy); g.lineTo(dx - 12 * sc, dy); g.fill();
-            g.fillStyle = '#eef6fd'; g.beginPath(); g.moveTo(dx, dy - 36 * sc); g.lineTo(dx + 8 * sc, dy - 14 * sc); g.lineTo(dx - 8 * sc, dy - 14 * sc); g.fill();
-          } else {
-            g.fillStyle = '#1d3a2a'; g.beginPath(); g.moveTo(dx, dy - 38 * sc); g.lineTo(dx + 13 * sc, dy); g.lineTo(dx - 13 * sc, dy); g.fill();
-            g.fillStyle = '#2b4f36'; g.beginPath(); g.moveTo(dx, dy - 28 * sc); g.lineTo(dx + 10 * sc, dy - 4 * sc); g.lineTo(dx - 10 * sc, dy - 4 * sc); g.fill();
+        for (k = 0; k < 90; k++) { // cakil ve toprak lekeleri
+          var py = this.eY + rnd() * (this.pY - this.eY), pxx = this.roadX(i, py) + (rnd() - 0.5) * 108;
+          g.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.18)'; ell(g, pxx, py, 1.5 + rnd() * 3, 1 + rnd() * 1.8);
+        }
+        for (yy = this.eY - 30; yy < this.pY + 30; yy += 22) { // yol kenarinda ot / kar / kuru ot
+          for (k = -1; k <= 1; k += 2) {
+            var ex = this.roadX(i, yy) + k * (62 + rnd() * 6), ey = yy + rnd() * 10;
+            if (this.theme === 2) { g.fillStyle = 'rgba(255,255,255,.9)'; ell(g, ex, ey, 6 + rnd() * 4, 3 + rnd() * 2); }
+            else if (this.theme === 1) { g.strokeStyle = 'rgba(120,90,40,.7)'; g.lineWidth = 1.6; for (var bl = 0; bl < 3; bl++) { g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex + (bl - 1) * 3, ey - 6 - rnd() * 3); g.stroke(); } }
+            else { g.strokeStyle = 'rgba(40,100,40,.9)'; g.lineWidth = 1.8; for (var bl2 = 0; bl2 < 4; bl2++) { g.beginPath(); g.moveTo(ex + (bl2 - 1.5) * 2, ey); g.lineTo(ex + (bl2 - 1.5) * 3.6, ey - 7 - rnd() * 4); g.stroke(); } }
           }
         }
+        // kale onlerinde duz plaza
+        g.fillStyle = 'rgba(0,0,0,.10)'; ell(g, this.laneX(i), this.eY + 6, 82, 22); ell(g, this.laneX(i), this.pY - 6, 82, 22);
       }
-      // genis ekranlarda yan seritler: ayni dekor yogun
-      if (ox > 4) {
-        for (j = 0; j < 2; j++) for (i = 0; i < Math.ceil(H / 60); i++) {
-          var sx = j === 0 ? hash(i * 5) * (ox - 6) : ox + DW + 6 + hash(i * 9) * (ox - 6);
-          var sy = 40 + i * 60 + hash(i + 31) * 30, ss = 0.8 + hash(i + 3) * 0.6;
-          g.fillStyle = this.theme === 1 ? '#a8803c' : this.theme === 2 ? '#2c4a5e' : '#1d3a2a';
-          g.beginPath(); g.moveTo(sx, sy - 34 * ss); g.lineTo(sx + 12 * ss, sy); g.lineTo(sx - 12 * ss, sy); g.fill();
+
+      // 6) orman: golgeler once, sonra tepe tepe agaclar (kusbakisi)
+      var trees = [];
+      var addStrip = function (x0, x1, dens, sizeMul) {
+        var wd = x1 - x0, n = Math.max(1, Math.round(wd / 44 * dens));
+        for (var y = top + 40; y < bot - 30; y += 24) {
+          for (var q = 0; q < n; q++) {
+            if (rnd() < 0.18) continue;
+            var r = (13 + rnd() * 12) * sizeMul;
+            trees.push({ x: x0 + (q + 0.15 + rnd() * 0.7) * wd / n, y: y + rnd() * 20, r: r, t: rnd(), rot: rnd() * TAU });
+          }
+        }
+      };
+      for (j = 0; j < strips.length; j++) addStrip(ox + strips[j][0] - (j === 0 ? 0 : 6), ox + strips[j][1] + (j === 3 ? 0 : 6), 1, j === 0 || j === 3 ? 0.9 : 1);
+      if (ox > 2) { addStrip(-10, ox + 6, 1.3, 1.05); addStrip(ox + DW - 6, W + 10, 1.3, 1.05); }
+      trees.sort(function (p, q) { return p.y - q.y; });
+      for (i = 0; i < trees.length; i++) { var tr = trees[i]; g.fillStyle = 'rgba(0,0,0,.28)'; ell(g, tr.x + tr.r * 0.28, tr.y + tr.r * 0.38, tr.r * 1.02, tr.r * 0.86); }
+      for (i = 0; i < trees.length; i++) this.drawTree(g, trees[i], T, rnd);
+      // alt bitki ortusu: calilar + cicekler yol kenarlarinda
+      for (i = 0; i < 3; i++) for (yy = this.eY + 10; yy < this.pY - 10; yy += 30 + rnd() * 20) for (k = -1; k <= 1; k += 2) {
+        if (rnd() < 0.4) continue;
+        var bx = this.roadX(i, yy) + k * (70 + rnd() * 10), by = yy + rnd() * 12, br = 5 + rnd() * 6;
+        if (this.theme === 1) { g.fillStyle = '#8a6a40'; ell(g, bx, by, br + 2, br); g.fillStyle = '#a98655'; ell(g, bx - 1, by - 2, br, br * 0.6); }
+        else if (this.theme === 2) { g.fillStyle = '#cfe3f5'; ell(g, bx, by, br + 3, br); g.fillStyle = '#fff'; ell(g, bx - 1, by - 2, br + 1, br * 0.6); }
+        else {
+          g.fillStyle = 'rgba(0,0,0,.25)'; ell(g, bx + 2, by + 3, br + 1, br); g.fillStyle = '#2f7a3f'; circ(g, bx, by, br); g.fillStyle = '#46a257'; circ(g, bx - 2, by - 2, br * 0.6);
+          if (rnd() < 0.5) { g.fillStyle = ['#ffe066', '#ff8fa3', '#ffffff', '#b197fc'][Math.floor(rnd() * 4)]; circ(g, bx + 2, by - 1, 1.8); circ(g, bx - 3, by + 2, 1.5); }
         }
       }
+      // tas kumeleri ve kutukler
+      for (i = 0; i < 12; i++) {
+        var rx2 = ox + strips[1 + Math.floor(rnd() * 2)][0] + 10 + rnd() * 80, ry2 = top + 120 + rnd() * (bot - top - 240);
+        if (rnd() < 0.5) { g.fillStyle = 'rgba(0,0,0,.3)'; ell(g, rx2 + 2, ry2 + 3, 10, 7); g.fillStyle = '#8b909c'; ell(g, rx2, ry2, 9, 6.5); g.fillStyle = '#b4b9c4'; ell(g, rx2 - 2, ry2 - 2, 5, 3.4); }
+        else if (this.theme === 0) { g.save(); g.translate(rx2, ry2); g.rotate(rnd() * 3); g.fillStyle = '#5b3d22'; rrect(g, -16, -4, 32, 8, 4); g.fill(); g.fillStyle = '#d8b07a'; ell(g, 16, 0, 3, 4); g.restore(); }
+      }
+
+      // 7) isik: gun isigi huzmeleri + kenar karartmasi
+      g.fillStyle = 'rgba(' + T.shaft + ',.05)';
+      for (i = 0; i < 4; i++) { var sx0 = ox + 40 + i * 190 + rnd() * 30; g.beginPath(); g.moveTo(sx0, top); g.lineTo(sx0 + 70, top); g.lineTo(sx0 - 150, bot); g.lineTo(sx0 - 220, bot); g.closePath(); g.fill(); }
+      var vg = g.createRadialGradient(W / 2, H * 0.48, H * 0.3, W / 2, H * 0.48, H * 0.78);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.38)');
+      g.fillStyle = vg; g.fillRect(0, 0, W, H);
       // alt kisim (kartlarin arkasi) karart
-      var dk = g.createLinearGradient(0, this.pY + 40, 0, H);
+      var dk = g.createLinearGradient(0, bot - 10, 0, H);
       dk.addColorStop(0, 'rgba(0,0,0,0)'); dk.addColorStop(0.35, 'rgba(0,0,0,.55)'); dk.addColorStop(1, 'rgba(0,0,0,.7)');
-      g.fillStyle = dk; g.fillRect(0, this.pY + 40, W, H - this.pY - 40);
+      g.fillStyle = dk; g.fillRect(0, bot - 10, W, H - bot + 10);
       this.bg = c;
+    },
+
+    // kusbakisi agac: tema'ya gore cam / genis yaprakli / palmiye-kaktus / karli cam
+    drawTree: function (g, t, T, rnd) {
+      var x = t.x, y = t.y, r = t.r, i, a;
+      if (T.kind === 'desert') {
+        if (t.t < 0.32) { // palmiye
+          g.fillStyle = '#6b4a2a'; circ(g, x, y, r * 0.22);
+          for (i = 0; i < 9; i++) { a = t.rot + i * TAU / 9; g.save(); g.translate(x, y); g.rotate(a); g.fillStyle = i % 2 ? T.tree[0] : T.tree[1]; ell(g, r * 0.75, 0, r * 0.82, r * 0.25); g.fillStyle = 'rgba(255,255,255,.18)'; ell(g, r * 0.7, -r * 0.05, r * 0.6, r * 0.06); g.restore(); }
+          g.fillStyle = '#5a3d20'; circ(g, x, y, r * 0.16);
+        } else if (t.t < 0.62) { // kaktus (ustten)
+          g.fillStyle = '#2f6a38'; circ(g, x, y, r * 0.5); g.fillStyle = '#3f8a4a'; circ(g, x - 2, y - 2, r * 0.34);
+          g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; for (i = 0; i < 8; i++) { a = i * TAU / 8; g.beginPath(); g.moveTo(x + Math.cos(a) * r * 0.2, y + Math.sin(a) * r * 0.2); g.lineTo(x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5); g.stroke(); }
+        } else { // kaya
+          g.fillStyle = '#8a6a40'; ell(g, x, y, r * 0.9, r * 0.66); g.fillStyle = '#b08a58'; ell(g, x - r * 0.2, y - r * 0.2, r * 0.55, r * 0.38);
+        }
+        return;
+      }
+      if (t.t < 0.78) { // cam: katmanli yildiz
+        var cols = T.tree, layers = [1, 0.74, 0.5, 0.28];
+        for (i = 0; i < layers.length; i++) {
+          g.fillStyle = i === 3 ? cols[2] : i === 2 ? cols[1] : cols[0]; if (T.kind === 'ice' && i === 3) g.fillStyle = '#ffffff';
+          star(g, x - i * 0.8, y - i * 1.4, r * layers[i], r * layers[i] * 0.58, 9, t.rot + i * 0.2); g.fill();
+        }
+        if (T.kind === 'ice') { g.fillStyle = 'rgba(255,255,255,.75)'; star(g, x - 2, y - 3, r * 0.62, r * 0.34, 9, t.rot); g.fill(); }
+        else { g.fillStyle = 'rgba(255,255,255,.14)'; circ(g, x - r * 0.25, y - r * 0.3, r * 0.22); }
+      } else { // genis yaprakli (veya buzlu kristal)
+        if (T.kind === 'ice') {
+          g.fillStyle = '#cfe8fa'; g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r * 0.6, y); g.lineTo(x, y + r * 0.8); g.lineTo(x - r * 0.6, y); g.closePath(); g.fill();
+          g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r * 0.2, y - r * 0.1); g.lineTo(x - r * 0.3, y - r * 0.15); g.closePath(); g.fill();
+          return;
+        }
+        var gcol = ['#2c6f3a', '#3b8c4b', '#56ad5f'];
+        for (i = 0; i < 5; i++) { a = t.rot + i * TAU / 5; g.fillStyle = gcol[0]; circ(g, x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.55); }
+        for (i = 0; i < 4; i++) { a = t.rot + 0.6 + i * TAU / 4; g.fillStyle = gcol[1]; circ(g, x + Math.cos(a) * r * 0.32, y + Math.sin(a) * r * 0.32 - 1, r * 0.46); }
+        g.fillStyle = gcol[2]; circ(g, x - r * 0.18, y - r * 0.22, r * 0.34);
+        g.fillStyle = 'rgba(255,255,255,.22)'; circ(g, x - r * 0.28, y - r * 0.32, r * 0.14);
+      }
     },
 
     // ---- Olaylar -> efektler + ses --------------------------------------
@@ -149,58 +292,60 @@
       var A = Z.Audio, i, e, ex, ey;
       for (i = 0; i < events.length; i++) {
         e = events[i];
-        ex = e.lane !== undefined ? this.laneX(e.lane) : 0;
         ey = e.x !== undefined ? this.Y(e.x) : 0;
+        ex = e.lane !== undefined ? this.roadX(e.lane, ey || this.pY) : 0;
         switch (e.type) {
           case 'spawn':
-            this.puff(this.laneX(e.unit.lane), this.Y(e.unit.x), 6, '#d9c9a0');
+            this.puff(this.roadX(e.unit.lane, this.Y(e.unit.x)), this.Y(e.unit.x), 7, '#d9c9a0');
             if (e.unit.team === 0) A.spawn();
             break;
           case 'hit':
-            this.sparks(ex, ey - 6, e.strong ? 6 : 3, e.strong ? '#ffd166' : '#ffffff');
-            if (this.texts.length < 26 && (e.strong || e.dmg > 40)) this.text(ex + 18, ey - 34, String(Math.round(e.dmg)), e.team === 1 ? (e.strong ? '#ffd166' : '#ffffff') : '#ff8b8b', e.strong ? 24 : 19);
+            this.sparks(ex, ey - 6, e.strong ? 7 : 3, e.strong ? '#ffd166' : '#ffffff');
+            if (this.fx.length < 40) this.fx.push({ k: 'slash', x: ex + (Math.random() - 0.5) * 14, y: ey - 6, a: Math.random() * TAU, t: 0.18, max: 0.18, big: e.strong });
+            if (this.texts.length < 26 && (e.strong || e.dmg > 40)) this.text(ex + 18, ey - 40, String(Math.round(e.dmg)), e.team === 1 ? (e.strong ? '#ffd166' : '#ffffff') : '#ff8b8b', e.strong ? 26 : 20);
             A.hit();
             break;
           case 'death':
-            this.puff(ex, ey, e.boss ? 22 : 9, e.team === 0 ? '#9ec5ff' : '#ff9d9d');
+            this.puff(ex, ey, e.boss ? 24 : 10, e.team === 0 ? '#9ec5ff' : '#ff9d9d');
+            if (this.fx.length < 60) this.fx.push({ k: 'decal', x: ex, y: ey, t: 4, max: 4, big: e.boss });
             A.death();
             if (e.boss) { this.shake = 14; A.boom(); }
             break;
-          case 'coin': this.text(ex, ey - 40, '+' + e.v, '#ffd23f', 22); A.coin(); break;
+          case 'coin': this.text(ex, ey - 46, '+' + e.v, '#ffd23f', 24); A.coin(); break;
           case 'shoot': A.shoot(); break;
           case 'tower':
             this.fx.push({ k: 'arrow', x1: ex, y1: e.team === 0 ? this.pY : this.eY, x2: ex, y2: ey, t: 0.18, max: 0.18 }); A.shoot(); break;
           case 'boom':
-            this.fx.push({ k: 'ring', x: ex, y: ey, r: Math.max(34, e.r * this.s * 1.2), t: 0.4, max: 0.4, col: e.cls === 'mage' ? '#c084fc' : '#ffa94d' });
-            this.sparks(ex, ey, 10, e.cls === 'mage' ? '#d8b4fe' : '#ffb347');
+            this.fx.push({ k: 'ring', x: ex, y: ey, r: Math.max(36, e.r * this.s * 1.2), t: 0.4, max: 0.4, col: e.cls === 'mage' ? '#c084fc' : '#ffa94d' });
+            this.sparks(ex, ey, 12, e.cls === 'mage' ? '#d8b4fe' : '#ffb347');
             this.shake = Math.max(this.shake, e.cls === 'cata' ? 5 : 2); A.boom();
             break;
           case 'heal':
-            if (this.parts.length < 380) for (var hq = 0; hq < 4; hq++) this.parts.push({ x: ex + (Math.random() - 0.5) * 24, y: ey - 8, vx: (Math.random() - 0.5) * 20, vy: -40 - Math.random() * 30, life: 0.7, max: 0.7, size: 2.8, col: '#6ee7b7', g: -10, shrink: true });
-            if (this.texts.length < 26) this.text(ex, ey - 36, '+' + Math.round(e.v), '#6ee7b7', 18);
+            if (this.parts.length < 380) for (var hq = 0; hq < 5; hq++) this.parts.push({ x: ex + (Math.random() - 0.5) * 26, y: ey - 8, vx: (Math.random() - 0.5) * 20, vy: -44 - Math.random() * 30, life: 0.8, max: 0.8, size: 3, col: '#6ee7b7', g: -10, shrink: true });
+            if (this.texts.length < 26) this.text(ex, ey - 40, '+' + Math.round(e.v), '#6ee7b7', 20);
             if (e.team === 0) A.heal();
             break;
           case 'freeze':
-            this.sparks(ex, ey - 6, 8, '#bfe6ff'); this.fx.push({ k: 'ring', x: ex, y: ey, r: 40, t: 0.45, max: 0.45, col: '#9bd7ff' });
+            this.sparks(ex, ey - 6, 9, '#bfe6ff'); this.fx.push({ k: 'ring', x: ex, y: ey, r: 44, t: 0.45, max: 0.45, col: '#9bd7ff' });
             break;
           case 'perk': A.perk(); break;
-          case 'charge': this.fx.push({ k: 'ring', x: ex, y: ey, r: 36, t: 0.3, max: 0.3, col: '#ffe08a' }); break;
+          case 'charge': this.fx.push({ k: 'ring', x: ex, y: ey, r: 40, t: 0.3, max: 0.3, col: '#ffe08a' }); break;
           case 'baseHit':
             this.shake = Math.max(this.shake, e.team === 0 ? 8 : 3);
-            this.puff(this.ox + 60 + Math.random() * 600, e.team === 0 ? this.pY + 24 : this.eY - 24, 4, '#cfc6b4');
+            this.puff(this.ox + 60 + Math.random() * 600, e.team === 0 ? this.pY + 20 : this.eY - 20, 5, '#cfc6b4');
             A.baseHit(); if (e.team === 0) A.vibrate(40);
             break;
           case 'skill':
-            if (e.kind === 'roar') { this.fx.push({ k: 'wave', x: this.ox + 360, y: this.pY + 24, t: 0.9, max: 0.9, col: '#ffd166' }); this.banner = { text: 'ZAFER NARAASI!', col: '#ffd166', t: 1.4 }; }
+            if (e.kind === 'roar') { this.fx.push({ k: 'wave', x: this.ox + 360, y: this.pY + 30, t: 0.9, max: 0.9, col: '#ffd166' }); this.banner = { text: 'ZAFER NARAASI!', col: '#ffd166', t: 1.4 }; }
             else if (e.kind === 'ward') { this.fx.push({ k: 'lane', lane: e.lane, t: 0.9, max: 0.9, col: '#6ee7b7' }); }
             else if (e.kind === 'bolt') { this.shake = Math.max(this.shake, 6); }
             else if (e.kind === 'freeze') { this.fx.push({ k: 'lane', lane: e.lane, t: 1.0, max: 1.0, col: '#9bd7ff' }); this.banner = { text: 'DON FIRTINASI!', col: '#9bd7ff', t: 1.2 }; }
             A.skill(e.kind); A.vibrate(25);
             break;
-          case 'bolt': this.fx.push({ k: 'bolt', x: ex, y: ey, t: 0.4, max: 0.4, seed: Math.random() * 99 }); this.sparks(ex, ey, 8, '#a5d8ff'); break;
+          case 'bolt': this.fx.push({ k: 'bolt', x: ex, y: ey, t: 0.4, max: 0.4, seed: Math.random() * 99 }); this.sparks(ex, ey, 9, '#a5d8ff'); break;
           case 'boss': this.banner = { text: 'PATRON GELİYOR!', col: '#ff6b6b', t: 1.8 }; this.shake = 10; A.boom(); break;
           case 'ambush': this.banner = { text: 'PUSU!', col: '#ffb347', t: 1.4 }; this.shake = 6; A.boom(); break;
-          case 'mine': this.text(this.ox + 360, this.H - 330, 'Maden Sv.' + e.level + '!', '#ffd23f', 28); A.click(); break;
+          case 'mine': this.text(this.ox + 360, this.H - 330, 'Maden Sv.' + e.level + '!', '#ffd23f', 30); A.click(); break;
           case 'win': A.win(); break;
           case 'lose': A.lose(); break;
         }
@@ -226,29 +371,34 @@
       this.time += dt;
       var b = this.battle, c = this.ctx, i, W = this.W, H = this.H;
       this.handle(b.drain());
+      for (i = 0; i < 4 && this.warmQ && this.warmQ.length; i++) { var w = this.warmQ.shift(); this.getSprite(w[0], w[1], w[2], w[3]); }
+      for (i = 0; i < b.projs.length; i++) { // tas atar dumani
+        var pj = b.projs[i];
+        if (pj.kind === 'rock' && Math.random() < 0.6 && this.parts.length < 380) this.parts.push({ x: this.roadX(pj.lane, this.Y(pj.x)), y: this.Y(pj.x), vx: (Math.random() - 0.5) * 10, vy: 6, life: 0.5, max: 0.5, size: 4, col: 'rgba(90,90,100,.55)', g: 0, shrink: true });
+      }
       this.updateFx(dt);
 
       c.setTransform(this.px, 0, 0, this.px, 0, 0);
       c.drawImage(this.bg, 0, 0, W, H);
-      // bulutlar (ufuk seridinde)
-      c.fillStyle = 'rgba(255,255,255,.16)';
-      for (i = 0; i < 4; i++) { var cx = ((i * 260 + this.time * (6 + i * 2)) % (W + 300)) - 150, cy = 36 + i * 20; ell(c, cx, cy, 64, 12); ell(c, cx + 36, cy - 7, 40, 10); }
+      c.fillStyle = 'rgba(255,255,255,.14)'; // bulutlar (ufuk)
+      for (i = 0; i < 4; i++) { var cx = ((i * 260 + this.time * (6 + i * 2)) % (W + 300)) - 150, cy = 30 + i * 18; ell(c, cx, cy, 64, 12); ell(c, cx + 36, cy - 7, 40, 10); }
       c.save();
       var sx = this.shake > 0.2 ? (Math.random() - 0.5) * this.shake : 0, sy = this.shake > 0.2 ? (Math.random() - 0.5) * this.shake : 0;
       c.translate(sx, sy);
 
-      // secili / surukle koridor vurgusu
+      // secili / surukle yol vurgusu
       for (i = 0; i < 3; i++) {
         var on = (this.dragLane === i), sel = (this.selLane === i && this.dragLane < 0);
         if (on || sel) {
-          c.fillStyle = on ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)';
-          c.fillRect(this.ox + i * 240, this.eY, 240, this.pY - this.eY);
-          if (on) { c.fillStyle = '#fff'; c.font = 'bold 26px system-ui'; c.textAlign = 'center'; c.fillText('▼ BURAYA BIRAK ▼', this.laneX(i), this.eY + 90); }
+          this.roadPath(c, i, 74);
+          c.fillStyle = on ? 'rgba(255,255,255,.26)' : 'rgba(255,240,170,.13)'; c.fill();
+          if (on) { c.fillStyle = '#fff'; c.font = 'bold 26px system-ui'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText('▼ BURAYA BIRAK ▼', this.laneX(i), this.eY + 110); c.fillText('▼ BURAYA BIRAK ▼', this.laneX(i), this.eY + 110); }
         }
       }
       this.drawCastle(c, 1); this.drawCastle(c, 0);
+      for (i = 0; i < this.fx.length; i++) if (this.fx[i].k === 'decal') this.drawDecal(c, this.fx[i]);
 
-      var order = b.units.slice().sort(function (a, d) { return R.Y(a.x) - R.Y(d.x); });
+      var self = this, order = b.units.slice().sort(function (a, d) { return self.Y(a.x) - self.Y(d.x); });
       for (i = 0; i < order.length; i++) this.drawUnit(c, order[i]);
       for (i = 0; i < b.projs.length; i++) this.drawProj(c, b.projs[i]);
       this.drawFx(c);
@@ -259,27 +409,27 @@
       c.globalAlpha = 1;
       for (i = 0; i < this.texts.length; i++) {
         var tx = this.texts[i], ta = Math.min(1, tx.t / 0.35);
-        c.globalAlpha = ta; c.font = 'bold ' + tx.size + 'px system-ui'; c.textAlign = 'center';
-        c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.65)'; c.strokeText(tx.s, tx.x, tx.y);
+        c.globalAlpha = ta; c.font = '900 ' + tx.size + 'px system-ui'; c.textAlign = 'center';
+        c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(tx.s, tx.x, tx.y);
         c.fillStyle = tx.col; c.fillText(tx.s, tx.x, tx.y);
       }
       c.globalAlpha = 1;
       c.restore();
 
-      // diyar atmosferi: kar / kum tozu
+      // atmosfer: yaprak / kum tozu / kar
       var amode = THEMES[this.theme].amb;
-      if (amode !== 'none') {
-        c.fillStyle = amode === 'snow' ? 'rgba(255,255,255,.85)' : 'rgba(240,200,130,.35)';
-        for (i = 0; i < this.amb.length; i++) {
-          var am = this.amb[i];
-          if (amode === 'snow') { am.y += am.v * dt; am.x += Math.sin(this.time + am.ph) * 14 * dt - 6 * dt; circ(c, am.x, am.y, am.r); }
-          else { am.x += (am.v * 4) * dt; am.y += Math.sin(this.time * 0.7 + am.ph) * 6 * dt; c.fillRect(am.x, am.y, 14 + am.r * 8, 1.6); }
-          if (am.y > H) { am.y = -4; am.x = Math.random() * W; }
-          if (am.x > W + 40) { am.x = -40; am.y = Math.random() * H; } else if (am.x < -10) am.x = W + 4;
+      for (i = 0; i < this.amb.length; i++) {
+        var am = this.amb[i];
+        if (amode === 'snow') { c.fillStyle = 'rgba(255,255,255,.85)'; am.y += am.v * dt; am.x += Math.sin(this.time + am.ph) * 14 * dt - 6 * dt; circ(c, am.x, am.y, am.r); }
+        else if (amode === 'dust') { c.fillStyle = 'rgba(240,200,130,.35)'; am.x += (am.v * 4) * dt; am.y += Math.sin(this.time * 0.7 + am.ph) * 6 * dt; c.fillRect(am.x, am.y, 14 + am.r * 8, 1.6); }
+        else { // dusen yapraklar
+          am.y += (am.v * 0.5) * dt; am.x += Math.sin(this.time * 0.9 + am.ph) * 18 * dt + 8 * dt;
+          c.save(); c.translate(am.x, am.y); c.rotate(this.time * 1.2 + am.ph); c.fillStyle = am.c < 0.5 ? 'rgba(120,190,90,.85)' : 'rgba(224,150,60,.85)'; ell(c, 0, 0, 5 + am.r, 2.4); c.restore();
         }
+        if (am.y > H) { am.y = -6; am.x = Math.random() * W; }
+        if (am.x > W + 40) { am.x = -40; am.y = Math.random() * H; } else if (am.x < -40) am.x = W + 4;
       }
-      // kukreme: altin kenar parlamasi
-      if (b.buffed()) {
+      if (b.buffed()) { // kukreme: altin kenar parlamasi
         var pulse = 0.2 + 0.08 * Math.sin(this.time * 8);
         var vg = c.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.62);
         vg.addColorStop(0, 'rgba(255,210,80,0)'); vg.addColorStop(1, 'rgba(255,200,60,' + pulse + ')');
@@ -287,9 +437,11 @@
       }
       if (this.banner) {
         var bn = this.banner, ba = Math.min(1, bn.t / 0.4);
-        c.save(); c.globalAlpha = ba; c.translate(W / 2, this.eY + 150);
-        c.font = '900 52px system-ui'; c.textAlign = 'center'; c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,.7)';
-        c.strokeText(bn.text, 0, 0); c.fillStyle = bn.col; c.fillText(bn.text, 0, 0); c.restore();
+        c.save(); c.globalAlpha = ba; c.translate(W / 2, this.eY + 160);
+        c.font = '900 54px system-ui'; c.textAlign = 'center'; c.lineWidth = 9; c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineJoin = 'round';
+        c.strokeText(bn.text, 0, 0);
+        var tg = c.createLinearGradient(0, -40, 0, 8); tg.addColorStop(0, '#ffffff'); tg.addColorStop(0.45, bn.col); tg.addColorStop(1, bn.col);
+        c.fillStyle = tg; c.fillText(bn.text, 0, 0); c.restore();
       }
     },
 
@@ -305,6 +457,12 @@
       if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
     },
 
+    drawDecal: function (c, f) {
+      var a = Math.min(1, f.t / 1.5) * 0.3, r = f.big ? 22 : 11;
+      c.globalAlpha = a; c.fillStyle = '#1a1208'; ell(c, f.x, f.y + 3, r, r * 0.6); c.fillStyle = '#3a2c18'; ell(c, f.x + 4, f.y + 1, r * 0.4, r * 0.25);
+      c.globalAlpha = 1;
+    },
+
     drawFx: function (c) {
       for (var i = 0; i < this.fx.length; i++) {
         var f = this.fx[i], k = 1 - f.t / f.max;
@@ -314,227 +472,367 @@
         } else if (f.k === 'wave') {
           c.globalAlpha = (1 - k) * 0.8; c.strokeStyle = f.col; c.lineWidth = 10 * (1 - k) + 2; c.beginPath(); c.arc(f.x, f.y, 40 + k * 1100, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
         } else if (f.k === 'lane') {
-          c.globalAlpha = (1 - k) * 0.35; c.fillStyle = f.col; c.fillRect(this.ox + f.lane * 240, this.eY, 240, this.pY - this.eY);
+          c.globalAlpha = (1 - k) * 0.4; this.roadPath(c, f.lane, 76); c.fillStyle = f.col; c.fill();
         } else if (f.k === 'bolt') {
-          c.globalAlpha = Math.min(1, f.t / 0.2); c.strokeStyle = '#d0ebff'; c.lineWidth = 5; c.lineJoin = 'round';
+          c.globalAlpha = Math.min(1, f.t / 0.2); c.strokeStyle = '#d0ebff'; c.lineWidth = 6; c.lineJoin = 'round';
           c.beginPath(); var x = f.x, y = f.y - 520;
           c.moveTo(x, y); var n = 9, step = (f.y - y) / n;
           for (var j = 1; j <= n; j++) { x = f.x + (j === n ? 0 : (hash(f.seed + j + Math.floor(this.time * 30)) - 0.5) * 46); y += step; c.lineTo(x, y); }
-          c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+          c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 2.4; c.stroke();
+          c.fillStyle = 'rgba(180,220,255,.5)'; circ(c, f.x, f.y, 26 * (1 - k * 0.5));
         } else if (f.k === 'arrow') {
           c.globalAlpha = 1; var ay = f.y1 + (f.y2 - f.y1) * k;
-          line(c, f.x1, ay - 9, f.x1, ay + 3, 2.4, '#e9d8a6');
+          line(c, f.x1, ay - 10, f.x1, ay + 4, 2.6, '#f1e3b0');
+        } else if (f.k === 'slash') { // kilic darbesi yayi
+          c.globalAlpha = (1 - k) * 0.9; c.strokeStyle = f.big ? '#ffe08a' : '#ffffff'; c.lineWidth = f.big ? 4 : 2.6; c.lineCap = 'round';
+          c.beginPath(); c.arc(f.x, f.y, (f.big ? 20 : 14) * (0.6 + k * 0.5), f.a, f.a + 1.9); c.stroke();
         }
       }
       c.globalAlpha = 1;
     },
 
     drawProj: function (c, p) {
-      var x = this.laneX(p.lane) + (p.team === 0 ? 10 : -10), y = this.Y(p.x), d = p.team === 0 ? -1 : 1; // d: ekrandaki hareket yonu
+      var y = this.Y(p.x), x = this.roadX(p.lane, y) + (p.team === 0 ? 10 : -10), d = p.team === 0 ? -1 : 1; // d: ekrandaki hareket yonu
       var tot = Math.max(1, Math.abs(p.tx - p.fromX)), prog = Math.min(1, Math.abs(p.x - p.fromX) / tot), h = Math.sin(prog * Math.PI);
       if (p.kind === 'arrow') {
-        c.fillStyle = 'rgba(0,0,0,.25)'; ell(c, x + 4, y + 4, 2, 6);
-        line(c, x, y - d * 10, x, y + d * 2, 2.4, '#f1e3b0');
-        c.fillStyle = '#ddd'; circ(c, x, y + d * 4, 2);
+        c.fillStyle = 'rgba(0,0,0,.25)'; ell(c, x + 5, y + 5, 2, 7);
+        var tg = c.createLinearGradient(0, y - d * 26, 0, y); tg.addColorStop(0, 'rgba(255,255,255,0)'); tg.addColorStop(1, 'rgba(255,245,200,.7)');
+        c.strokeStyle = tg; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y - d * 26); c.lineTo(x, y); c.stroke();
+        line(c, x, y - d * 11, x, y + d * 3, 2.6, '#f1e3b0'); c.fillStyle = '#e8edf5'; circ(c, x, y + d * 5, 2.2);
       } else if (p.kind === 'bolt') {
-        c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, x + 3, y + 5, 7, 4);
-        c.fillStyle = 'rgba(192,132,252,.4)'; circ(c, x, y - 10 * h, 12); c.fillStyle = '#e9d5ff'; circ(c, x, y - 10 * h, 6);
+        c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, x + 3, y + 6, 7, 4);
+        for (var q = 3; q >= 1; q--) { c.fillStyle = 'rgba(192,132,252,' + (0.18 * (4 - q)) + ')'; circ(c, x, y - 10 * h - d * q * 9, 9 - q); }
+        c.fillStyle = 'rgba(192,132,252,.45)'; circ(c, x, y - 10 * h, 13); c.fillStyle = '#f1e4ff'; circ(c, x, y - 10 * h, 6.5);
       } else {
-        var ry = y - h * 46;
-        c.fillStyle = 'rgba(0,0,0,.3)'; ell(c, x + 2, y + 4, 9, 5);
-        c.fillStyle = '#4a4a52'; circ(c, x, ry, 8 + h * 3); c.fillStyle = '#ff9f43'; circ(c, x - 2, ry - 2, 3);
+        var ry = y - h * 50;
+        c.fillStyle = 'rgba(0,0,0,.3)'; ell(c, x + 2, y + 5, 10, 5.5);
+        c.fillStyle = '#4a4a54'; circ(c, x, ry, 8.5 + h * 3.5); c.fillStyle = '#6a6a76'; circ(c, x - 2, ry - 2, 4); c.fillStyle = '#ff9f43'; circ(c, x + 3, ry + 2, 2.6);
       }
     },
 
-    // ---- Kale (yatay sur, uc koridora uc kapi) --------------------------
+    // ---- Kale: buyuk, tuğlalı sur + silindirik kuleler + kapilar ---------
     drawCastle: function (c, team) {
-      var b = this.battle.base[team], pal = PAL[team], ox = this.ox, w = DW, h = 58;
-      var y0 = team === 0 ? this.pY : this.eY - h; // sur seridinin ust kenari
+      var b = this.battle.base[team], pal = PAL[team], ox = this.ox, h = CASTLE_H, pct = b.hp / b.max, t = this.time;
+      var y0 = team === 0 ? this.pY : this.eY - h;
       c.save();
-      c.fillStyle = 'rgba(0,0,0,.28)'; c.fillRect(ox + 8, y0 + (team === 0 ? 8 : -2), w - 16, h);
-      var sg = c.createLinearGradient(0, y0, 0, y0 + h);
-      sg.addColorStop(0, team === 0 ? '#b3b4c0' : '#8d8e9b'); sg.addColorStop(1, team === 0 ? '#8d8e9b' : '#b3b4c0');
-      c.fillStyle = sg; c.fillRect(ox + 8, y0, w - 16, h);
-      c.strokeStyle = 'rgba(60,60,80,.28)'; c.lineWidth = 1.5;
-      for (var r = 1; r < 4; r++) { var yy = y0 + r * h / 4; c.beginPath(); c.moveTo(ox + 8, yy); c.lineTo(ox + w - 8, yy); c.stroke(); }
-      // siperlikler (sahaya bakan kenar)
-      c.fillStyle = '#9a9bab';
-      for (var m = 0; m < 24; m++) { var mx = ox + 14 + m * 29; c.fillRect(mx, team === 0 ? y0 - 8 : y0 + h - 2, 17, 10); }
-      // kuleler: iki uc + iki ara
-      var towers = [ox + 4, ox + 240, ox + 480, ox + w - 4];
-      for (var t = 0; t < towers.length; t++) {
-        var tx = towers[t], tw = 60, th = 74, ty = team === 0 ? y0 - 12 : y0 - 4;
-        var tg = c.createLinearGradient(tx - tw / 2, 0, tx + tw / 2, 0);
-        tg.addColorStop(0, '#6f7080'); tg.addColorStop(0.45, '#a3a4b3'); tg.addColorStop(1, '#6a6b7b');
-        c.fillStyle = tg; rrect(c, tx - tw / 2, ty, tw, th, 10); c.fill();
-        c.fillStyle = pal.dark; circ(c, tx, ty + th / 2, 22); c.fillStyle = pal.main; c.beginPath(); c.arc(tx, ty + th / 2, 20, Math.PI * 0.8, Math.PI * 1.8); c.lineTo(tx, ty + th / 2); c.fill();
-        c.fillStyle = pal.trim; circ(c, tx, ty + th / 2, 5);
+      // yerel cizim: orijin sur ustu; saha tarafi +y. Oyuncu kalesi aynalanir.
+      if (team === 0) { c.translate(0, y0 + h); c.scale(1, -1); } else { c.translate(0, y0); }
+      // sahaya dusen golge
+      var sh = c.createLinearGradient(0, h, 0, h + 30); sh.addColorStop(0, 'rgba(0,0,0,.38)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = sh; c.fillRect(ox + 4, h, DW - 8, 30);
+      // sur govdesi
+      var tgr = c.createLinearGradient(0, 0, 0, 36); tgr.addColorStop(0, '#c7c9d6'); tgr.addColorStop(1, '#a9abbb');
+      c.fillStyle = tgr; c.fillRect(ox + 4, 0, DW - 8, 36);                      // ust yuzey (yuruyus yolu)
+      var fgr = c.createLinearGradient(0, 36, 0, h); fgr.addColorStop(0, '#8d8fa1'); fgr.addColorStop(1, '#5f6174');
+      c.fillStyle = fgr; c.fillRect(ox + 4, 36, DW - 8, h - 36);                 // on yuz
+      c.strokeStyle = 'rgba(30,32,48,.35)'; c.lineWidth = 1.4;
+      for (var r = 0; r < 4; r++) {                                              // tugla dokusu
+        var ry = 36 + r * 13; c.beginPath(); c.moveTo(ox + 4, ry); c.lineTo(ox + DW - 4, ry); c.stroke();
+        for (var bx = ox + 4 + (r % 2) * 14; bx < ox + DW - 4; bx += 28) { c.beginPath(); c.moveTo(bx, ry); c.lineTo(bx, ry + 13); c.stroke(); }
       }
-      // kapilar (koridor merkezlerinde)
+      c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(ox + 4, 36, DW - 8, 3);   // kenar isigi
+      c.fillStyle = '#3a3c4e'; c.fillRect(ox + 4, h - 5, DW - 8, 5);              // taban
+      // siperlikler
+      var broken = pct < 0.3 ? [3, 9, 14] : pct < 0.6 ? [6] : [];
+      for (var m = 0, mx = ox + 8; mx < ox + DW - 20; m++, mx += 30) {
+        if (broken.indexOf(m) >= 0) { c.fillStyle = '#7a7c8e'; c.fillRect(mx, 28, 18, 5); continue; }
+        c.fillStyle = '#9d9fb0'; c.fillRect(mx, 22, 18, 14); c.fillStyle = '#cfd1dd'; c.fillRect(mx, 22, 18, 5); c.fillStyle = 'rgba(0,0,0,.2)'; c.fillRect(mx + 15, 22, 3, 14);
+      }
+      // kapilar
       for (var l = 0; l < 3; l++) {
-        var gx = this.laneX(l), gw = 64;
-        c.fillStyle = '#4a2f1a'; c.beginPath();
-        if (team === 0) { c.moveTo(gx - gw / 2, y0 + h); c.lineTo(gx - gw / 2, y0 + 18); c.arc(gx, y0 + 18, gw / 2, Math.PI, 0); c.lineTo(gx + gw / 2, y0 + h); }
-        else { c.moveTo(gx - gw / 2, y0); c.lineTo(gx - gw / 2, y0 + h - 18); c.arc(gx, y0 + h - 18, gw / 2, Math.PI, 0, true); c.lineTo(gx + gw / 2, y0); }
-        c.fill(); line(c, gx, y0 + 6, gx, y0 + h - 6, 2, '#2c1a0c');
-        if (team === 0 && this.selLane === l) { // secili koridor: altin parlama + ok
-          c.fillStyle = 'rgba(255,210,77,.35)'; ell(c, gx, y0 - 4, 54, 14);
-          var bob = Math.sin(this.time * 6) * 4; c.fillStyle = '#ffd24d'; c.beginPath(); c.moveTo(gx, y0 - 44 + bob); c.lineTo(gx + 15, y0 - 20 + bob); c.lineTo(gx - 15, y0 - 20 + bob); c.closePath(); c.fill();
-          c.strokeStyle = '#7c4a00'; c.lineWidth = 2; c.stroke();
+        var gx = this.laneX(l), gw = 76, gt = h - 56;
+        c.fillStyle = '#4a4c60'; rrect(c, gx - gw / 2 - 7, gt - 7, gw + 14, 63, 18); c.fill();                       // tas cerceve
+        c.fillStyle = '#7d7f93'; rrect(c, gx - gw / 2 - 4, gt - 4, gw + 8, 60, 16); c.fill();
+        var dg = c.createLinearGradient(0, gt, 0, h); dg.addColorStop(0, '#0e0a08'); dg.addColorStop(1, '#2a1c12');
+        c.fillStyle = dg; rrect(c, gx - gw / 2, gt, gw, 56, 14); c.fill();                                           // karanlik ic
+        c.fillStyle = '#5a3a1e';                                                                                      // yari acik kapi kanatlari
+        c.beginPath(); c.moveTo(gx - gw / 2, gt + 12); c.lineTo(gx - gw / 2 + 16, gt + 16); c.lineTo(gx - gw / 2 + 16, h); c.lineTo(gx - gw / 2, h); c.closePath(); c.fill();
+        c.beginPath(); c.moveTo(gx + gw / 2, gt + 12); c.lineTo(gx + gw / 2 - 16, gt + 16); c.lineTo(gx + gw / 2 - 16, h); c.lineTo(gx + gw / 2, h); c.closePath(); c.fill();
+        c.strokeStyle = '#2a2a34'; c.lineWidth = 2; c.beginPath(); c.moveTo(gx - gw / 2 + 8, gt + 12); c.lineTo(gx - gw / 2 + 8, h); c.moveTo(gx + gw / 2 - 8, gt + 12); c.lineTo(gx + gw / 2 - 8, h); c.stroke();
+        c.strokeStyle = '#8a8a98'; c.lineWidth = 2.2; for (var pk = -2; pk <= 2; pk++) { c.beginPath(); c.moveTo(gx + pk * 9, gt + 4); c.lineTo(gx + pk * 9, gt + 20); c.stroke(); } // kafes disleri
+        c.fillStyle = '#ffd24d'; c.beginPath(); c.moveTo(gx - 6, gt - 4); c.lineTo(gx + 6, gt - 4); c.lineTo(gx, gt + 5); c.closePath(); c.fill();       // kilit tasi
+        // takim kalkani
+        c.fillStyle = pal.dark; circ(c, gx, gt - 20, 11.5); c.fillStyle = pal.main; circ(c, gx, gt - 20, 9.5); c.fillStyle = pal.trim; circ(c, gx, gt - 20, 3.6);
+        c.strokeStyle = pal.trim; c.lineWidth = 2; c.beginPath(); c.arc(gx, gt - 20, 11.5, 0, TAU); c.stroke();
+        // mesaleler
+        for (var tk = -1; tk <= 1; tk += 2) {
+          var tx0 = gx + tk * (gw / 2 + 20), ty0 = gt + 6, fl = 0.8 + 0.2 * Math.sin(t * 11 + l * 2 + tk);
+          c.fillStyle = '#4a3320'; c.fillRect(tx0 - 2, ty0, 4, 14);
+          var fg = c.createRadialGradient(tx0, ty0 - 4, 1, tx0, ty0 - 4, 22 * fl); fg.addColorStop(0, 'rgba(255,200,90,.85)'); fg.addColorStop(1, 'rgba(255,140,40,0)');
+          c.fillStyle = fg; c.fillRect(tx0 - 24, ty0 - 28, 48, 48);
+          c.fillStyle = '#ff8a2a'; ell(c, tx0, ty0 - 4, 3.6, 6 * fl); c.fillStyle = '#ffe08a'; ell(c, tx0, ty0 - 3, 1.8, 3.6 * fl);
+        }
+        if (team === 0 && this.selLane === l) { // secili kapi: altin parlama
+          var pulse = 0.5 + 0.5 * Math.sin(t * 6);
+          c.strokeStyle = 'rgba(255,210,77,' + (0.55 + 0.35 * pulse) + ')'; c.lineWidth = 5; rrect(c, gx - gw / 2 - 9, gt - 9, gw + 18, 67, 20); c.stroke();
         }
       }
-      // sancaklar
-      var wave = Math.sin(this.time * 3 + team) * 4;
-      [ox + 44, ox + w - 44].forEach(function (fx) {
-        var fy = team === 0 ? y0 - 10 : y0 + h + 10, dir = team === 0 ? -1 : 1;
-        line(c, fx, fy, fx, fy + dir * 46, 3, '#5b4a3a');
-        c.fillStyle = pal.main; c.beginPath(); c.moveTo(fx, fy + dir * 46); c.lineTo(fx + 30 + wave, fy + dir * 36); c.lineTo(fx, fy + dir * 26); c.fill();
-        c.fillStyle = pal.trim; circ(c, fx + 11, fy + dir * 36, 3.4);
+      // asilan sancaklar
+      var sw = Math.sin(t * 2.4) * 3;
+      [ox + 180, ox + 540].forEach(function (fx) {
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(fx - 12, 40, 28, 40);
+        c.fillStyle = pal.main; c.beginPath(); c.moveTo(fx - 13, 38); c.lineTo(fx + 13, 38); c.lineTo(fx + 13 + sw * 0.4, 70); c.lineTo(fx + sw, 78); c.lineTo(fx - 13 + sw * 0.4, 70); c.closePath(); c.fill();
+        c.strokeStyle = pal.trim; c.lineWidth = 2; c.stroke();
+        c.fillStyle = pal.trim; circ(c, fx, 54, 5.5); c.fillStyle = pal.dark; circ(c, fx, 54, 2.4);
       });
-      // hasar
-      var pct = b.hp / b.max;
-      if (pct < 0.6) { c.strokeStyle = 'rgba(30,30,40,.6)'; c.lineWidth = 2; c.beginPath(); c.moveTo(ox + 140, y0 + 6); c.lineTo(ox + 152, y0 + 26); c.lineTo(ox + 142, y0 + 46); c.stroke(); }
-      if (pct < 0.3 && Math.random() < 0.25 && this.parts.length < 380) this.parts.push({ x: ox + 40 + Math.random() * 640, y: y0 + h / 2, vx: (Math.random() - 0.5) * 12, vy: team === 0 ? -30 : 30, life: 1, max: 1, size: 7, col: 'rgba(80,80,90,.7)', g: 0, shrink: false });
-      if (b.flash > 0) { c.globalAlpha = b.flash * 3; c.fillStyle = '#fff'; c.fillRect(ox + 8, y0, w - 16, h); c.globalAlpha = 1; }
-      // can cubugu
-      var by = team === 0 ? y0 + h + 12 : y0 - 24, bw = 380, bx = ox + (w - bw) / 2;
+      // kuleler: silindir govde + konik cati
+      var towers = [ox + 44, ox + 240, ox + 480, ox + DW - 44];
+      for (var ti = 0; ti < towers.length; ti++) {
+        var tx = towers[ti], bw = 30;
+        c.fillStyle = 'rgba(0,0,0,.3)'; ell(c, tx + 6, h + 4, 42, 10);
+        var bg2 = c.createLinearGradient(tx - bw, 0, tx + bw, 0); bg2.addColorStop(0, '#6c6e80'); bg2.addColorStop(0.4, '#b4b6c6'); bg2.addColorStop(1, '#5b5d70');
+        c.fillStyle = bg2; rrect(c, tx - bw, 30, bw * 2, h - 26, 12); c.fill();
+        c.strokeStyle = 'rgba(30,32,48,.35)'; c.lineWidth = 1.4; for (var rr = 0; rr < 4; rr++) { c.beginPath(); c.moveTo(tx - bw + 3, 44 + rr * 11); c.lineTo(tx + bw - 3, 44 + rr * 11); c.stroke(); }
+        c.fillStyle = '#12131c'; rrect(c, tx - 3.5, 52, 7, 17, 3); c.fill();                                // ok yuvasi
+        c.fillStyle = pal.trim; c.fillRect(tx - bw, 30, bw * 2, 4); c.fillStyle = pal.dark; c.fillRect(tx - bw, 34, bw * 2, 5);   // takim kusagi
+        // konik cati (ustten): dilimler
+        var cx = tx, cy = 24, cr = 34;
+        c.fillStyle = 'rgba(0,0,0,.28)'; circ(c, cx + 4, cy + 6, cr);
+        c.fillStyle = pal.dark; circ(c, cx, cy, cr);
+        for (var sgm = 0; sgm < 12; sgm++) {
+          var a0 = sgm * TAU / 12 + 0.2, a1 = a0 + TAU / 12;
+          c.fillStyle = sgm % 2 ? pal.main : pal.cloth; c.beginPath(); c.moveTo(cx - 3, cy - 4); c.arc(cx, cy, cr - 2, a0, a1); c.closePath(); c.fill();
+          if (sgm === 8 || sgm === 9 || sgm === 10) { c.fillStyle = 'rgba(255,255,255,.2)'; c.fill(); }
+        }
+        c.strokeStyle = pal.trim; c.lineWidth = 2.4; c.beginPath(); c.arc(cx, cy, cr - 1, 0, TAU); c.stroke();
+        c.fillStyle = '#ffd24d'; circ(c, cx - 3, cy - 4, 5); c.fillStyle = '#fff3b0'; circ(c, cx - 4.4, cy - 5.4, 1.8);
+        // sancak (sadece uc kuleler)
+        if (ti === 0 || ti === 3) {
+          line(c, cx - 3, cy - 4, cx - 3, cy - 44, 3, '#5b4a3a');
+          c.fillStyle = pal.main; c.beginPath(); c.moveTo(cx - 3, cy - 44); c.lineTo(cx + 28 + sw, cy - 37); c.lineTo(cx + 20 + sw * 0.6, cy - 30); c.lineTo(cx + 28 + sw, cy - 22); c.lineTo(cx - 3, cy - 24); c.closePath(); c.fill();
+          c.strokeStyle = OUT; c.lineWidth = 1.2; c.stroke(); c.fillStyle = pal.trim; circ(c, cx + 10, cy - 33, 4);
+        }
+        if (pct < 0.3) { // yanan kuleler
+          for (var fl2 = 0; fl2 < 3; fl2++) { var ff = 0.7 + 0.3 * Math.sin(t * 9 + fl2 * 2 + ti); c.fillStyle = 'rgba(255,' + (110 + fl2 * 40) + ',30,.85)'; ell(c, cx - 10 + fl2 * 10, cy - 6 - fl2 * 2, 6 * ff, 11 * ff); }
+        }
+      }
+      // hasar: catlaklar
+      if (pct < 0.6) { c.strokeStyle = 'rgba(20,20,30,.7)'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(ox + 130, 38); c.lineTo(ox + 142, 54); c.lineTo(ox + 132, 66); c.lineTo(ox + 146, 80); c.moveTo(ox + 520, 40); c.lineTo(ox + 508, 58); c.lineTo(ox + 518, 72); c.stroke(); }
+      if (b.flash > 0) { c.globalAlpha = Math.min(0.8, b.flash * 4); c.fillStyle = '#fff'; c.fillRect(ox + 4, 0, DW - 8, h); c.globalAlpha = 1; }
+      c.restore();
+      if (pct < 0.3 && Math.random() < 0.3 && this.parts.length < 380) this.parts.push({ x: this.ox + 40 + Math.random() * 640, y: y0 + h * 0.4, vx: (Math.random() - 0.5) * 12, vy: team === 0 ? -34 : 34, life: 1, max: 1, size: 8, col: 'rgba(70,70,80,.65)', g: 0, shrink: false });
+
+      // can cubugu (saha tarafinda dusman, altta oyuncu)
+      var by = team === 0 ? y0 + h + 8 : y0 + h + 6, bw2 = 420, bx = ox + (DW - bw2) / 2;
+      c.save();
       if (b.max < 1e8) {
-        c.fillStyle = 'rgba(0,0,0,.6)'; rrect(c, bx - 3, by - 3, bw + 6, 20, 9); c.fill();
-        c.fillStyle = pct > 0.5 ? '#4ade80' : pct > 0.25 ? '#fbbf24' : '#ef4444'; rrect(c, bx, by, Math.max(0, bw * pct), 14, 7); c.fill();
-        c.font = 'bold 13px system-ui'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.fillText(Math.max(0, Math.ceil(b.hp)) + ' / ' + Math.ceil(b.max), ox + w / 2, by + 12);
+        c.fillStyle = 'rgba(0,0,0,.65)'; rrect(c, bx - 4, by - 4, bw2 + 8, 26, 13); c.fill();
+        c.strokeStyle = pct > 0.5 ? '#2c7a4b' : pct > 0.25 ? '#9a7410' : '#8a1a1a'; c.lineWidth = 2; c.stroke();
+        var hg = c.createLinearGradient(0, by, 0, by + 18);
+        if (pct > 0.5) { hg.addColorStop(0, '#7df2a8'); hg.addColorStop(1, '#27b869'); } else if (pct > 0.25) { hg.addColorStop(0, '#ffd966'); hg.addColorStop(1, '#e09a12'); } else { hg.addColorStop(0, '#ff8a8a'); hg.addColorStop(1, '#d62f2f'); }
+        c.fillStyle = hg; rrect(c, bx, by, Math.max(0, bw2 * pct), 18, 9); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.28)'; rrect(c, bx + 3, by + 2, Math.max(0, bw2 * pct - 6), 5, 3); c.fill();
+        c.font = '800 14px system-ui'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)';
+        var tl = Math.max(0, Math.ceil(b.hp)) + ' / ' + Math.ceil(b.max); c.strokeText(tl, ox + DW / 2, by + 14); c.fillStyle = '#fff'; c.fillText(tl, ox + DW / 2, by + 14);
       } else {
-        c.fillStyle = 'rgba(0,0,0,.6)'; rrect(c, bx + bw / 2 - 90, by - 3, 180, 20, 9); c.fill();
-        c.font = 'bold 13px system-ui'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.fillText('Yıkılamaz kale', ox + w / 2, by + 12);
+        c.fillStyle = 'rgba(0,0,0,.65)'; rrect(c, ox + DW / 2 - 100, by - 4, 200, 26, 13); c.fill();
+        c.font = '800 14px system-ui'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.fillText('Yıkılamaz kale', ox + DW / 2, by + 14);
       }
       c.restore();
     },
 
-    // ---- Birlikler (kuşbakışı; oyuncu yukari, dusman asagi bakar) ---------
+    // ---- Birlikler (kusbakisi; oyuncu yukari, dusman asagi bakar) ---------
+    // Performans: her sinif x takim x durum (bekle/yuru/saldir) kareleri bir kez cizilip onbellege alinir,
+    // her karede yalnizca drawImage ile basilir. Sade efektler (donma, parlama, kalkan) uste canli cizilir.
+    SN: { i: 6, m: 8, a: 4 },
+    getSprite: function (cls, team, st, idx) {
+      var cache = this.sprites || (this.sprites = {}), key = cls + team + st + idx;
+      return cache[key] || (cache[key] = this.renderSprite(cls, team, st, idx));
+    },
+    renderSprite: function (cls, team, st, idx) {
+      var Sc = this.px * SPR, cv = document.createElement('canvas');
+      cv.width = Math.ceil(92 * Sc); cv.height = Math.ceil(120 * Sc);
+      var g = cv.getContext('2d'), pal = PAL[team], walk = 0, atk = 0, lunge = 0, ph = 0, age = 0, t = 0;
+      g.setTransform(Sc, 0, 0, Sc, 46 * Sc, 74 * Sc);
+      if (st === 'm') { ph = idx / this.SN.m * TAU; walk = Math.sin(ph); t = ph; age = ph / 7; }
+      else if (st === 'i') { t = idx / this.SN.i * TAU; }
+      else { atk = [0.85, 0.6, 0.35, 0.12][idx]; lunge = Math.sin((1 - atk) * Math.PI); }
+      var shw = cls === 'cav' ? [16, 26] : cls === 'cata' ? [24, 26] : [13, 10];
+      g.fillStyle = 'rgba(0,0,0,.22)'; ell(g, 3, 6, shw[0] + 3, shw[1] + 2); g.fillStyle = 'rgba(0,0,0,.2)'; ell(g, 3, 6, shw[0], shw[1]);
+      outline(g);
+      g.rotate(walk * 0.05);
+      switch (cls) {
+        case 'spear': this.dSpear(g, pal, team, walk, lunge, t); break;
+        case 'archer': this.dArcher(g, pal, team, walk, atk, t); break;
+        case 'cav': this.dCav(g, pal, team, walk, lunge, age, t); break;
+        case 'knight': this.dKnight(g, pal, team, walk, lunge, t); break;
+        case 'mage': this.dMage(g, pal, team, walk, atk, t); break;
+        case 'cata': this.dCata(g, pal, idx * 6, atk, t); break;
+        case 'healer': this.dHealer(g, pal, team, walk, atk, t); break;
+        case 'banner': this.dBanner(g, pal, team, walk, lunge, t); break;
+      }
+      return cv;
+    },
     drawUnit: function (c, u) {
-      var x = this.laneX(u.lane) + ((u.id * 37) % 5 - 2) * 13, y = this.Y(u.x), dirY = u.team === 0 ? 1 : -1, pal = PAL[u.team], s = u.boss ? 1.55 : 1;
+      var y = this.Y(u.x), x = this.roadX(u.lane, y) + ((u.id * 37) % 5 - 2) * 13, dirY = u.team === 0 ? 1 : -1, s = (u.boss ? 1.55 : 1) * SPR;
       if (u.age < 0.3) { var q = u.age / 0.3; s *= 0.5 + 0.5 * (1 - Math.pow(1 - q, 3)); }
-      var walk = u.moving ? Math.sin(u.age * u.speed * 0.12) : 0;
-      var atk = u.atkAnim > 0 ? u.atkAnim / 0.25 : 0, lunge = atk > 0 ? Math.sin((1 - atk) * Math.PI) : 0;
+      var atk = u.atkAnim > 0 ? u.atkAnim / 0.25 : 0, st, idx;
+      if (atk > 0) { st = 'a'; idx = Math.min(this.SN.a - 1, Math.floor((1 - atk) * this.SN.a)); }
+      else if (u.moving) { st = 'm'; idx = Math.floor(((u.age * u.speed * 0.0191) % 1) * this.SN.m); }
+      else { st = 'i'; idx = Math.floor(((this.time * 0.55 + u.id * 0.137) % 1) * this.SN.i); }
+      var img = this.getSprite(u.cls, u.team, st, idx), k = s / SPR;
 
       if (u.aura) { // sancak aurasi (yer duzleminde)
-        c.save(); c.translate(x, y); c.fillStyle = 'rgba(255,210,77,' + (0.07 + 0.03 * Math.sin(this.time * 3)) + ')'; ell(c, 0, 0, 100, 160 * this.s); c.restore();
+        c.save(); c.translate(x, y); c.fillStyle = 'rgba(255,210,77,' + (0.08 + 0.03 * Math.sin(this.time * 3)) + ')'; ell(c, 0, 0, 100, 160 * this.s);
+        c.strokeStyle = 'rgba(255,210,77,.22)'; c.lineWidth = 2; c.setLineDash([8, 8]); c.beginPath(); c.ellipse(0, 0, 100, 160 * this.s, 0, 0, TAU); c.stroke(); c.restore();
       }
       c.save();
-      c.translate(x, y); c.scale(s, s * dirY);
-      c.fillStyle = 'rgba(0,0,0,.28)'; ell(c, 3, 5, u.cls === 'cav' ? 15 : u.cls === 'cata' ? 22 : 13, u.cls === 'cav' ? 24 : u.cls === 'cata' ? 24 : 9);
-      if (u.boss) { c.fillStyle = 'rgba(255,60,60,' + (0.18 + 0.08 * Math.sin(this.time * 6)) + ')'; circ(c, 0, 0, 32); }
-      switch (u.cls) {
-        case 'spear': this.dSpear(c, pal, walk, lunge); break;
-        case 'archer': this.dArcher(c, pal, walk, atk); break;
-        case 'cav': this.dCav(c, pal, walk, lunge, u.age); break;
-        case 'knight': this.dKnight(c, pal, walk, lunge); break;
-        case 'mage': this.dMage(c, pal, walk, atk); break;
-        case 'cata': this.dCata(c, pal, u.x, atk); break;
-        case 'healer': this.dHealer(c, pal, walk, atk, this.time); break;
-        case 'banner': this.dBanner(c, pal, walk, lunge, this.time); break;
+      c.translate(x, y); if (dirY < 0) c.scale(1, -1);
+      if (u.boss) { var ag = c.createRadialGradient(0, 0, 4, 0, 0, 40); ag.addColorStop(0, 'rgba(255,70,70,' + (0.4 + 0.15 * Math.sin(this.time * 6)) + ')'); ag.addColorStop(1, 'rgba(255,70,70,0)'); c.fillStyle = ag; circ(c, 0, 0, 40); }
+      c.drawImage(img, -46 * s, -74 * s, 92 * s, 120 * s);
+      c.scale(s, s);
+      if (u.stunUntil > this.battle.t) { // donmus: buz kabugu
+        c.fillStyle = 'rgba(170,220,255,.6)'; rrect(c, -17, -32, 34, 56, 10); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 2; c.beginPath(); c.moveTo(-11, -24); c.lineTo(-4, -8); c.moveTo(10, -28); c.lineTo(4, -12); c.moveTo(-9, 12); c.lineTo(0, 0); c.moveTo(8, 6); c.lineTo(13, 18); c.stroke();
       }
-      if (u.stunUntil > this.battle.t) { // donmus
-        c.fillStyle = 'rgba(160,215,255,.55)'; rrect(c, -16, -30, 32, 52, 9); c.fill();
-        c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2; c.beginPath(); c.moveTo(-10, -22); c.lineTo(-4, -8); c.moveTo(9, -26); c.lineTo(4, -12); c.moveTo(-8, 10); c.lineTo(0, 0); c.stroke();
-      }
-      if (u.flash > 0) { c.globalAlpha = Math.min(0.7, u.flash * 6); c.fillStyle = '#fff'; ell(c, 0, -4, 15, 20); c.globalAlpha = 1; }
-      if (u.wardUntil > this.battle.t) { c.strokeStyle = 'rgba(110,231,183,.85)'; c.lineWidth = 2.5; c.beginPath(); c.arc(0, -2, 24, 0, TAU); c.stroke(); }
+      if (u.flash > 0) { c.globalAlpha = Math.min(0.75, u.flash * 6); c.fillStyle = '#fff'; ell(c, 0, -4, 16, 22); c.globalAlpha = 1; }
+      if (u.wardUntil > this.battle.t) { c.strokeStyle = 'rgba(110,231,183,.9)'; c.lineWidth = 2.5; c.beginPath(); c.arc(0, -2, 25, 0, TAU); c.stroke(); c.fillStyle = 'rgba(110,231,183,.14)'; c.fill(); }
       c.restore();
-      if (u.boss) { c.fillStyle = '#ffd23f'; var cy = y - 62; c.beginPath(); c.moveTo(x - 9, cy + 10); c.lineTo(x - 9, cy); c.lineTo(x - 4, cy + 6); c.lineTo(x, cy - 3); c.lineTo(x + 4, cy + 6); c.lineTo(x + 9, cy); c.lineTo(x + 9, cy + 10); c.fill(); }
 
-      if (u.hp < u.max) {
-        var bw = 32 * Math.min(s, 1.4), by = y - 40 * s - (u.cls === 'cav' || u.cls === 'cata' ? 12 : 0), f = Math.max(0, u.hp / u.max);
-        c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(x - bw / 2 - 1, by - 1, bw + 2, 6);
-        c.fillStyle = u.team === 0 ? '#4ade80' : '#f87171'; c.fillRect(x - bw / 2, by, bw * f, 4);
+      var ext = { spear: 54, archer: 30, cav: 58, knight: 36, mage: 38, cata: 42, healer: 34, banner: 58 }[u.cls] || 40;
+      var rear = { cav: 36, cata: 30, banner: 20 }[u.cls] || 20;
+      var top = y - (u.team === 0 ? ext : rear) * s - 6;
+      if (u.boss) { c.fillStyle = '#ffd23f'; c.strokeStyle = OUT; c.lineWidth = 1.2; var cy = top - 12; c.beginPath(); c.moveTo(x - 10, cy + 10); c.lineTo(x - 10, cy); c.lineTo(x - 5, cy + 6); c.lineTo(x, cy - 4); c.lineTo(x + 5, cy + 6); c.lineTo(x + 10, cy); c.lineTo(x + 10, cy + 10); c.closePath(); c.fill(); c.stroke(); }
+      if (u.hp < u.max) { // can cubugu
+        var bw = 38 * Math.min(k, 1.4), f = Math.max(0, u.hp / u.max);
+        c.fillStyle = 'rgba(0,0,0,.7)'; rrect(c, x - bw / 2 - 2, top - 2, bw + 4, 9, 4.5); c.fill();
+        var hg = c.createLinearGradient(0, top, 0, top + 5);
+        if (u.team === 0) { hg.addColorStop(0, '#8cf5b0'); hg.addColorStop(1, '#2dbd6a'); } else { hg.addColorStop(0, '#ff9a9a'); hg.addColorStop(1, '#d33a3a'); }
+        c.fillStyle = hg; rrect(c, x - bw / 2, top, Math.max(1, bw * f), 5, 2.5); c.fill();
       }
     },
-    // yerel koordinat: orijin = birligin zemin noktasi, ON = -y
-    feet: function (c, walk, col) {
-      c.fillStyle = col; ell(c, -5, 7 + walk * 3, 3.6, 4.6); ell(c, 5, 7 - walk * 3, 3.6, 4.6);
+
+    // yerel koordinat: orijin = birligin zemin noktasi, ON = -y. Konturlar outline() ile.
+    feet: function (c, walk, col) { E(c, -5, 9 + walk * 3.5, 3.8, 4.8, col); E(c, 5, 9 - walk * 3.5, 3.8, 4.8, col); },
+    helmet: function (c, x, y, r, p, team) {
+      if (team === 1) { // dusman: boynuzlu karanlik miğfer
+        poly(c, [[x - r * 0.6, y - r * 0.5], [x - r * 1.5, y - r * 1.9], [x - r * 0.2, y - r * 0.9]], '#d9d0b8');
+        poly(c, [[x + r * 0.6, y - r * 0.5], [x + r * 1.5, y - r * 1.9], [x + r * 0.2, y - r * 0.9]], '#d9d0b8');
+      }
+      c.beginPath(); c.arc(x, y, r, 0, TAU); fe(c, mgrad(c, x, y, r, p));
+      c.strokeStyle = p.metalD; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y - r); c.lineTo(x, y + r * 0.2); c.stroke(); outline(c);
+      if (team === 0) { c.beginPath(); c.ellipse(x, y - r * 0.15, r * 0.3, r * 1.05, 0, 0, TAU); fe(c, p.main); } // takim tuyu
+      else { c.fillStyle = p.main; c.fillRect(x - r * 0.3, y - r * 0.9, r * 0.6, r * 1.2); }
     },
-    dSpear: function (c, pal, walk, lunge) {
-      this.feet(c, walk, '#3a3a4a');
-      var ext = lunge * 12;
-      line(c, 10, 8, 10, -34 - ext, 2.8, '#7a5a35');
-      c.fillStyle = '#e5e7eb'; c.beginPath(); c.moveTo(10, -46 - ext); c.lineTo(14, -33 - ext); c.lineTo(6, -33 - ext); c.fill();
-      c.fillStyle = pal.main; ell(c, 0, 1, 11, 9); c.fillStyle = pal.trim; c.fillRect(-11, 0, 22, 2.4);
-      c.fillStyle = pal.dark; circ(c, -12, -3, 8); c.fillStyle = pal.trim; circ(c, -12, -3, 3);
-      c.fillStyle = '#9ca3af'; circ(c, 0, -8, 7); c.fillStyle = pal.main; circ(c, 0, -12, 2.6);
+    dSpear: function (c, pal, team, walk, lunge, t) {
+      var ext = lunge * 13;
+      c.beginPath(); c.moveTo(-8, 3); c.quadraticCurveTo(-10 + Math.sin(t * 7) * 2, 16, 0, 20); c.quadraticCurveTo(10 + Math.sin(t * 7) * 2, 16, 8, 3); c.closePath(); fe(c, pal.cloth);   // pelerin
+      this.feet(c, walk, '#2b2f3a');
+      E(c, 0, 2, 11.5, 9.5, mgrad(c, 0, 2, 11, pal));                                                                    // zirh
+      RR(c, -5.5, -5, 11, 19, 3, pal.main); c.fillStyle = pal.trim; c.fillRect(-5.5, 5, 11, 2.6); c.fillRect(-1.2, -5, 2.4, 19);  // tabard
+      O(c, -11.5, -1, 5.2, mgrad(c, -11.5, -1, 5, pal)); O(c, 11.5, -1, 5.2, mgrad(c, 11.5, -1, 5, pal));                // omuzluk
+      O(c, -14, -5, 10, pal.metalD); O(c, -14, -5, 8, pal.main);                                                         // kalkan
+      c.fillStyle = pal.dark; c.beginPath(); c.moveTo(-14, -5); c.arc(-14, -5, 8, 0, Math.PI / 2); c.closePath(); c.fill(); c.beginPath(); c.moveTo(-14, -5); c.arc(-14, -5, 8, Math.PI, Math.PI * 1.5); c.closePath(); c.fill();
+      O(c, -14, -5, 2.8, pal.trim);
+      line(c, 12.5, 13, 12.5, -36 - ext, 3, '#7a5530'); line(c, 12.5, 13, 12.5, -36 - ext, 1, '#b08a58');               // mizrak
+      poly(c, [[12.5, -55 - ext], [16.5, -41 - ext], [12.5, -37 - ext], [8.5, -41 - ext]], '#eef2f8');
+      c.beginPath(); c.moveTo(12.5, -39 - ext); c.lineTo(24 + Math.sin(t * 9) * 3, -35 - ext); c.lineTo(12.5, -31 - ext); c.closePath(); fe(c, pal.main);  // flama
+      this.helmet(c, 0, -8, 7.6, pal, team);
     },
-    dArcher: function (c, pal, walk, atk) {
+    dArcher: function (c, pal, team, walk, atk, t) {
+      RR(c, 2, 3, 6, 15, 2.5, '#7a5230'); c.fillStyle = pal.light; c.fillRect(3, 0, 1.8, 5); c.fillStyle = '#ffffff'; c.fillRect(5.6, -1, 1.8, 6);   // sadak
+      c.beginPath(); c.moveTo(-6, 0); c.quadraticCurveTo(-12, 12, 0, 18); c.quadraticCurveTo(12, 12, 6, 0); c.closePath(); fe(c, pal.dark);   // pelerin
       this.feet(c, walk, '#3d3322');
-      c.fillStyle = '#7a5a35'; c.fillRect(2, 2, 5, 12); c.fillStyle = '#e9d8a6'; c.fillRect(3, 0, 1.4, 4); c.fillRect(5.4, 0, 1.4, 4); // sadak
-      c.fillStyle = pal.dark; ell(c, 0, 1, 9, 8);
-      var pull = atk > 0 ? (1 - atk) * 8 : 3;
-      c.strokeStyle = '#7a5a35'; c.lineWidth = 2.8; c.beginPath(); c.arc(0, -4, 17, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
-      var ax = 17 * Math.cos(Math.PI * 1.15), ay = -4 + 17 * Math.sin(Math.PI * 1.15), bx = 17 * Math.cos(Math.PI * 1.85);
-      c.strokeStyle = '#eee'; c.lineWidth = 1; c.beginPath(); c.moveTo(ax, ay); c.lineTo(0, -4 + pull * 0.6 - 2); c.lineTo(bx, ay); c.stroke();
-      if (atk === 0 || atk < 0.6) line(c, 0, -2 + pull * 0.4, 0, -24, 1.6, '#e9d8a6');
-      c.fillStyle = pal.main; circ(c, 0, -7, 6.4); c.fillStyle = pal.dark; circ(c, 0, -7, 2.4);
+      E(c, 0, 2, 9.5, 8, pal.main); c.fillStyle = '#5b4426'; c.fillRect(-9, 3, 18, 2.4);                                  // yelek + kemer
+      O(c, -10, -3, 3.6, SKIN); O(c, 10, -6, 3.6, SKIN);
+      var pull = atk > 0 ? (1 - atk) * 10 : 3;
+      c.strokeStyle = '#6b4a2a'; c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.arc(0, -4, 19, Math.PI * 1.12, Math.PI * 1.88); c.stroke();
+      c.strokeStyle = '#c9a36a'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, -4, 19, Math.PI * 1.12, Math.PI * 1.88); c.stroke();
+      var ax = 19 * Math.cos(Math.PI * 1.12), ay = -4 + 19 * Math.sin(Math.PI * 1.12), bx = 19 * Math.cos(Math.PI * 1.88);
+      c.strokeStyle = '#f4f4f4'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(ax, ay); c.lineTo(0, -4 + pull * 0.5 - 1); c.lineTo(bx, ay); c.stroke(); outline(c);
+      if (atk === 0 || atk < 0.6) { line(c, 0, -3 + pull * 0.5, 0, -32, 2, '#efe3b8'); poly(c, [[0, -37], [2.6, -31], [-2.6, -31]], '#e8edf5'); c.fillStyle = pal.light; c.fillRect(-2, -5 + pull * 0.5, 4, 4); }
+      c.beginPath(); c.moveTo(-3, 0); c.lineTo(0, 10); c.lineTo(3, 0); c.closePath(); fe(c, pal.main);                         // kapuson kuyrugu
+      O(c, 0, -7, 7, pal.main); O(c, 0, -6, 3.8, pal.dark);
+      if (team === 1) { poly(c, [[-5, -10], [-9, -17], [-2, -12]], '#d9d0b8'); poly(c, [[5, -10], [9, -17], [2, -12]], '#d9d0b8'); }
     },
-    dCav: function (c, pal, walk, lunge, age) {
-      var g = Math.sin(age * 14) * (walk !== 0 ? 1 : 0.1);
-      c.fillStyle = '#6b4423';
-      [[-9, -10], [9, -10], [-9, 12], [9, 12]].forEach(function (L, i) { ell(c, L[0], L[1] + g * (i % 2 ? 5 : -5), 3, 6); });
-      c.fillStyle = '#9a6a3a'; ell(c, 0, 2, 11, 21);
-      c.fillStyle = '#9a6a3a'; ell(c, 0, -22, 5.6, 9); c.fillStyle = '#2b1a0c'; ell(c, 0, -17, 2.4, 8);
-      c.fillStyle = '#2b1a0c'; c.beginPath(); c.moveTo(0, 22); c.lineTo(-4, 31); c.lineTo(4, 31); c.fill();
-      c.fillStyle = pal.main; rrect(c, -10, -4, 20, 14, 4); c.fill(); c.fillStyle = pal.trim; c.fillRect(-10, 2, 20, 2.2);
-      var ext = lunge * 10;
-      line(c, 8, 8, 8, -44 - ext, 2.8, '#7a5a35');
-      c.fillStyle = '#e5e7eb'; c.beginPath(); c.moveTo(8, -56 - ext); c.lineTo(12, -43 - ext); c.lineTo(4, -43 - ext); c.fill();
-      c.fillStyle = pal.main; c.beginPath(); c.moveTo(8, -40 - ext); c.lineTo(20, -35 - ext); c.lineTo(8, -30 - ext); c.fill();
-      c.fillStyle = pal.dark; ell(c, 0, 0, 8, 6.6); c.fillStyle = '#9ca3af'; circ(c, 0, -5, 6); c.fillStyle = pal.main; circ(c, 0, -9, 2.4);
+    dCav: function (c, pal, team, walk, lunge, age, t) {
+      var coat = team === 0 ? '#ece5d6' : '#3b3034', coatD = team === 0 ? '#bdb199' : '#1f181b', g = Math.sin(age * 14) * (walk !== 0 ? 1 : 0.1);
+      [[-9, -12], [9, -12], [-9, 13], [9, 13]].forEach(function (L, i) { E(c, L[0], L[1] + g * (i % 2 ? 5.5 : -5.5), 3.2, 6.6, coatD); });
+      c.beginPath(); c.moveTo(0, 22); c.quadraticCurveTo(-7 + Math.sin(t * 6) * 2, 34, -2, 38); c.quadraticCurveTo(5, 34, 0, 22); fe(c, '#2a2018');                                       // kuyruk
+      E(c, 0, 2, 12.5, 22.5, coat);                                                                                   // govde
+      c.fillStyle = 'rgba(255,255,255,.2)'; ell(c, -4, -2, 4, 15);
+      E(c, 0, -23, 6.6, 10.5, coat); E(c, 0, -32, 4.2, 5.2, coatD);                                                   // boyun + burun
+      c.strokeStyle = '#2a2018'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, -30); c.lineTo(0, -14); c.stroke(); outline(c);   // yele
+      c.strokeStyle = '#c0392b'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-4.4, -27); c.lineTo(4.4, -27); c.stroke(); outline(c);   // dizgin
+      poly(c, [[-5, -16], [-8, -22], [-3, -19]], coatD); poly(c, [[5, -16], [8, -22], [3, -19]], coatD);              // kulaklar
+      RR(c, -11.5, -6, 23, 17, 5, pal.main); c.fillStyle = pal.trim; c.fillRect(-11.5, 1, 23, 2.6); c.fillRect(-11.5, 8, 23, 2);   // eyer ortusu
+      c.beginPath(); c.moveTo(-7, 2); c.lineTo(7, 2); c.lineTo(5 + Math.sin(t * 8) * 2, 18); c.lineTo(-5 + Math.sin(t * 8) * 2, 18); c.closePath(); fe(c, pal.cloth);   // binici pelerini
+      E(c, 0, -1, 8.4, 7, mgrad(c, 0, -1, 8, pal)); O(c, -8.4, -2, 3.6, mgrad(c, -8.4, -2, 3.6, pal)); O(c, 8.4, -2, 3.6, mgrad(c, 8.4, -2, 3.6, pal));
+      var ext = lunge * 11;
+      line(c, 10, 12, 10, -48 - ext, 3.2, '#7a5530'); line(c, 10, 12, 10, -48 - ext, 1, '#b08a58');
+      poly(c, [[10, -62 - ext], [13.6, -48 - ext], [6.4, -48 - ext]], '#eef2f8');
+      c.beginPath(); c.moveTo(10, -44 - ext); c.lineTo(24 + Math.sin(t * 9) * 3, -39 - ext); c.lineTo(10, -33 - ext); c.closePath(); fe(c, pal.main);
+      this.helmet(c, 0, -7, 6.8, pal, team);
     },
-    dKnight: function (c, pal, walk, lunge) {
-      this.feet(c, walk, '#4b5563');
-      var sw = lunge * 12;
-      line(c, 14, 6, 14, -32 - sw, 3.4, '#d1d5db'); line(c, 9, -2, 19, -2, 3, '#a16207');
-      c.fillStyle = '#9aa3b2'; ell(c, 0, 1, 15, 11);
-      c.fillStyle = '#c0c7d4'; circ(c, -14, -1, 6.4); circ(c, 14, -1, 6.4);
-      c.fillStyle = pal.dark; rrect(c, -27, -18, 15, 28, 6); c.fill(); c.fillStyle = pal.trim; c.fillRect(-20.4, -16, 2.2, 24); c.fillRect(-25, -6, 11, 2.4);
-      c.fillStyle = '#b6bdca'; circ(c, 0, -9, 8); c.fillStyle = '#1f2937'; c.fillRect(-5, -16, 10, 2.4);
-      c.fillStyle = pal.main; c.beginPath(); c.arc(0, -4, 8, Math.PI * 0.2, Math.PI * 0.8); c.lineTo(0, -4); c.fill();
+    dKnight: function (c, pal, team, walk, lunge, t) {
+      var sw = lunge * 13;
+      this.feet(c, walk, '#3f4654');
+      line(c, 16, 9, 16, -36 - sw, 4.2, '#2c3140'); line(c, 16, 9, 16, -36 - sw, 3, '#eef2f8'); line(c, 15.2, 6, 15.2, -34 - sw, 1, '#ffffff');   // kilic
+      line(c, 10, -2, 22, -2, 3.8, '#c79a2c'); O(c, 16, 12, 2.6, '#c79a2c');
+      E(c, 0, 2, 16, 12.5, mgrad(c, 0, 2, 15, pal));                                                                   // zirh
+      RR(c, -6, -7, 12, 24, 3, pal.main); c.fillStyle = pal.trim; c.fillRect(-1.4, -7, 2.8, 24); c.fillRect(-6, 4, 12, 2.6);
+      O(c, -16, -1, 8, mgrad(c, -16, -1, 8, pal)); O(c, 16, -1, 8, mgrad(c, 16, -1, 8, pal));                          // omuzluk
+      c.fillStyle = pal.hi; circ(c, -18.4, -3.6, 1.6); circ(c, 13.6, -3.6, 1.6);
+      poly(c, [[-31, -16], [-19, -16], [-19, 6], [-25, 18], [-31, 6]], pal.dark); poly(c, [[-29, -13], [-21, -13], [-21, 5], [-25, 13], [-29, 5]], pal.main);   // kalkan
+      c.fillStyle = pal.trim; c.fillRect(-26, -13, 2, 24); c.fillRect(-29, -6, 8, 2.4);
+      if (team === 0) { c.beginPath(); c.ellipse(0, -2, 3.6, 12, 0, 0, TAU); fe(c, pal.main); }                       // uzun tuy
+      this.helmet(c, 0, -9, 9, pal, team);
+      c.fillStyle = '#0d1018'; c.fillRect(-5.8, -16, 11.6, 2.8);                                                       // goz yarigi
     },
-    dMage: function (c, pal, walk, atk) {
-      c.fillStyle = pal.dark; circ(c, 0, 1, 12.5); c.fillStyle = pal.main; circ(c, 0, 1, 8.5);
-      line(c, 14, 8, 14, -30, 2.8, '#7a5a35');
-      var gl = 5 + (atk > 0 ? 6 * atk : 0) + Math.sin(walk * 9 + 1) * 0.5;
-      c.fillStyle = 'rgba(216,180,254,.4)'; circ(c, 14, -33, gl + 5); c.fillStyle = '#e9d5ff'; circ(c, 14, -33, gl); c.fillStyle = '#fff'; circ(c, 13, -34, 2);
-      c.fillStyle = pal.dark; circ(c, 0, -5, 8.4); c.fillStyle = pal.trim; circ(c, 0, -5, 3.2); c.fillStyle = SKIN; circ(c, 0, 5, 3.2);
+    dMage: function (c, pal, team, walk, atk, t) {
+      E(c, 0, 2, 14, 11.5, pal.dark); E(c, 0, 2, 9.4, 8, pal.main);                                                    // cüppe
+      c.fillStyle = '#ffd86b'; for (var k = 0; k < 7; k++) circ(c, Math.cos(k * 0.9 + 0.4) * 11.8, 2 + Math.sin(k * 0.9 + 0.4) * 9.6, 1.3);
+      O(c, -11.5, -3, 3.8, pal.dark); O(c, 13, -6, 3, SKIN);
+      line(c, 14.5, 12, 14.5, -33, 3.2, '#6b4a2a'); line(c, 14.5, 12, 14.5, -33, 1, '#a07a4a');
+      var gl = 5.4 + (atk > 0 ? 6 * atk : 0) + Math.sin(t * 6) * 0.6;
+      var og = c.createRadialGradient(14.5, -37, 1, 14.5, -37, gl + 8); og.addColorStop(0, 'rgba(240,220,255,.95)'); og.addColorStop(0.5, 'rgba(192,132,252,.5)'); og.addColorStop(1, 'rgba(192,132,252,0)');
+      c.fillStyle = og; circ(c, 14.5, -37, gl + 8); O(c, 14.5, -37, gl, '#e9d5ff'); c.fillStyle = '#fff'; circ(c, 13, -38.5, 2);
+      for (var s2 = 0; s2 < 3; s2++) { var a = t * 3 + s2 * 2.1; c.fillStyle = '#fff'; circ(c, 14.5 + Math.cos(a) * (gl + 6), -37 + Math.sin(a) * (gl + 6) * 0.6, 1.5); }
+      O(c, 0, -6, 10.5, pal.dark); O(c, 0, -7, 6.6, pal.main);                                                         // genis siperli sapka
+      c.strokeStyle = pal.trim; c.lineWidth = 2; c.beginPath(); c.arc(0, -6, 8.4, 0, TAU); c.stroke(); outline(c);
+      O(c, 0, -7.5, 2.3, pal.trim); c.fillStyle = 'rgba(255,255,255,.28)'; circ(c, -2, -9.4, 1.8);
     },
-    dCata: function (c, pal, ux, atk) {
-      var rot = (ux * 0.07) % TAU;
-      c.fillStyle = '#7a5a35'; rrect(c, -17, -22, 34, 48, 5); c.fill();
-      c.fillStyle = '#5b4426'; c.fillRect(-12, -14, 24, 5); c.fillRect(-12, 6, 24, 5);
-      [[-21, -6], [21, -6], [-21, 14], [21, 14]].forEach(function (w) {
-        c.fillStyle = '#4a3720'; rrect(c, w[0] - 4, w[1] - 8, 8, 16, 3); c.fill();
-        c.strokeStyle = '#7a5a35'; c.lineWidth = 1.4; for (var k = 0; k < 3; k++) { var yy = w[1] - 6 + ((k * 5 + Math.floor(rot * 4)) % 12); c.beginPath(); c.moveTo(w[0] - 4, yy); c.lineTo(w[0] + 4, yy); c.stroke(); }
+    dCata: function (c, pal, ux, atk, t) {
+      var rot = Math.floor((ux * 0.16) % 3), sweep = atk > 0 ? (1 - atk) : 0;
+      RR(c, -18.5, -23, 37, 51, 6, '#8b6a3c'); c.strokeStyle = 'rgba(60,40,20,.45)'; c.lineWidth = 1.2;
+      for (var k = 0; k < 6; k++) { c.beginPath(); c.moveTo(-18, -18 + k * 8); c.lineTo(18, -18 + k * 8); c.stroke(); } outline(c);
+      RR(c, -14, -14, 28, 6, 2, '#6b4f2a'); RR(c, -14, 9, 28, 6, 2, '#6b4f2a');
+      [[-23, -8], [23, -8], [-23, 14], [23, 14]].forEach(function (w) {
+        RR(c, w[0] - 4.8, w[1] - 10, 9.6, 20, 3.5, '#4a3720');
+        c.strokeStyle = '#8a6a40'; c.lineWidth = 1.6; for (var q = 0; q < 3; q++) { var yy = w[1] - 7 + ((q * 7 + rot * 2.3) % 14); c.beginPath(); c.moveTo(w[0] - 4.6, yy); c.lineTo(w[0] + 4.6, yy); c.stroke(); } outline(c);
       });
-      var ang = (atk > 0 ? (1 - atk) * Math.PI : 0); // geride bekler, atis aninda one savrulur
-      c.save(); c.rotate(-ang * 0.35);
-      line(c, 0, 18, 0, -34, 4.4, '#8a6a40'); c.fillStyle = '#4a3720'; circ(c, 0, -36, 7); if (atk === 0) { c.fillStyle = '#4a4a52'; circ(c, 0, -37, 5.4); }
-      c.restore();
-      c.fillStyle = pal.main; c.beginPath(); c.moveTo(-17, 24); c.lineTo(-30, 18); c.lineTo(-17, 12); c.fill();
+      var by = 20 - sweep * 62 + (sweep === 0 ? 0 : -2);                                                                // kova: geride -> one savrulur
+      line(c, 0, -2, 0, by, 5.2, '#2c1f10'); line(c, 0, -2, 0, by, 3.8, '#9a7442');
+      O(c, 0, -2, 4.6, '#4a3720'); O(c, 0, by, 8, '#5a4326'); if (atk === 0) O(c, 0, by, 5.2, '#6f6f7a');
+      c.strokeStyle = '#d9c9a0'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-14, 24); c.lineTo(14, 6); c.moveTo(14, 24); c.lineTo(-14, 6); c.stroke(); outline(c);   // halat
+      poly(c, [[-18, 30], [-32, 24 + Math.sin(t * 5) * 1.5], [-18, 18]], pal.main);
     },
-    dHealer: function (c, pal, walk, atk, time) {
+    dHealer: function (c, pal, team, walk, atk, t) {
       this.feet(c, walk, '#cbd5e1');
-      c.fillStyle = '#f1f5f9'; ell(c, 0, 1, 10.5, 9);
-      c.fillStyle = '#16a34a'; c.fillRect(-1.8, 1, 3.6, 10); c.fillRect(-5.4, 4.6, 10.8, 3.6);
-      line(c, 12, 8, 12, -28, 2.6, '#8a6a40');
-      var gl = 4.5 + (atk > 0 ? 5 * atk : 0) + Math.sin(time * 5) * 0.6;
-      c.fillStyle = 'rgba(110,231,183,.4)'; circ(c, 12, -31, gl + 5); c.fillStyle = '#a7f3d0'; circ(c, 12, -31, gl);
-      c.fillStyle = '#f1f5f9'; circ(c, 0, -7, 7); c.fillStyle = '#16a34a'; c.fillRect(-1.1, -11, 2.2, 7); c.fillRect(-3.6, -8.8, 7.2, 2.2);
+      E(c, 0, 2, 12, 10.5, '#f6f8fb'); c.strokeStyle = '#e0b84a'; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 2, 11, 9.5, 0, 0, TAU); c.stroke(); outline(c);
+      c.fillStyle = '#16a34a'; c.fillRect(-2, 0, 4, 12); c.fillRect(-6.4, 4, 12.8, 4);
+      O(c, -11, -2, 3.4, '#f6f8fb'); O(c, 13, -6, 3, SKIN);
+      line(c, 14, 12, 14, -31, 3, '#8a6a3a'); line(c, 14, 12, 14, -31, 1, '#c8a266');
+      var gl = 1 + (atk > 0 ? 0.5 * atk : 0), cg = c.createRadialGradient(14, -36, 1, 14, -36, 15 * gl); cg.addColorStop(0, 'rgba(180,255,220,.9)'); cg.addColorStop(1, 'rgba(110,231,183,0)');
+      c.fillStyle = cg; circ(c, 14, -36, 15 * gl); poly(c, [[14, -45], [19.5, -36], [14, -27], [8.5, -36]], '#7ef0bd'); c.fillStyle = 'rgba(255,255,255,.6)'; circ(c, 12.4, -39, 1.8);
+      if (atk > 0) { c.strokeStyle = 'rgba(126,240,189,' + atk + ')'; c.lineWidth = 2.4; c.beginPath(); c.arc(0, -2, 20 + (1 - atk) * 12, 0, TAU); c.stroke(); outline(c); }
+      O(c, 0, -7, 7.4, '#f6f8fb'); O(c, 0, -6.4, 3.8, '#dfe6ee'); c.fillStyle = '#16a34a'; c.fillRect(-1.2, -12.4, 2.4, 7); c.fillRect(-3.8, -10, 7.6, 2.4);
+      c.strokeStyle = '#e0b84a'; c.lineWidth = 1.6; c.beginPath(); c.arc(0, -7, 8.4, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); outline(c);
     },
-    dBanner: function (c, pal, walk, lunge, time) {
+    dBanner: function (c, pal, team, walk, lunge, t) {
+      var w = Math.sin(t * 4) * 4;
+      c.beginPath(); c.moveTo(-8, 3); c.quadraticCurveTo(-10, 15, 0, 19); c.quadraticCurveTo(10, 15, 8, 3); c.closePath(); fe(c, pal.cloth);
       this.feet(c, walk, '#3a3a4a');
-      var w = Math.sin(time * 4) * 4;
-      line(c, 0, 8, 0, -50, 3, '#7a5a35');
-      c.fillStyle = pal.main; c.beginPath(); c.moveTo(0, -50); c.lineTo(32 + w, -44); c.lineTo(26 + w * 0.6, -34); c.lineTo(32 + w, -24); c.lineTo(0, -22); c.closePath(); c.fill();
-      c.fillStyle = pal.trim; circ(c, 15, -36, 5); c.fillStyle = pal.dark; circ(c, 15, -36, 2.2);
-      c.fillStyle = pal.main; ell(c, -1, 2, 11, 9); c.fillStyle = pal.trim; c.fillRect(-12, 1, 23, 2.4);
-      c.fillStyle = '#9ca3af'; circ(c, -1, -6, 6.6);
-      line(c, 10, 6, 10, -10 - lunge * 8, 2.4, '#d1d5db');
+      E(c, -1, 3, 12.5, 10, mgrad(c, -1, 3, 12, pal)); RR(c, -5, -4, 10, 17, 3, pal.main); c.fillStyle = pal.trim; c.fillRect(-5, 5, 10, 2.4);
+      O(c, -12, -1, 5, mgrad(c, -12, -1, 5, pal)); O(c, 10, -1, 5, mgrad(c, 10, -1, 5, pal));
+      line(c, 12, 8, 12, -8 - lunge * 8, 2.8, '#2c3140'); line(c, 12, 8, 12, -8 - lunge * 8, 1.6, '#e5e9f0');
+      line(c, 0, 14, 0, -54, 3.4, '#6b4a2a'); line(c, 0, 14, 0, -54, 1.2, '#a07a4a');
+      c.beginPath(); c.moveTo(0, -52); c.lineTo(36 + w, -47); c.lineTo(31 + w * 0.6, -37); c.lineTo(37 + w, -27); c.lineTo(0, -24); c.closePath(); fe(c, pal.main);
+      c.strokeStyle = pal.trim; c.lineWidth = 1.8; c.beginPath(); c.moveTo(2, -49); c.lineTo(32 + w, -45); c.moveTo(2, -27); c.lineTo(33 + w, -29); c.stroke(); outline(c);
+      O(c, 18, -38, 6.4, pal.trim); O(c, 18, -38, 3.2, pal.dark);
+      for (var q = 0; q < 3; q++) { c.strokeStyle = pal.trim; c.lineWidth = 1.6; c.beginPath(); c.moveTo(8 + q * 10, -25); c.lineTo(8 + q * 10 + w * 0.2, -19); c.stroke(); } outline(c);
+      O(c, 0, -57, 3.6, pal.trim);
+      this.helmet(c, -1, -7, 7.2, pal, team);
     }
   };
 })(globalThis.Z = globalThis.Z || {});

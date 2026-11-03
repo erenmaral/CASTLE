@@ -25,6 +25,9 @@ node tests/e2e-smoke.js               # Playwright ile ekran görüntülü duman
 node tests/pwa-check.js <adres>       # manifest, service worker ve çevrimdışı açılış kontrolü
 node tests/unit-features.js           # şifacı, aura, dondurma, ganimet, çark, kayıt göçü mantık testleri
 node tests/e2e-v02.js                 # v0.2 özellikleri + eski kayıtla açılış (ekran görüntülü)
+node tests/e2e-v03.js                 # dikey format, koridor seçimi, sefer kuralları
+node tests/gallery.js                 # tüm birliklerin yakın plan görsel galerisi (3 diyar)
+node tests/perf.js                    # çizim maliyeti ölçümü
 python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 ```
 

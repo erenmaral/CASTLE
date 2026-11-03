@@ -2,6 +2,13 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.3.1 — Grafik yenileme
+- 🏰 **Kaleler çok daha belirgin:** tuğla dokulu yüksek sur, silindirik kuleler ve konik çatılar, taş kemerli kapılar (kafes dişleri, yarı açık kanatlar), meşaleler, takım kalkanları ve sancaklar. Hasar alınca çatlar, siperlikler kırılır, kuleler yanar.
+- 🌲 **Orman yolları:** koridorlar artık ormanın içinden kıvrılan toprak yollar. İki yanı yoğun orman (kuşbakışı çam ve geniş yapraklı ağaçlar, çalılar, çiçekler, kütükler, kayalar, göletler). Çölde palmiye/kaktus/kaya, buzda karlı çam ve buz kristalleri. **Her sefer kendi manzarasına sahip.**
+- ⚔️ **Daha güzel askerler:** kontur çizgileri, metal parlaklığı, pelerinler, miğfer tüyleri, ayrıntılı silahlar. Sprite'lar %28 büyütüldü. Düşmanlar boynuzlu ve koyu zırhlı, atlar takıma göre beyaz/siyah.
+- ✨ **Efektler:** güneş huzmeleri, kenar karartması, düşen yapraklar, ok ve büyü izleri, taş dumanı, kılıç darbesi yayları, savaş izleri.
+- 🎨 Arayüzde parlak düğmeler, kartlar ve paneller.
+
 ## 0.3.0 — Dikey Seferler
 - 📱 **Oyun artık dikey (portre):** menüler, harita ve savaş telefonu dik tutarak oynanır. Android'de ekran dikeye kilitli, tarayıcı sürümü de dikey açılır.
 - ⚔️ **Dikey savaş:** kalen altta, düşman kalesi üstte; 3 koridor yan yana, birlikler yukarı doğru yürür. Birlikler kuşbakışı yeniden çizildi.
