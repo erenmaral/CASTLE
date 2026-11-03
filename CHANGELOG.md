@@ -2,6 +2,18 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.4.0 — Sürdürülebilir Seferhan
+- 🌋 **2 yeni diyar, 75 bölüm:** **Volkan Diyarı** (lav çatlaklı yollar, yanmış ağaçlar, kor yağmuru, ufukta yanardağlar) ve **Gölge Bataklığı** (sis, ateşböcekleri, ışıldayan mantarlar, sazlıklar). Diyar bölüm adları temalarına uygun.
+- 🗡️ **Suikastçı:** çok hızlı; düşman saflarının arasından geçip okçu/büyücü/şifacıyı avlar. 🗿 **Taş Dev:** çok dayanıklı, darbesi çevreye de vurur. 🔥 **Alevci:** kısa menzilli alev, yanma hasarı.
+- 🐉 **Ejder Hatun** kahramanı: *Ejder Nefesi* ile koridoru 6 sn yakar.
+- 📅 **Günlük Sefer:** her gün tarihe göre değişen, **2 kurallı** özel savaş; ilerlemene göre ölçeklenir. Ödül günde bir kez.
+- 🔥💀 **Zor ve Efsane kademeleri:** Normal'de kazandığın seferleri güçlü düşmanlarla tekrar oyna; ödül ×2 / ×3, her kademede ilk galibiyette bonus elmas.
+- 🛒 **Pazar:** elmasla altın kesesi, büyük sandık, hazine hızlandırma, bonus çark hakkı.
+- 📤 **Kayıt taşıma:** Ayarlar'dan kayıt kodunu dışa/içe aktar (APK ↔ tarayıcı ↔ yeni telefon).
+- 🏆 Yeni başarımlar (9): son bölümler, Zor/Efsane, Günlük Sefer, Pazar, birlik seviyeleri.
+- ⚖️ **Ekonomi uzun vadeye göre yeniden dengelendi:** yükseltme maliyet eğrisi yumuşatıldı (`1.28^sv`), birlik seviye sınırı 25→40, kahraman/kale/hazine için de üst sınırlar ("MAKS"). Son diyarların zorluk ve düşman geliri eğrisi ayarlandı.
+- 🧰 **Geliştirici:** `docs/ICERIK.md` içerik ekleme rehberi, 10 yeni mantık testi ve veri tutarlılığı testi (bölüm/ad/hikâye sayısı, her birimin COUNTER'ı vb.), `tests/e2e-v04.js`.
+
 ## 0.3.1 — Grafik yenileme
 - 🏰 **Kaleler çok daha belirgin:** tuğla dokulu yüksek sur, silindirik kuleler ve konik çatılar, taş kemerli kapılar (kafes dişleri, yarı açık kanatlar), meşaleler, takım kalkanları ve sancaklar. Hasar alınca çatlar, siperlikler kırılır, kuleler yanar.
 - 🌲 **Orman yolları:** koridorlar artık ormanın içinden kıvrılan toprak yollar. İki yanı yoğun orman (kuşbakışı çam ve geniş yapraklı ağaçlar, çalılar, çiçekler, kütükler, kayalar, göletler). Çölde palmiye/kaktus/kaya, buzda karlı çam ve buz kristalleri. **Her sefer kendi manzarasına sahip.**

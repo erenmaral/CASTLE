@@ -20,6 +20,7 @@
   Z.mulberry32 = mulberry32;
 
   var MAX_PER_LANE = 14;
+  var PRIO = { archer: 1, mage: 1, healer: 1, cata: 1, banner: 1 }; // suikastcinin oncelikli avlari
 
   // opts: { mode:'campaign'|'endless', level, save:{unitLvl,heroLvl,castleLvl}, deck:[], hero:'aslan', seed }
   function Battle(opts) {
@@ -48,8 +49,11 @@
     this.roarUntil = 0;
 
     var castle = Z.castleHp(this.sv.castleLvl || 1);
-    this.rule = this.mode === 'endless' ? 'none' : this.info.rule;
-    var eHp = this.mode === 'endless' || this.rule === 'survive' ? 1e9 : this.info.baseHp * (this.rule === 'fortress' ? 1.4 : 1); // savunma seferinde kale yikilamaz
+    this.diff = opts.diff || 0; this.D = Z.DIFFS[this.diff];
+    this.daily = opts.daily || null;
+    this.rules = (opts.rules || (this.mode === 'endless' ? [] : [this.info.rule])).filter(function (r) { return r && r !== 'none'; });
+    this.rule = this.rules[0] || 'none';
+    var eHp = this.mode === 'endless' || this.rl('survive') ? 1e9 : this.info.baseHp * (this.rl('fortress') ? 1.4 : 1) * this.D.base; // savunma seferinde kale yikilamaz
     this.base = [
       { hp: castle, max: castle, shoot: 0.8, flash: 0 },
       { hp: eHp, max: eHp, shoot: 1.2, flash: 0 }
@@ -60,7 +64,7 @@
     // istatistikler
     this.stats = { kills: 0, spawns: 0, skills: 0, mines: 0, lost: 0, perks: 0 };
     this.combo = 0; this.comboT = 0; this.bestCombo = 0;
-    this.theme = Z.realmOf(this.mode === 'endless' ? 1 : this.level);
+    this.theme = opts.theme !== undefined ? opts.theme : Z.realmOf(this.mode === 'endless' ? 1 : this.level);
     this.perks = {}; this.perkIdx = 0; this.perkOffer = null;
   }
   Z.Battle = Battle;
@@ -71,6 +75,7 @@
   P.enemyScale = function () {
     return this.mode === 'endless' ? 1 + 0.065 * (this.wave() - 1) : this.info.scale;
   };
+  P.rl = function (name) { return this.rules.indexOf(name) >= 0; };
   P.aiRate = function () {
     return this.mode === 'endless' ? 8 + 0.8 * this.wave() : this.info.aiRate;
   };
@@ -78,9 +83,10 @@
     if (this.mode !== 'endless') return this.info.tiers;
     var w = this.wave(), t = ['spear', 'archer'];
     if (w >= 2) t.push('cav'); if (w >= 4) t.push('knight'); if (w >= 6) t.push('mage'); if (w >= 8) t.push('cata');
+    if (w >= 10) t.push('healer'); if (w >= 12) t.push('banner'); if (w >= 14) t.push('assassin'); if (w >= 17) t.push('golem'); if (w >= 20) t.push('flamer');
     return t;
   };
-  P.income = function () { return Z.mineIncome(this.mine) * (this.perks.gold ? 1.25 : 1) * (this.rule === 'rich' ? 1.3 : this.rule === 'famine' ? 0.8 : 1); };
+  P.income = function () { return Z.mineIncome(this.mine) * (this.perks.gold ? 1.25 : 1) * (this.rl('rich') ? 1.3 : this.rl('famine') ? 0.8 : 1); };
   P.goldCap = function () { return Z.mineCap(this.mine); };
   P.mineCost = function () { return this.mine < Z.MINE_COSTS.length ? Z.MINE_COSTS[this.mine] : null; };
   P.emit = function (e) { this.events.push(e); };
@@ -96,7 +102,7 @@
     if (this.laneCount(0, lane) >= MAX_PER_LANE) return false;
     var def = Z.UNITS[type];
     this.gold -= def.cost;
-    this.cooldown[type] = def.cd * (this.perks.cd ? 0.75 : 1) * (this.rule === 'fortress' ? 0.85 : 1);
+    this.cooldown[type] = def.cd * (this.perks.cd ? 0.75 : 1) * (this.rl('fortress') ? 0.85 : 1);
     this.spawn(0, type, lane);
     this.stats.spawns++;
     return true;
@@ -145,6 +151,14 @@
         this.damage(frozen[i], 55 * pw, 'freeze', false, true);
       }
     }
+    if (hero.type === 'dragon') {
+      var burning = this.units.filter(function (e) { return e.team === 1 && e.lane === lane && !e.dead; });
+      for (i = 0; i < burning.length; i++) {
+        this.ignite(burning[i], Math.max(burning[i].max * 0.05 * pw, 6), 6);
+        this.emit({ type: 'burn', x: burning[i].x, lane: lane });
+        this.damage(burning[i], 40 * pw, 'dragon', false, true);
+      }
+    }
     this.heroCd = hero.cd * (this.perks.skill ? 0.7 : 1);
     this.stats.skills++;
     this.emit({ type: 'skill', kind: hero.type, lane: lane });
@@ -159,7 +173,7 @@
       hpM = Z.unitHpMult(lvl); dmgM = Z.unitDmgMult(lvl);
     } else {
       var s = this.enemyScale();
-      hpM = s * (this.rule === 'heavy' ? 1.2 : 1); dmgM = 1 + (s - 1) * 0.8;
+      hpM = s * (this.rl('heavy') ? 1.2 : 1) * this.D.hp; dmgM = (1 + (s - 1) * 0.8) * this.D.dmg;
     }
     if (boss) { hpM *= 3; dmgM *= 1.15; }
     if (team === 0 && this.perks.hp) hpM *= 1.15;
@@ -168,6 +182,7 @@
       x: team === 0 ? C.PF + 10 : C.EF - 10,
       hp: def.hp * hpM, max: def.hp * hpM, dmg: def.dmg * dmgM,
       int: def.int, range: def.range, speed: def.speed, ranged: def.ranged, aoe: def.aoe || 0, minRange: def.minRange || 0, heal: !!def.heal, aura: !!def.aura, stunUntil: 0,
+      assassin: def.cls === 'assassin', splash: def.splash || 0, flame: !!def.flame, burnUntil: 0, burnDps: 0, burnTick: 0,
       atkCd: def.int * 0.5, atkAnim: 0, flash: 0, age: 0, dead: false, charged: false, wardUntil: 0, moving: false
     };
     this.units.push(u);
@@ -194,7 +209,7 @@
     if (u.team === 1) {
       this.stats.kills++;
       this.comboT = 3; this.combo++; if (this.combo > this.bestCombo) this.bestCombo = this.combo;
-      var g = Math.round(Z.UNITS[u.type].cost * 0.4 * (u.boss ? 4 : 1) * (1 + 0.05 * Math.min(this.combo, 10)) * (this.rule === 'famine' ? 1.5 : 1));
+      var g = Math.round(Z.UNITS[u.type].cost * 0.4 * (u.boss ? 4 : 1) * (1 + 0.05 * Math.min(this.combo, 10)) * (this.rl('famine') ? 1.5 : 1));
       this.gold = Math.min(this.goldCap() + 100, this.gold + g);
       this.emit({ type: 'coin', x: u.x, lane: u.lane, v: g });
     } else {
@@ -223,8 +238,19 @@
     this.updateAI(dt);
     for (i = 0; i < this.units.length; i++) if (!this.units[i].dead) this.stepUnit(this.units[i], dt);
     this.updateProjectiles(dt);
+    for (i = 0; i < this.units.length; i++) { // yanma hasari: yarim saniyede bir
+      var bu = this.units[i];
+      if (!bu.dead && bu.burnUntil > this.t) {
+        bu.burnTick -= dt;
+        if (bu.burnTick <= 0) {
+          bu.burnTick = 0.5; bu.hp -= bu.burnDps * 0.5 * (bu.wardUntil > this.t ? 0.5 : 1);
+          this.emit({ type: 'burn', x: bu.x, lane: bu.lane });
+          if (bu.hp <= 0) this.kill(bu);
+        }
+      }
+    }
     this.updateBases(dt);
-    var regen = (this.perks.regen ? 0.015 : 0) + (this.rule === 'rally' ? 0.01 : 0);
+    var regen = (this.perks.regen ? 0.015 : 0) + (this.rl('rally') ? 0.01 : 0);
     if (regen) {
       for (i = 0; i < this.units.length; i++) { var ru = this.units[i]; if (ru.team === 0 && !ru.dead) ru.hp = Math.min(ru.max, ru.hp + ru.max * regen * dt); }
     }
@@ -232,7 +258,7 @@
 
     if (this.base[1].hp <= 0) this.finish(true);
     else if (this.base[0].hp <= 0) this.finish(false);
-    else if (this.rule === 'survive' && this.t >= this.info.surviveTime) this.finish(true);
+    else if (this.rl('survive') && this.t >= this.info.surviveTime) this.finish(true);
     else if (this.perkIdx < Z.PERK_KILLS.length && this.stats.kills >= Z.PERK_KILLS[this.perkIdx]) { this.perkIdx++; this.offerPerk(); }
   };
 
@@ -241,7 +267,7 @@
     if (u.flash > 0) u.flash -= dt;
     if (u.atkAnim > 0) u.atkAnim -= dt;
     if (u.stunUntil > this.t) { u.moving = false; return; } // dondurulmus
-    var dir = u.team === 0 ? 1 : -1, tgt = null, best = 1e9, allyAhead = 1e9, enemyAhead = 1e9, hurt = null, hurtR = 2;
+    var dir = u.team === 0 ? 1 : -1, tgt = null, best = 1e9, allyAhead = 1e9, enemyAhead = 1e9, hurt = null, hurtR = 2, pTgt = null, pBest = 1e9;
 
     for (var i = 0; i < this.units.length; i++) {
       var e = this.units[i];
@@ -255,15 +281,18 @@
         if (d < enemyAhead) enemyAhead = d;
         if (u.minRange && d < u.minRange) continue; // mancinik yakina atamaz
         if (d < best) { best = d; tgt = e; }
+        if (u.assassin && PRIO[e.cls] && d < pBest) { pBest = d; pTgt = e; }
       } else if (d > 0 && d < allyAhead) {
         allyAhead = d;
       }
     }
 
+    if (u.assassin && pTgt) { tgt = pTgt; best = pBest; enemyAhead = 1e9; } // arka saftaki avina engellenmeden gider
+
     // Sifaci: savasmaz, yarali dostu iyilestirir, dusmana yaklasmaz
     if (u.heal) {
       if (hurt && u.atkCd <= 0) this.healUnit(u, hurt);
-      if (allyAhead < 26 || enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rule === 'swift' ? 1.25 : 1) * dt; u.moving = true; }
+      if (allyAhead < 26 || enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; }
       return;
     }
 
@@ -277,7 +306,7 @@
     } else {
       // dusmanla temas varsa (mancinik gibi ates edemeyenler dahil) ilerleme
       var blocked = allyAhead < 26 || enemyAhead < 30;
-      if (!blocked) { u.x += dir * u.speed * (this.rule === 'swift' ? 1.25 : 1) * dt; u.moving = true; } else { u.moving = false; }
+      if (!blocked) { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; } else { u.moving = false; }
     }
   };
 
@@ -298,7 +327,8 @@
       });
       this.emit({ type: 'shoot', x: u.x, lane: u.lane, cls: u.cls });
     } else if (tgt) {
-      this.damage(tgt, dmg, u.cls, false);
+      if (u.flame) this.flameAttack(u, tgt, dmg);
+      else { this.damage(tgt, dmg, u.cls, false); if (u.splash) this.splashHit(u, tgt, dmg); }
     } else {
       this.hitBase(u.team === 0 ? 1 : 0, dmg, u.cls);
     }
@@ -332,6 +362,32 @@
     if (p.target && !p.target.dead && Math.abs(p.target.x - p.tx) < 40) {
       this.damage(p.target, p.dmg, p.cls, true);
     }
+  };
+
+  // Tas Dev: darbe hedefin cevresindekilere de (%60) vurur
+  P.splashHit = function (u, tgt, dmg) {
+    for (var i = 0; i < this.units.length; i++) {
+      var e = this.units[i];
+      if (e.team !== u.team && !e.dead && e.lane === u.lane && e !== tgt && Math.abs(e.x - tgt.x) <= u.splash) this.damage(e, dmg * 0.6, u.cls, false);
+    }
+    this.emit({ type: 'boom', x: tgt.x, lane: u.lane, r: u.splash, cls: 'golem' });
+  };
+  // Alevci: hedef ve hemen arkasindakiler yanar
+  P.ignite = function (e, dps, dur) {
+    if (e.dead) return;
+    e.burnUntil = Math.max(e.burnUntil, this.t + dur); e.burnDps = Math.max(e.burnDps, dps);
+  };
+  P.flameAttack = function (u, tgt, dmg) {
+    var dir = u.team === 0 ? 1 : -1;
+    for (var i = 0; i < this.units.length; i++) {
+      var e = this.units[i];
+      if (e.team === u.team || e.dead || e.lane !== u.lane) continue;
+      var d = (e.x - u.x) * dir;
+      if (d < -6 || d > u.range + 10 || Math.abs(e.x - tgt.x) > 45) continue;
+      this.damage(e, e === tgt ? dmg : dmg * 0.6, u.cls, false);
+      this.ignite(e, dmg * 0.9, 3);
+    }
+    this.emit({ type: 'flame', x: u.x, lane: u.lane, to: tgt.x, team: u.team });
   };
 
   // Sancaktar aurasi: ayni koridorda 160 birim icindeki baska bir sancaktar
@@ -395,7 +451,7 @@
   // ---- Dusman yapay zekasi ---------------------------------------------
   P.updateAI = function (dt) {
     var ai = this.ai;
-    ai.gold += this.aiRate() * dt;
+    ai.gold += this.aiRate() * this.D.ai * dt;
     // Patron
     if (this.mode === 'campaign' && this.info.boss) {
       var times = [60, 130];
@@ -405,7 +461,7 @@
         this.emit({ type: 'boss' });
       }
     }
-    if (this.rule === 'ambush') { // kenar koridorlardan baskin
+    if (this.rl('ambush')) { // kenar koridorlardan baskin
       var amb = [1.5, 50, 100];
       if (this.ambushIdx < amb.length && this.t >= amb[this.ambushIdx]) {
         this.ambushIdx++;
@@ -481,7 +537,13 @@
     S.track('kills', b.stats.kills); S.track('spawns', b.stats.spawns); S.track('skills', b.stats.skills); S.track('mines', b.stats.mines); S.track('perks', b.stats.perks);
     d.stats.perks += b.stats.perks; if (b.bestCombo > d.stats.maxCombo) d.stats.maxCombo = b.bestCombo;
 
-    if (b.mode === 'endless') {
+    if (b.mode === 'daily') {
+      var dsd = d.dailySefer;
+      if (r.win) {
+        d.stats.wins++; S.track('wins', 1); if (r.stars === 3) S.track('threeStars', 1);
+        if (!dsd.won) { dsd.won = true; d.stats.dailyWins++; out.coins = b.daily.rewardCoins; out.gems = b.daily.rewardGems; out.dailyFirst = true; }
+      } else { out.coins = Math.round(b.info.rewardCoins * 0.15) + b.stats.kills; }
+    } else if (b.mode === 'endless') {
       out.coins = r.wave * 25 + b.stats.kills * 2;
       out.gems = Math.floor(r.wave / 5) * 2;
       if (r.wave > d.endlessBest) { d.endlessBest = r.wave; out.newBest = true; }
@@ -491,9 +553,14 @@
         d.stats.wins++; S.track('wins', 1);
         if (r.stars === 3) S.track('threeStars', 1);
         var prev = d.stars[b.level] || 0;
-        out.coins = Math.round(info.rewardCoins * (1 + 0.25 * (r.stars - 1)) * (info.boss ? 1.5 : 1) * (b.rule === 'heavy' || b.rule === 'famine' ? 1.3 : 1));
-        if (prev === 0) { out.firstClear = true; out.gems += info.rewardGems; }
-        if (r.stars > prev) { d.stats.totalStars += r.stars - prev; d.stars[b.level] = r.stars; if (prev > 0) out.gems += (r.stars - prev) * 2; }
+        out.coins = Math.round(info.rewardCoins * (1 + 0.25 * (r.stars - 1)) * (info.boss ? 1.5 : 1) * (b.rl('heavy') || b.rl('famine') ? 1.3 : 1) * b.D.coin);
+        if (prev === 0 && b.diff === 0) { out.firstClear = true; out.gems += info.rewardGems; }
+        if (b.diff > 0) { // Zor / Efsane: ilk kez bu kademede kazaninca elmas
+          var ph = d.hardCleared[b.level] || 0;
+          if (b.diff > ph) { d.hardCleared[b.level] = b.diff; out.gems += b.D.gem; out.firstHard = true; }
+          if (b.diff === 1) d.stats.hardWins++; else d.stats.legendWins++;
+        }
+        if (r.stars > prev && b.diff === 0) { d.stats.totalStars += r.stars - prev; d.stars[b.level] = r.stars; if (prev > 0) out.gems += (r.stars - prev) * 2; }
         if (b.level > d.cleared) {
           var before = S.unlockedUnits();
           d.cleared = b.level;
@@ -501,7 +568,7 @@
         }
         // sandik
         var tier = r.stars;
-        out.chest = { tier: tier, coins: Math.round(info.rewardCoins * (0.3 + 0.35 * tier) * (0.8 + b.rng() * 0.6)), gems: b.rng() < 0.15 * tier ? tier : 0 };
+        out.chest = { tier: tier, coins: Math.round(info.rewardCoins * (0.3 + 0.35 * tier) * (0.8 + b.rng() * 0.6) * b.D.coin), gems: b.rng() < 0.15 * tier ? tier : 0 };
         out.coins += out.chest.coins; out.gems += out.chest.gems;
       } else {
         out.coins = Math.round(info.rewardCoins * 0.15) + b.stats.kills;

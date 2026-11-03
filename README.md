@@ -26,10 +26,14 @@ node tests/pwa-check.js <adres>       # manifest, service worker ve çevrimdış
 node tests/unit-features.js           # şifacı, aura, dondurma, ganimet, çark, kayıt göçü mantık testleri
 node tests/e2e-v02.js                 # v0.2 özellikleri + eski kayıtla açılış (ekran görüntülü)
 node tests/e2e-v03.js                 # dikey format, koridor seçimi, sefer kuralları
+node tests/e2e-v04.js                 # günlük sefer, zorluk, pazar, kayıt taşıma, yeni diyarlar
 node tests/gallery.js                 # tüm birliklerin yakın plan görsel galerisi (3 diyar)
 node tests/perf.js                    # çizim maliyeti ölçümü
 python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 ```
+
+## Yeni içerik eklemek
+**[docs/ICERIK.md](docs/ICERIK.md)** — birlik, kahraman, diyar, kural, başarım ekleme adımları, denge ölçümü ve kayıt uyumluluğu kuralları.
 
 ## Yapı
 | Yol | Görev |

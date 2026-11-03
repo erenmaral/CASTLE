@@ -20,14 +20,15 @@
       v: 1,
       coins: 150, gems: 20,
       unitLvl: unitLvl,
-      heroOwned: { aslan: true }, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1 }, hero: 'aslan',
+      heroOwned: { aslan: true }, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1, ejder: 1 }, hero: 'aslan',
       deck: ['spear', 'archer', 'cav'],
       castleLvl: 1, treasuryLvl: 1, treasuryLast: Date.now(),
       cleared: 0, stars: {}, endlessBest: 0,
       daily: { lastDay: '', streak: 0, claimedToday: false },
       quests: { day: '', list: [] },
-      stats: { battles: 0, wins: 0, kills: 0, totalStars: 0, maxCombo: 0, perks: 0, spins: 0 },
+      stats: { battles: 0, wins: 0, kills: 0, totalStars: 0, maxCombo: 0, perks: 0, spins: 0, hardWins: 0, legendWins: 0, dailyWins: 0, purchases: 0 },
       achClaimed: {}, starClaimed: {}, wheel: { day: '', used: false },
+      hardCleared: {}, dailySefer: { day: '', won: false },
       settings: { sound: true, music: true, vibrate: true },
       seenUnlock: { spear: true, archer: true, cav: true },
       tutorialDone: false, seenVersion: ''
@@ -69,6 +70,7 @@
         d.daily.lastDay = t;
       }
       if (d.wheel.day !== t) d.wheel = { day: t, used: false };
+      if (d.dailySefer.day !== t) d.dailySefer = { day: t, won: false };
       if (d.quests.day !== t) {
         var pool = Z.QUEST_POOL.slice(), h = hashStr(t), list = [];
         for (var i = 0; i < 3 && pool.length; i++) {
@@ -149,6 +151,38 @@
       this.data.starClaimed[n] = true; this.data.coins += m.coins; this.data.gems += m.gems; this.save(); return m;
     },
     anyStarClaimable: function () { var self = this; return Z.STAR_MILESTONES.some(function (m) { return self.starClaimable(m); }); },
+
+    // ---- Gunluk sefer ----
+    dailyInfo: function () { return Z.dailySefer(today(), this.data.cleared); },
+    dailyAvailable: function () { return this.data.cleared >= Z.DAILY_UNLOCK; },
+
+    // ---- Pazar (elmas harcama) ----
+    buyMarket: function (id) {
+      var d = this.data, m = Z.MARKET.filter(function (x) { return x.id === id; })[0];
+      if (!m || d.gems < m.gems) return null;
+      if (id === 'treasury' && this.treasuryFull()) return { full: true };
+      if (id === 'spin' && !d.wheel.used) return { unused: true };
+      d.gems -= m.gems;
+      if (id === 'coins') d.coins += 400 + 60 * d.cleared;
+      else if (id === 'chest') d.coins += 3000 + 250 * d.cleared;
+      else if (id === 'treasury') d.treasuryLast = Date.now() - Z.TREASURY_CAP_H * 3600000;
+      else if (id === 'spin') d.wheel.used = false;
+      d.stats.purchases++; this.save();
+      return m;
+    },
+
+    // ---- Kayit tasima (APK <-> tarayici <-> yeni telefon) ----
+    exportSave: function () {
+      try { return btoa(unescape(encodeURIComponent(JSON.stringify(this.data)))); } catch (e) { return ''; }
+    },
+    importSave: function (txt) {
+      var json, d;
+      try { json = decodeURIComponent(escape(atob(String(txt).replace(/\s+/g, '')))); d = JSON.parse(json); } catch (e) { return false; }
+      if (!d || typeof d !== 'object' || d.v !== 1 || typeof d.coins !== 'number' || typeof d.gems !== 'number' || !d.unitLvl || typeof d.cleared !== 'number') return false;
+      try { localStorage.setItem(KEY, json); } catch (e2) { return false; }
+      this.load(); this.save();
+      return true;
+    },
 
     unlockedUnits: function () {
       var c = this.data.cleared;

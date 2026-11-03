@@ -20,27 +20,36 @@
     healer: { id: 'healer', name: 'Şifacı', icon: '💚', cls: 'healer', hp: 75, dmg: 20, int: 1.6, range: 190, speed: 42, cost: 130, cd: 6.0, ranged: true, heal: true,
               desc: 'Koridordaki yaralı dostları iyileştirir. Savaşmaz, korumaya al! Süvariye karşı savunmasız.' },
     banner: { id: 'banner', name: 'Sancaktar', icon: '🚩', cls: 'banner', hp: 150, dmg: 9, int: 1.0, range: 40, speed: 48, cost: 90, cd: 5.0, ranged: false, aura: true,
-              desc: 'Yanındaki (160 birim) dostlara %20 hasar bonusu verir. Sancağı düşmeden ordunu güçlendirir.' }
+              desc: 'Yanındaki (160 birim) dostlara %20 hasar bonusu verir. Sancağı düşmeden ordunu güçlendirir.' },
+    assassin: { id: 'assassin', name: 'Suikastçı', icon: '🗡️', cls: 'assassin', hp: 70, dmg: 26, int: 0.6, range: 34, speed: 120, cost: 120, cd: 5.0, ranged: false,
+              desc: 'Çok hızlı. Düşman saflarının arasından geçip okçu, büyücü ve şifacıları avlar. Canı azdır.' },
+    golem: { id: 'golem', name: 'Taş Dev', icon: '🗿', cls: 'golem', hp: 900, dmg: 34, int: 1.8, range: 50, speed: 30, cost: 260, cd: 12.0, ranged: false, splash: 60,
+              desc: 'Taştan dev. Çok dayanıklı; darbesi çevresindeki düşmanları da ezer. Çok yavaştır.' },
+    flamer: { id: 'flamer', name: 'Alevci', icon: '🔥', cls: 'flamer', hp: 110, dmg: 11, int: 0.5, range: 110, speed: 44, cost: 170, cd: 7.0, ranged: false, flame: true,
+              desc: 'Kısa menzilli alev. Birden fazla düşmanı yakar; yanan düşman 3 sn boyunca can kaybeder.' }
   };
-  Z.UNIT_ORDER = ['spear', 'archer', 'cav', 'knight', 'mage', 'cata', 'healer', 'banner'];
+  Z.UNIT_ORDER = ['spear', 'archer', 'cav', 'knight', 'mage', 'cata', 'healer', 'banner', 'assassin', 'golem', 'flamer'];
   // Bu kadar bolum kazanilinca birlik acilir
-  Z.UNLOCK_AT = { spear: 0, archer: 0, cav: 0, knight: 4, mage: 8, cata: 12, healer: 6, banner: 10 };
+  Z.UNLOCK_AT = { spear: 0, archer: 0, cav: 0, knight: 4, mage: 8, cata: 12, healer: 6, banner: 10, assassin: 16, golem: 26, flamer: 36 };
   // Tas-kagit-makas benzeri bonus tablosu: BONUS[saldiran][savunan]
   Z.BONUS = {
     spear:  { cav: 1.6 },
     archer: { spear: 1.4 },
     cav:    { archer: 1.6, healer: 1.5 },
     mage:   { knight: 1.35 },
-    knight: { mage: 1.3 },
+    knight: { mage: 1.3, assassin: 1.25 },
+    assassin: { archer: 1.5, mage: 1.5, healer: 1.6, cata: 1.4, banner: 1.3 },
+    golem:  {},
+    flamer: { spear: 1.2, archer: 1.3, healer: 1.3 },
     cata:   {}
   };
   // Dusman yapay zekasi: bir sinifa karsi en iyi cevap
-  Z.COUNTER = { spear: 'archer', archer: 'cav', cav: 'spear', knight: 'mage', mage: 'cav', cata: 'cav', healer: 'cav', banner: 'archer' };
+  Z.COUNTER = { spear: 'archer', archer: 'cav', cav: 'spear', knight: 'mage', mage: 'cav', cata: 'cav', healer: 'cav', banner: 'archer', assassin: 'knight', golem: 'mage', flamer: 'cav' };
 
   Z.unitHpMult  = function (lvl) { return 1 + 0.10 * (lvl - 1); };
   Z.unitDmgMult = function (lvl) { return 1 + 0.08 * (lvl - 1); };
-  Z.unitUpgradeCost = function (lvl) { return Math.round(55 * Math.pow(1.42, lvl - 1)); };
-  Z.MAX_UNIT_LVL = 25;
+  Z.unitUpgradeCost = function (lvl) { return Math.round(55 * Math.pow(1.28, lvl - 1)); };
+  Z.MAX_UNIT_LVL = 40;
 
   // ---- Kahramanlar -----------------------------------------------------
   Z.HEROES = {
@@ -51,18 +60,23 @@
     demir: { id: 'demir', name: 'Demir Bey', icon: '🪖', skill: 'Çelik Siper', type: 'ward', cd: 26, target: 'lane', gems: 120,
              desc: 'Seçilen koridordaki dostları %35 iyileştirir, 6 sn yarı hasar alır.' },
     buz: { id: 'buz', name: 'Buz Hatun', icon: '❄️', skill: 'Don Fırtınası', type: 'freeze', cd: 24, target: 'lane', gems: 150,
-             desc: 'Seçilen koridordaki tüm düşmanları 3.5 sn dondurur ve hasar verir.' }
+             desc: 'Seçilen koridordaki tüm düşmanları 3.5 sn dondurur ve hasar verir.' },
+    ejder: { id: 'ejder', name: 'Ejder Hatun', icon: '🐉', skill: 'Ejder Nefesi', type: 'dragon', cd: 26, target: 'lane', gems: 200,
+             desc: 'Seçilen koridordaki tüm düşmanları 6 sn boyunca yakar: saniyede %5 can kaybederler.' }
   };
-  Z.HERO_ORDER = ['aslan', 'yildiz', 'demir', 'buz'];
-  Z.heroUpgradeCost = function (lvl) { return Math.round(120 * Math.pow(1.5, lvl - 1)); };
+  Z.HERO_ORDER = ['aslan', 'yildiz', 'demir', 'buz', 'ejder'];
+  Z.heroUpgradeCost = function (lvl) { return Math.round(120 * Math.pow(1.22, lvl - 1)); };
+  Z.MAX_HERO_LVL = 30;
   Z.heroPower = function (lvl) { return 1 + 0.12 * (lvl - 1); };
 
   // ---- Kale / Hazine ---------------------------------------------------
   Z.castleHp = function (lvl) { return Math.round(1500 * (1 + 0.12 * (lvl - 1))); };
-  Z.castleUpgradeCost = function (lvl) { return Math.round(150 * Math.pow(1.5, lvl - 1)); };
+  Z.castleUpgradeCost = function (lvl) { return Math.round(150 * Math.pow(1.24, lvl - 1)); };
+  Z.MAX_CASTLE_LVL = 30;
   Z.treasuryRate = function (lvl, cleared) { return 90 + 45 * (lvl - 1) + 6 * cleared; }; // altin / saat
   Z.TREASURY_CAP_H = 8;
-  Z.treasuryUpgradeCost = function (lvl) { return Math.round(200 * Math.pow(1.6, lvl - 1)); };
+  Z.treasuryUpgradeCost = function (lvl) { return Math.round(200 * Math.pow(1.28, lvl - 1)); };
+  Z.MAX_TREASURY_LVL = 25;
 
   // ---- Savas ici maden -------------------------------------------------
   Z.MINE_COSTS = [100, 180, 300, 450, 650];
@@ -70,9 +84,9 @@
   Z.mineCap = function (lvl) { return 400 + 150 * lvl; };
 
   // ---- Bolumler --------------------------------------------------------
-  Z.MAX_LEVEL = 45;
-  Z.REALMS = ['Yeşil Vadi', 'Kızıl Çöl', 'Buz Diyarı'];
-  Z.realmOf = function (n) { return Math.min(2, Math.floor((n - 1) / 15)); };
+  Z.MAX_LEVEL = 75;
+  Z.REALMS = ['Yeşil Vadi', 'Kızıl Çöl', 'Buz Diyarı', 'Volkan Diyarı', 'Gölge Bataklığı'];
+  Z.realmOf = function (n) { return Math.min(Z.REALMS.length - 1, Math.floor((n - 1) / 15)); };
   // Her diyarin adlari kendi temasina uygun (1-15 Yesil Vadi, 16-30 Kizil Col, 31-45 Buz Diyari)
   Z.LEVEL_NAMES = [
     'Kızıl Vadi', 'Sis Geçidi', 'Kuzgun Tepesi', 'Demirkapı', 'Gölge Ormanı',
@@ -83,7 +97,13 @@
     'Ejder Geçidi', 'Kurt Kapanı', 'Siyah Kale', 'Kül Vadisi', 'Çöl Tahtı',
     'Buzul Kapısı', 'Kar Fırtınası', 'Donmuş Göl', 'Kurt Yurdu', 'Kristal Mağara',
     'Ayaz Boğazı', 'Beyaz Kale', 'Kutup Işığı', 'Don Vadisi', 'Dondurucu Zirve',
-    'Buz Köprüsü', 'Kış Nöbeti', 'Yıldız Kalesi', 'Son Sur', 'Seferhan Tahtı'
+    'Buz Köprüsü', 'Kış Nöbeti', 'Yıldız Kalesi', 'Son Sur', 'Seferhan Tahtı',
+    'Kül Kapısı', 'Lav Nehri', 'Köz Vadisi', 'Obsidyen Yolu', 'Magma Kalesi',
+    'Duman Geçidi', 'Kızgın Kayalık', 'Alev Köprüsü', 'Bazalt Kule', 'Kor Meydanı',
+    'Ateş Boğazı', 'Cehennem Yolu', 'Kül Fırtınası', 'Lav Gölü', 'Volkan Tahtı',
+    'Sis Bataklığı', 'Çürük Köprü', 'Ölü Orman', 'Mantar Vadisi', 'Karanlık Göl',
+    'Zehirli Sazlık', 'Hayalet Patikası', 'Çamur Kalesi', 'Kurbağa Tepesi', 'Kasvet Ormanı',
+    'Ruhlar Çukuru', 'Uğultu Vadisi', 'Kara Su', 'Son Bataklık', 'Gölge Tahtı'
   ];
   // Her bolum ayri bir sefer: kisa hikaye
   Z.STORIES = [
@@ -131,7 +151,37 @@
     'Kış Nöbeti: düşman son yedeklerini sürüyor.',
     'Yıldız Kalesi\'nin kapıları sana açılmayı bekliyor.',
     'Son Sur\'un ardında Seferhan Tahtı var. Son hazırlık!',
-    'PATRON — Seferhan Tahtı! Tüm seferlerin sonu. Tahtı ele geçir.'
+    'PATRON — Seferhan Tahtı! Ama sefer burada bitmiyor: ufukta alev ve gölge var.',
+    'Buz Diyarı\'nı geride bıraktın; ufukta alev kırmızısı bir gökyüzü var. Kül Kapısı\'nı geç.',
+    'Lav nehrinin üzerindeki taş geçit tek yol. Düşman karşı kıyıda bekliyor.',
+    'Köz Vadisi\'nin sıcağı zırhları kızartıyor. Hızlı ol, uzun savaşma.',
+    'Keskin obsidyen kayalar arasında dar bir yol: pusu için ideal.',
+    'PATRON — Magma Kalesi\'nin efendisi erimiş taştan bir zırh giyiyor.',
+    'Duman gözleri yakıyor. Düşman seni görmeden sancak yerini belirle.',
+    'Kızgın kayalıkta her adım tehlikeli. Şifacılarını yanında tut.',
+    'Alev Köprüsü\'nün iki ucu da düşman elinde.',
+    'Bazalt Kule\'nin muhafızları zırhlı ve sabırlı.',
+    'PATRON — Kor Meydanı\'nda ateş dansçılarının komutanı seni bekliyor.',
+    'Ateş Boğazı: düşman alevlerle yolu kapatmış.',
+    'Cehennem Yolu\'nda bile ordunu geri çekme.',
+    'Kül fırtınasında düşmanın sesi bile boğuk geliyor.',
+    'Lav Gölü\'nün kıyısında Volkan Tahtı\'nın bekçileri toplandı.',
+    'PATRON — Volkan Tahtı\'nın ejderha binicisi gökten indi!',
+    'Bataklığın sisi her şeyi yutuyor. Ordun yönünü kaybetmesin.',
+    'Çürük Köprü\'nün her tahtası bir tuzak.',
+    'Ölü Orman\'da ağaçlar bile düşmanın safında gibi.',
+    'Mantar Vadisi\'nin ışıkları cezbedici ama tehlikeli.',
+    'PATRON — Karanlık Göl\'ün dev yaratığı sudan yükseldi.',
+    'Zehirli sazlıkta sessiz ilerlemek şart.',
+    'Hayalet Patikası\'nda gölge askerler beliriyor.',
+    'Çamur Kalesi\'nin surları yumuşak ama kapıları sağlam.',
+    'Kurbağa Tepesi\'nde düşman yüksek yerden atış yapıyor.',
+    'PATRON — Kasvet Ormanı\'nın cadısı yolunu kesti.',
+    'Ruhlar Çukuru\'nun başında kadim bir ordu uyanıyor.',
+    'Uğultu Vadisi\'nde sesler bile silah.',
+    'Kara Su\'yu geçmek için hızlı ve kararlı ol.',
+    'Son Bataklık\'ın ardında Gölge Tahtı var. Son çabaya hazır ol!',
+    'PATRON — Gölge Tahtı! Tüm seferlerin gerçek sonu. Gölge Han seni bekliyor.'
   ];
   // Sefer kurallari: her sefere ozgu bir savas kosulu
   Z.RULES = {
@@ -160,6 +210,9 @@
     if (n >= 12) tiers.push('cata');
     if (n >= 10) tiers.push('healer');
     if (n >= 20) tiers.push('banner');
+    if (n >= 22) tiers.push('assassin');
+    if (n >= 32) tiers.push('golem');
+    if (n >= 42) tiers.push('flamer');
     return {
       n: n,
       name: Z.LEVEL_NAMES[(n - 1) % Z.LEVEL_NAMES.length],
@@ -168,9 +221,10 @@
       rule: Z.ruleOf(n),
       story: Z.STORIES[(n - 1) % Z.STORIES.length],
       surviveTime: Math.round(90 + 2.5 * n),
-      scale: 1 + 0.040 * Math.min(n - 1, 29) + 0.028 * Math.max(0, n - 30),
+      scale: 1 + 0.040 * Math.min(n - 1, 29) + 0.028 * Math.max(0, Math.min(n - 30, 15)) + 0.008 * Math.max(0, n - 45),
       baseHp: 700 + 130 * n,
-      aiRate: 8 + 0.35 * n,
+      aiRate: n <= 40 ? 8 + 0.35 * n : 20 + 0.04 * (n - 40), // oyuncunun azami geliriyle (27.5) dengeli kalir
+      // // oyuncunun azami geliriyle (27.5) dengeli kalir
       startGold: 60 + 8 * n,
       tiers: tiers,
       rewardCoins: 40 + 18 * n,
@@ -241,10 +295,62 @@
     { id: 'unit10',   text: 'Bir birliği 10. seviyeye çıkar', target: 10, gems: 10, get: maxUnit },
     { id: 'castle5',  text: 'Kaleyi 5. seviyeye çıkar',  target: 5,    gems: 8,  get: function (d) { return d.castleLvl; } },
     { id: 'treas5',   text: 'Hazineyi 5. seviyeye çıkar', target: 5,   gems: 8,  get: function (d) { return d.treasuryLvl; } },
-    { id: 'heroes',   text: 'Tüm kahramanları aç',       target: 4,    gems: 20, get: function (d) { var n = 0; for (var k in d.heroOwned) if (d.heroOwned[k]) n++; return n; } },
+    { id: 'heroes',   text: 'Tüm kahramanları aç',       target: 5,    gems: 20, get: function (d) { var n = 0; for (var k in d.heroOwned) if (d.heroOwned[k]) n++; return n; } },
     { id: 'combo15',  text: '15\'lik öldürme serisi yap', target: 15,  gems: 6,  get: function (d) { return d.stats.maxCombo || 0; } },
     { id: 'perks20',  text: '20 savaş ganimeti seç',     target: 20,   gems: 8,  get: function (d) { return d.stats.perks || 0; } },
-    { id: 'spins10',  text: 'Şans Çarkı\'nı 10 kez çevir', target: 10, gems: 8,  get: function (d) { return d.stats.spins || 0; } }
+    { id: 'spins10',  text: 'Şans Çarkı\'nı 10 kez çevir', target: 10, gems: 8,  get: function (d) { return d.stats.spins || 0; } },
+    { id: 'lvl60',    text: 'Volkan Tahtı\'nı ele geçir (60)', target: 60, gems: 40, get: function (d) { return d.cleared; } },
+    { id: 'lvl75',    text: 'Gölge Tahtı\'nı ele geçir (75)', target: 75, gems: 80, get: function (d) { return d.cleared; } },
+    { id: 'hard10',   text: 'Zor kademede 10 sefer kazan', target: 10, gems: 15, get: function (d) { return d.stats.hardWins || 0; } },
+    { id: 'legend5',  text: 'Efsane kademede 5 sefer kazan', target: 5, gems: 25, get: function (d) { return d.stats.legendWins || 0; } },
+    { id: 'daily7',   text: '7 Günlük Sefer kazan',      target: 7,    gems: 15, get: function (d) { return d.stats.dailyWins || 0; } },
+    { id: 'daily30',  text: '30 Günlük Sefer kazan',     target: 30,   gems: 50, get: function (d) { return d.stats.dailyWins || 0; } },
+    { id: 'market5',  text: 'Pazar\'dan 5 kez alışveriş yap', target: 5, gems: 5, get: function (d) { return d.stats.purchases || 0; } },
+    { id: 'unit25',   text: 'Bir birliği 25. seviyeye çıkar', target: 25, gems: 25, get: maxUnit },
+    { id: 'unit40',   text: 'Bir birliği son seviyeye (40) çıkar', target: 40, gems: 60, get: maxUnit }
+  ];
+
+  // ---- Zorluk kademeleri (tekrar oynanabilirlik) --------------------------
+  Z.DIFFS = [
+    { name: 'Normal', icon: '⚔️', hp: 1,    dmg: 1,    ai: 1,    base: 1,    coin: 1, gem: 0 },
+    { name: 'Zor',    icon: '🔥', hp: 1.35, dmg: 1.2,  ai: 1.15, base: 1.45, coin: 2, gem: 5 },
+    { name: 'Efsane', icon: '💀', hp: 1.8,  dmg: 1.45, ai: 1.3,  base: 1.9,  coin: 3, gem: 10 }
+  ];
+  // Zor: normalde kazanilmis bolumde; Efsane: o bolumu Zor'da kazandiktan sonra
+  Z.diffUnlocked = function (d, level, diff) {
+    if (diff === 0) return true;
+    if (diff === 1) return level <= d.cleared;
+    return (d.hardCleared[level] || 0) >= 1;
+  };
+
+  // ---- Gunluk sefer: her gun tarihe gore degisen, ilerlemene gore olceklenen ozel savas
+  Z.DAILY_UNLOCK = 5; // bu kadar bolum kazanilinca acilir
+  Z.dailySefer = function (day, cleared) {
+    var h = 2166136261, i;
+    for (i = 0; i < day.length; i++) { h ^= day.charCodeAt(i); h = Math.imul(h, 16777619); }
+    h >>>= 0;
+    function rnd() { h = (Math.imul(h, 1103515245) + 12345) >>> 0; return h / 4294967296; }
+    rnd(); rnd();
+    var maxRealm = Math.min(Z.REALMS.length - 1, Z.realmOf(Math.max(1, cleared + 1)));
+    var theme = Math.floor(rnd() * (maxRealm + 1));
+    var pool = ['rich', 'swift', 'heavy', 'ambush', 'famine', 'rally', 'fortress', 'survive'], rules = [];
+    while (rules.length < 2) {
+      var r = pool[Math.floor(rnd() * pool.length)];
+      if (rules.indexOf(r) >= 0) continue;
+      if ((r === 'rich' && rules[0] === 'famine') || (r === 'famine' && rules[0] === 'rich')) continue; // celisen gelir kurallari
+      rules.push(r);
+    }
+    var level = Math.max(3, Math.min(Z.MAX_LEVEL, Math.round(cleared * 0.8) + 2));
+    var info = Z.levelInfo(level);
+    return { day: day, theme: theme, rules: rules, level: level, rewardCoins: Math.round(info.rewardCoins * 2.5), rewardGems: 12 };
+  };
+
+  // ---- Pazar: elmas harcama yeri ----------------------------------------
+  Z.MARKET = [
+    { id: 'coins',    icon: '👛', name: 'Altın Kesesi',       gems: 10, desc: function (d) { return '🪙 ' + (400 + 60 * d.cleared) + ' altın'; } },
+    { id: 'chest',    icon: '🎁', name: 'Büyük Sandık',       gems: 40, desc: function (d) { return '🪙 ' + (3000 + 250 * d.cleared) + ' altın'; } },
+    { id: 'treasury', icon: '💰', name: 'Hazine Hızlandırma', gems: 15, desc: function () { return 'Hazine hemen 8 saatlik geliri biriktirir'; } },
+    { id: 'spin',     icon: '🎡', name: 'Bonus Çark Hakkı',   gems: 10, desc: function () { return 'Şans Çarkı\'nı bedava çevir'; } }
   ];
 
   // ---- Yardimcilar -----------------------------------------------------

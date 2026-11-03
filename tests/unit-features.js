@@ -3,9 +3,9 @@ const path = require('path'); const assert = require('assert');
 globalThis.localStorage = { getItem() { return null; }, setItem() {} };
 ['version', 'data', 'save', 'sim'].forEach(f => require(path.join('..', 'www', 'js', f + '.js')));
 const Z = globalThis.Z;
-const mk = (deck, hero, level) => {
-  const sv = { unitLvl: {}, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1 }, castleLvl: 1 }; Z.UNIT_ORDER.forEach(u => (sv.unitLvl[u] = 1));
-  const b = new Z.Battle({ mode: 'campaign', level: level || 1, save: sv, deck, hero: hero || 'aslan', seed: 5 });
+const mk = (deck, hero, level, extra) => {
+  const sv = { unitLvl: {}, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1, ejder: 1 }, castleLvl: 1 }; Z.UNIT_ORDER.forEach(u => (sv.unitLvl[u] = 1));
+  const b = new Z.Battle(Object.assign({ mode: 'campaign', level: level || 1, save: sv, deck, hero: hero || 'aslan', seed: 5 }, extra || {}));
   b.ai.gold = -1e9; b.ai.think = 1e9; // dusman yapay zekasi kapali
   return b;
 };
@@ -74,6 +74,74 @@ let n = 0; const ok = (name) => { n++; console.log('  ✓', name); };
   const a = w.spawn(0, 'spear', 1), c = x.spawn(0, 'spear', 1); a.atkCd = c.atkCd = 99; for (let i = 0; i < 30; i++) { w.update(1 / 30); x.update(1 / 30); }
   assert(Math.abs((a.x - 180) / (c.x - 180) - 1.25) < 0.02, 'hiz +%25'); ok('Fırtına Rüzgârı: birlikler %25 daha hızlı'); }
 { for (let n = 1; n <= Z.MAX_LEVEL; n++) { const i = Z.levelInfo(n); assert(i.story && i.story.length > 10 && i.name, 'hikaye/ad eksik ' + n); assert(Z.RULES[i.rule], 'kural tanimsiz ' + n); assert(i.rule === 'none' || n >= 3, 'ilk iki bolum kuralsiz'); if (Z.isBoss(n)) assert(i.rule === 'none', 'patron kuralsiz'); }
-  ok('45 bölümün hepsinde ad, hikâye ve geçerli kural var'); }
+  ok(Z.MAX_LEVEL + ' bölümün hepsinde ad, hikâye ve geçerli kural var'); }
+
+// ---- v0.4: yeni birlikler ----
+const still = (b) => b.units.forEach(u => { if (u.team === 1) u.atkCd = 99; });
+{ const b = mk(['assassin'], 'aslan', 1); const as = b.spawn(0, 'assassin', 1); as.x = 200; as.age = 5;
+  const sp = b.spawn(1, 'spear', 1); sp.x = 640; sp.hp = sp.max = 1e5; const ar = b.spawn(1, 'archer', 1); ar.x = 710; still(b);
+  let spAtKill = null, asAtKill = 0;
+  for (let i = 0; i < 30 * 9; i++) { b.update(1 / 30); still(b); if (!b.units.includes(ar) && spAtKill === null) { spAtKill = sp.hp; asAtKill = as.x; } }
+  assert(spAtKill !== null, 'suikastci arka saftaki okcuyu oldurmedi'); assert(asAtKill > sp.x, 'suikastci on saftan gecmedi'); assert(spAtKill === sp.max, 'okcu olene kadar on saf mizrakciya dokunulmamali');
+  ok('Suikastçı: ön saftaki mızrakçıyı geçip arkadaki okçuyu avlar'); }
+{ const b = mk(['golem'], 'aslan', 1); const g = b.spawn(0, 'golem', 1); g.x = 300; g.age = 5; g.atkCd = 0;
+  const a = b.spawn(1, 'knight', 1), c2 = b.spawn(1, 'knight', 1), far = b.spawn(1, 'knight', 1); a.x = 340; c2.x = 380; far.x = 480; still(b);
+  b.attack(g, a); assert(a.hp < a.max && c2.hp < c2.max, 'sıçrama hasarı yok'); assert(far.hp === far.max, 'uzak birlik etkilenmemeli');
+  assert(Math.abs((c2.max - c2.hp) / (a.max - a.hp) - 0.6) < 0.01, 'sıçrama %60 olmalı'); ok('Taş Dev: darbe çevredekilere %60 hasar yayar'); }
+{ const b = mk(['flamer'], 'aslan', 1); const f = b.spawn(0, 'flamer', 1); f.x = 700; f.age = 5; const e = b.spawn(1, 'knight', 1); e.x = 780; e.hp = e.max = 1e5; still(b);
+  b.attack(f, e); assert(e.burnUntil > b.t, 'yanma baslamadi'); const h0 = e.hp; f.atkCd = 99;
+  for (let i = 0; i < 60; i++) { b.update(1 / 30); still(b); } const h1 = e.hp; assert(h1 < h0 - 5, 'yanma hasari yok');
+  for (let i = 0; i < 90; i++) { b.update(1 / 30); still(b); } const h2 = e.hp; for (let i = 0; i < 60; i++) { b.update(1 / 30); still(b); }
+  assert(e.hp === h2, 'yanma 3 sn sonra bitmeli'); ok('Alevci: hedefi yakar, yanma 3 sn sürer ve biter'); }
+{ const b = mk(['spear'], 'ejder', 1); const es = [0, 1, 2].map(i => { const e = b.spawn(1, 'knight', 1); e.x = 500 + i * 30; e.hp = e.max = 1e5; return e; }); still(b);
+  b.heroCd = 0; assert(b.useSkill(1), 'ejder yetenegi kullanilamadi'); assert(es.every(e => e.burnUntil > b.t + 5), 'tum koridor yanmali');
+  const h = es[0].hp; for (let i = 0; i < 60; i++) { b.update(1 / 30); still(b); } assert(es[0].hp < h - 10, 'ejder yanma hasari yok'); ok('Ejder Hatun: koridordaki tüm düşmanları 6 sn yakar'); }
+
+// ---- v0.4: zorluk kademeleri ----
+{ const n = mk(['spear'], 'aslan', 10), h = mk(['spear'], 'aslan', 10, { diff: 1 }), l = mk(['spear'], 'aslan', 10, { diff: 2 });
+  const en = n.spawn(1, 'spear', 1), eh = h.spawn(1, 'spear', 1), el = l.spawn(1, 'spear', 1);
+  assert(Math.abs(eh.max / en.max - 1.35) < 1e-9 && Math.abs(el.max / en.max - 1.8) < 1e-9, 'dusman cani'); assert(Math.abs(eh.dmg / en.dmg - 1.2) < 1e-9 && Math.abs(el.dmg / en.dmg - 1.45) < 1e-9, 'dusman hasari');
+  assert(l.base[1].max > h.base[1].max && h.base[1].max > n.base[1].max, 'kale cani zorlukla artmali'); ok('Zorluk: Zor ×1.35 / Efsane ×1.8 düşman canı, daha sağlam kale'); }
+{ const store = {}; globalThis.localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } }; Z.Save.reset();
+  const S = Z.Save, d = S.data; d.cleared = 10;
+  assert(Z.diffUnlocked(d, 10, 1) && !Z.diffUnlocked(d, 11, 1) && !Z.diffUnlocked(d, 10, 2), 'kademe kilitleri');
+  const win = (diff) => { const b = mk(['spear'], 'aslan', 10, { diff }); b.base[1].hp = 0; b.update(0.01); assert(b.result && b.result.win); return Z.settleBattle(b, S); };
+  const g0 = d.gems, o1 = win(1); assert(o1.firstHard && d.hardCleared[10] === 1 && d.gems - g0 === 5 + (o1.chest.gems || 0) && d.stats.hardWins === 1, 'ilk Zor galibiyeti');
+  assert(Z.diffUnlocked(d, 10, 2), 'Efsane acilmali'); const g1 = d.gems, o2 = win(1); assert(!o2.firstHard && d.gems - g1 === (o2.chest.gems || 0), 'ikinci Zor galibiyetinde elmas yok');
+  const o3 = win(2); assert(o3.firstHard && d.hardCleared[10] === 2 && d.stats.legendWins === 1, 'Efsane galibiyeti'); assert(d.stars[10] === undefined, 'zor kademe yildiz yazmamali');
+  ok('Zor/Efsane: kilitler, ilk galibiyette elmas, ödül çarpanı ve yıldıza dokunmama'); }
+
+// ---- v0.4: gunluk sefer ----
+{ const a = Z.dailySefer('2026-11-03', 20), b = Z.dailySefer('2026-11-03', 20); assert(JSON.stringify(a) === JSON.stringify(b), 'ayni gun ayni sefer olmali');
+  const days = new Set(); for (let i = 1; i <= 28; i++) { const x = Z.dailySefer('2026-12-' + String(i).padStart(2, '0'), 30); days.add(x.rules.join('+') + x.theme);
+    assert(x.rules.length === 2 && x.rules[0] !== x.rules[1], 'iki farkli kural'); assert(!(x.rules.includes('rich') && x.rules.includes('famine')), 'celisen kurallar'); assert(x.level >= 3 && x.level <= Z.MAX_LEVEL && x.theme >= 0 && x.theme < Z.REALMS.length); }
+  assert(days.size >= 12, 'gunluk seferler yeterince cesitli degil: ' + days.size);
+  Z.Save.reset(); const S = Z.Save, d = S.data; d.cleared = 12; const di = S.dailyInfo();
+  const play = () => { const b = mk(['spear'], 'aslan', di.level, { mode: 'daily', rules: di.rules, theme: di.theme, daily: di }); b.base[1].hp = 0; b.update(0.01); return Z.settleBattle(b, S); };
+  const c0 = d.coins, o1 = play(); assert(o1.dailyFirst && d.dailySefer.won && d.stats.dailyWins === 1 && o1.coins === di.rewardCoins && o1.gems === 12 && d.coins - c0 === di.rewardCoins, 'gunluk ilk odul');
+  const o2 = play(); assert(!o2.dailyFirst && o2.coins === 0 && d.stats.dailyWins === 1, 'ikinci galibiyette odul yok'); ok('Günlük Sefer: aynı gün aynı sefer, 28 günde çeşitli, ödül günde bir kez'); }
+
+// ---- v0.4: pazar ----
+{ Z.Save.reset(); const S = Z.Save, d = S.data; d.cleared = 10; d.gems = 100; d.coins = 0;
+  assert(S.buyMarket('coins') && d.gems === 90 && d.coins === 400 + 600, 'altin kesesi'); assert(S.buyMarket('chest') && d.gems === 50 && d.coins === 1000 + 3000 + 2500, 'buyuk sandik');
+  assert(S.buyMarket('spin').unused, 'bedava hak varken cark satilmamali'); S.spin(); d.gems = 50; /* cark odulu rastgele: elmasi sabitle */ assert(S.buyMarket('spin') && d.wheel.used === false && d.gems === 40, 'bonus cark');
+  d.treasuryLast = Date.now(); assert(S.buyMarket('treasury') && S.treasuryFull() && d.gems === 25, 'hazine hizlandirma'); assert(S.buyMarket('treasury').full, 'dolu hazine satilmamali');
+  d.gems = 5; assert(S.buyMarket('coins') === null && d.gems === 5, 'yetersiz elmas'); assert(d.stats.purchases === 4, 'satin alma sayaci'); ok('Pazar: 4 ürün, elmas düşer, gereksiz alımı engeller'); }
+
+// ---- v0.4: kayit tasima ----
+{ Z.Save.reset(); const S = Z.Save, d = S.data; d.coins = 12345; d.gems = 77; d.cleared = 33; d.unitLvl.spear = 17; d.hardCleared[5] = 2;
+  const code = S.exportSave(); assert(code && /^[A-Za-z0-9+/=]+$/.test(code), 'disa aktarma kodu');
+  d.coins = 1; d.cleared = 1; assert(S.importSave(code), 'ice aktarma basarisiz'); assert(S.data.coins === 12345 && S.data.cleared === 33 && S.data.unitLvl.spear === 17 && S.data.hardCleared[5] === 2, 'veri korunmadi');
+  const before = JSON.stringify(S.data); ['', 'abc', 'e30=', btoa('{"v":2}'), btoa('{"v":1,"coins":"x"}'), btoa('not json')].forEach(bad => assert(S.importSave(bad) === false, 'gecersiz kod kabul edildi: ' + bad));
+  assert(JSON.stringify(S.data) === before, 'gecersiz ice aktarma kaydi bozdu'); ok('Kayıt taşıma: dışa/içe aktarma gidiş-dönüş, geçersiz kodlar reddedilir'); }
+
+// ---- v0.4: veri tutarliligi (yeni icerik eklerken bozuk veri yakalar) ----
+{ assert(Z.LEVEL_NAMES.length === Z.MAX_LEVEL && Z.STORIES.length === Z.MAX_LEVEL, 'bolum ad/hikaye sayisi MAX_LEVEL ile esit olmali');
+  assert(Z.REALMS.length * 15 >= Z.MAX_LEVEL && Z.realmOf(Z.MAX_LEVEL) === Z.REALMS.length - 1, 'diyar sayisi');
+  Z.UNIT_ORDER.forEach(id => { const u = Z.UNITS[id]; assert(u && u.id === id && u.cls && u.hp > 0 && u.dmg > 0 && u.cost > 0 && u.cd > 0 && u.desc, 'birim eksik: ' + id); assert(Z.UNLOCK_AT[id] !== undefined, 'UNLOCK_AT yok: ' + id); assert(Z.COUNTER[u.cls], 'COUNTER yok: ' + u.cls); /* BONUS opsiyonel: bonusu olmayan siniflar tabloda yer almaz */ });
+  Z.HERO_ORDER.forEach(id => { const h = Z.HEROES[id]; assert(h && h.name && h.skill && h.cd > 0 && h.type && h.desc, 'kahraman eksik: ' + id); });
+  for (let n = 1; n <= Z.MAX_LEVEL; n++) Z.levelInfo(n).tiers.forEach(t => assert(Z.UNITS[t], 'dusman kademesinde bilinmeyen birim: ' + t));
+  assert(Z.levelInfo(60).tiers.includes('flamer') && Z.levelInfo(22).tiers.includes('assassin'), 'yeni birimler dusman kademelerinde'); assert(Z.unitUpgradeCost(Z.MAX_UNIT_LVL - 1) > Z.unitUpgradeCost(10), 'maliyet egrisi');
+  ok('Veri tutarlılığı: 75 bölüm, ' + Z.UNIT_ORDER.length + ' birim, ' + Z.HERO_ORDER.length + ' kahraman eksiksiz'); }
 
 console.log(n + ' test geçti');

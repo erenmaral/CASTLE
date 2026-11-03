@@ -44,6 +44,7 @@
     skill: function (kind) {
       if (!ctx || !A.enabled) return;
       if (kind === 'freeze') { A.freeze(); return; }
+      if (kind === 'dragon') { A.noise(0.7, 0.32, 600); A.tone(160, 60, 0.7, 'sawtooth', 0.18); A.tone(90, 50, 0.7, 'sine', 0.2); return; }
       if (kind === 'bolt') { A.noise(0.4, 0.35, 3000); A.tone(1200, 100, 0.4, 'sawtooth', 0.15); }
       else if (kind === 'ward') { A.tone(400, 800, 0.4, 'triangle', 0.2); A.tone(600, 1200, 0.4, 'triangle', 0.1, 0.1); }
       else { A.tone(200, 400, 0.5, 'sawtooth', 0.18); A.tone(300, 600, 0.5, 'sawtooth', 0.12, 0.05); }
@@ -59,6 +60,7 @@
     },
     heal: function () { if (A.ok('heal', 0.12)) { A.tone(660, 990, 0.14, 'sine', 0.09); } },
     freeze: function () { if (!ctx || !A.enabled) return; A.noise(0.5, 0.25, 5000); A.tone(1500, 400, 0.5, 'triangle', 0.14); A.tone(2200, 900, 0.4, 'sine', 0.08, 0.05); },
+    fire: function () { if (A.ok('fire', 0.12)) { A.noise(0.18, 0.16, 900); A.tone(180, 90, 0.14, 'sawtooth', 0.06); } },
     perk: function () { if (!ctx || !A.enabled) return; [523, 659, 784].forEach(function (f, i) { A.tone(f, 0, 0.18, 'triangle', 0.16, i * 0.08); }); },
     star: function (i) { if (ctx && A.enabled) A.tone(700 + i * 200, 0, 0.25, 'triangle', 0.2); },
     chest: function () {

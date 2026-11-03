@@ -19,16 +19,20 @@
       R.resize(w, h, scale);
     },
 
-    startBattle: function (mode, level) {
+    startBattle: function (mode, level, opts) {
+      opts = opts || {};
       S.sanitizeDeck();
       var d = S.data;
       A.init();
-      this.battle = new Z.Battle({ mode: mode, level: level, save: d, deck: d.deck, hero: d.heroOwned[d.hero] ? d.hero : 'aslan' });
+      this.battle = new Z.Battle({ mode: mode, level: mode === 'daily' ? opts.daily.level : level, save: d, deck: d.deck, hero: d.heroOwned[d.hero] ? d.hero : 'aslan',
+        diff: opts.diff || 0, daily: opts.daily, rules: opts.daily ? opts.daily.rules : undefined,
+        theme: mode === 'daily' ? opts.daily.theme : mode === 'endless' ? Math.floor(Math.random() * Z.REALMS.length) : undefined });
+      this.battle.startOpts = opts;
       this.paused = false; this.ending = false; this.endTimer = 0; this.perkOpen = false;
       UI.closeModal(); UI.hideHub();
       UI.hudBuild(this.battle);
       R.start(this.battle);
-      R.banner = { text: mode === 'endless' ? 'SONSUZ KUŞATMA' : 'SEFER ' + level, col: '#ffd166', t: 1.8 };
+      R.banner = { text: mode === 'endless' ? 'SONSUZ KUŞATMA' : mode === 'daily' ? 'GÜNLÜK SEFER' : 'SEFER ' + level, col: '#ffd166', t: 1.8 };
       A.musicStart();
     },
 
@@ -43,7 +47,7 @@
       var self = this;
       UI.pauseModal({
         resume: function () { self.resume(); },
-        restart: function () { var b = self.battle; self.startBattle(b.mode, b.level); },
+        restart: function () { var b = self.battle; self.startBattle(b.mode, b.level, b.startOpts); },
         quit: function () { self.toMenu(); }
       });
     },
@@ -95,7 +99,7 @@
 
   // Bir savas bittiginde bayragi sifirla
   var origStart = Game.startBattle;
-  Game.startBattle = function (m, l) { Game.settled = false; origStart.call(Game, m, l); };
+  Game.startBattle = function (m, l, o) { Game.settled = false; origStart.call(Game, m, l, o); };
 
   function boot() {
     S.load();

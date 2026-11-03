@@ -72,7 +72,8 @@ if (process.argv[4] === 'endless') {
 
 console.log('Seviye | kazanma | ort. sure | ort. yildiz | birlik sv.');
 let totalWins = 0, n = 0;
-for (let L = 1; L <= Z.MAX_LEVEL; L++) {
+const LMIN = +(process.env.LMIN || 1), LMAX = +(process.env.LMAX || Z.MAX_LEVEL);
+for (let L = LMIN; L <= LMAX; L++) {
   let wins = 0, time = 0, stars = 0;
   for (let s = 1; s <= SEEDS; s++) {
     const b = playBot('campaign', L, s * 101 + L);
