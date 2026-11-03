@@ -31,7 +31,7 @@ jobs:
       - name: Surum bilgisi ve onbellek adi
         run: |
           sed -i "s/Z.BUILD = 'dev'/Z.BUILD = '${{ github.run_number }}'/" www/js/version.js
-          sed -i "s/zafarion-dev/zafarion-${{ github.run_number }}/" www/sw.js
+          sed -i "s/seferhan-dev/seferhan-${{ github.run_number }}/" www/sw.js
           grep -n "BUILD" www/js/version.js; grep -n "const CACHE" www/sw.js
 
       - uses: actions/configure-pages@v5

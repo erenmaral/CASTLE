@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Zafarion</string>
-    <string name="title_activity_main">Zafarion</string>
+    <string name="app_name">Seferhan</string>
+    <string name="title_activity_main">Seferhan</string>
     <string name="package_name">com.zafarion.game</string>
     <string name="custom_url_scheme">com.zafarion.game</string>
 </resources>

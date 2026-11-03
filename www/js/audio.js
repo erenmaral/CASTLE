@@ -1,4 +1,4 @@
-// Zafarion - WebAudio ile sentezlenen ses efektleri ve basit davul muzigi (dosya yok, telifsiz)
+// Seferhan - WebAudio ile sentezlenen ses efektleri ve basit davul muzigi (dosya yok, telifsiz)
 (function (Z) {
   'use strict';
   var ctx = null, master = null, noiseBuf = null, musicTimer = null, beat = 0, last = {};
@@ -43,6 +43,7 @@
     baseHit: function () { if (A.ok('base', 0.15)) { A.noise(0.2, 0.28, 400); A.tone(90, 50, 0.2, 'sine', 0.3); } },
     skill: function (kind) {
       if (!ctx || !A.enabled) return;
+      if (kind === 'freeze') { A.freeze(); return; }
       if (kind === 'bolt') { A.noise(0.4, 0.35, 3000); A.tone(1200, 100, 0.4, 'sawtooth', 0.15); }
       else if (kind === 'ward') { A.tone(400, 800, 0.4, 'triangle', 0.2); A.tone(600, 1200, 0.4, 'triangle', 0.1, 0.1); }
       else { A.tone(200, 400, 0.5, 'sawtooth', 0.18); A.tone(300, 600, 0.5, 'sawtooth', 0.12, 0.05); }
@@ -56,6 +57,9 @@
       if (!ctx || !A.enabled) return;
       [392, 330, 262, 196].forEach(function (f, i) { A.tone(f, 0, 0.35, 'sawtooth', 0.12, i * 0.2); });
     },
+    heal: function () { if (A.ok('heal', 0.12)) { A.tone(660, 990, 0.14, 'sine', 0.09); } },
+    freeze: function () { if (!ctx || !A.enabled) return; A.noise(0.5, 0.25, 5000); A.tone(1500, 400, 0.5, 'triangle', 0.14); A.tone(2200, 900, 0.4, 'sine', 0.08, 0.05); },
+    perk: function () { if (!ctx || !A.enabled) return; [523, 659, 784].forEach(function (f, i) { A.tone(f, 0, 0.18, 'triangle', 0.16, i * 0.08); }); },
     star: function (i) { if (ctx && A.enabled) A.tone(700 + i * 200, 0, 0.25, 'triangle', 0.2); },
     chest: function () {
       if (!ctx || !A.enabled) return;

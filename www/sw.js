@@ -1,6 +1,6 @@
-// Zafarion service worker: cevrimdisi calisma. Once ag, olmazsa onbellek (guncellemeler hemen gelir).
-// CI, 'zafarion-dev' degerini her derlemede calisma numarasiyla degistirir.
-const CACHE = 'zafarion-dev';
+// Seferhan service worker: cevrimdisi calisma. Once ag, olmazsa onbellek (guncellemeler hemen gelir).
+// CI, 'seferhan-dev' degerini her derlemede calisma numarasiyla degistirir.
+const CACHE = 'seferhan-dev';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/version.js', 'js/data.js', 'js/save.js', 'js/audio.js', 'js/sim.js', 'js/render.js', 'js/ui.js', 'js/main.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];

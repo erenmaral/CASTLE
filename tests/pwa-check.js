@@ -15,7 +15,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8765/erenmaral/';
   const cached = await p.evaluate(async () => (await caches.keys()).length && (await (await caches.open((await caches.keys())[0])).keys()).length);
   await ctx.setOffline(true); await p.reload(); await p.waitForFunction(() => globalThis.Z && Z.ready, null, { timeout: 8000 });
   const title = await p.title();
-  console.log(JSON.stringify({ manifestName: man.j.name, iconsOk, cachedEntries: cached, offlineReloadOk: title === 'Zafarion' }));
+  console.log(JSON.stringify({ manifestName: man.j.name, iconsOk, cachedEntries: cached, offlineReloadOk: title === 'Seferhan' }));
   console.log(errors.length ? 'HATALAR:\n' + errors.join('\n') : 'Hata yok');
   await b.close(); process.exit(errors.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

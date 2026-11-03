@@ -1,4 +1,4 @@
-"""Zafarion ikon ve acilis ekrani uretici (PIL). Calistir: python3 scripts/make-icons.py"""
+"""Seferhan ikon ve acilis ekrani uretici (PIL). Calistir: python3 scripts/make-icons.py"""
 import os, glob
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -6,22 +6,36 @@ RES = os.path.join(os.path.dirname(__file__), '..', 'android', 'app', 'src', 'ma
 NAVY, NAVY2, GOLD, GOLD2 = (11, 16, 32), (38, 52, 110), (255, 210, 77), (245, 158, 11)
 
 def emblem(size, pad=0.18):
-    """Altin 'Z' + kilic capraz + tac: seffaf zeminli amblem."""
+    """Altin kale kulesi + kirmizi sancak (Seferhan): seffaf zeminli amblem."""
     S = size * 4
     im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    m = S * pad; w = S - 2 * m; t = w * 0.2
-    x0, y0, x1, y1 = m, m + w * 0.14, S - m, S - m - w * 0.02
-    # Z govdesi
-    z = [(x0, y0), (x1, y0), (x1, y0 + t), (x0 + t * 1.15, y1 - t), (x1, y1 - t), (x1, y1), (x0, y1), (x0, y1 - t), (x1 - t * 1.15, y0 + t), (x0, y0 + t)]
-    sh = Image.new('RGBA', (S, S), (0, 0, 0, 0)); ImageDraw.Draw(sh).polygon([(a + S * 0.012, b + S * 0.02) for a, b in z], fill=(0, 0, 0, 140))
+    m = S * pad; w = S - 2 * m
+    cx = S / 2
+    tw = w * 0.52                       # kule govdesi
+    x0, x1 = cx - tw / 2, cx + tw / 2
+    top, bot = m + w * 0.30, S - m
+    # golge
+    sh = Image.new('RGBA', (S, S), (0, 0, 0, 0)); ImageDraw.Draw(sh).rectangle([x0 + S * .015, top + S * .02, x1 + S * .015, bot + S * .02], fill=(0, 0, 0, 150))
     im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(S * 0.012)))
-    d.polygon(z, fill=GOLD)
-    d.polygon([(x0, y0), (x1, y0), (x1, y0 + t * 0.35), (x0, y0 + t * 0.35)], fill=(255, 238, 170))
-    d.polygon([(x0, y1 - t * 0.35), (x1, y1 - t * 0.35), (x1, y1), (x0, y1)], fill=GOLD2)
-    # tac
-    cx, cy, cw, ch = S / 2, m + w * 0.02, w * 0.36, w * 0.17
-    crown = [(cx - cw / 2, cy + ch), (cx - cw / 2, cy), (cx - cw / 4, cy + ch * 0.45), (cx, cy - ch * 0.15), (cx + cw / 4, cy + ch * 0.45), (cx + cw / 2, cy), (cx + cw / 2, cy + ch)]
-    d.polygon(crown, fill=(239, 68, 68), outline=GOLD, width=int(S * 0.008))
+    d.rectangle([x0, top, x1, bot], fill=GOLD)
+    d.rectangle([x0, top, x1, top + w * 0.04], fill=(255, 238, 170))
+    d.rectangle([x0, bot - w * 0.05, x1, bot], fill=GOLD2)
+    # siperlikler
+    cw = tw / 5
+    for i in range(3):
+        cxl = x0 + i * cw * 2
+        d.rectangle([cxl, top - w * 0.10, cxl + cw, top], fill=GOLD)
+    # kapi
+    gw = tw * 0.34; gx0 = cx - gw / 2; gy0 = bot - w * 0.30
+    d.rectangle([gx0, gy0, gx0 + gw, bot], fill=(60, 36, 12)); d.pieslice([gx0, gy0 - gw / 2, gx0 + gw, gy0 + gw / 2], 180, 360, fill=(60, 36, 12))
+    # kucuk pencere
+    d.rectangle([cx - tw * .07, top + w * .12, cx + tw * .07, top + w * .26], fill=(60, 36, 12))
+    # sancak diregi ve sancak
+    px = cx; pt = m - w * 0.02
+    d.rectangle([px - w * 0.012, pt, px + w * 0.012, top - w * 0.10], fill=(120, 80, 30))
+    flag = [(px + w * 0.012, pt), (px + w * 0.40, pt + w * 0.075), (px + w * 0.30, pt + w * 0.135), (px + w * 0.40, pt + w * 0.195), (px + w * 0.012, pt + w * 0.19)]
+    d.polygon(flag, fill=(239, 68, 68), outline=GOLD, width=int(S * 0.008))
+    d.ellipse([px + w * 0.10, pt + w * 0.07, px + w * 0.17, pt + w * 0.14], fill=GOLD)
     return im.resize((size, size), Image.LANCZOS)
 
 def bg(size, round_=False):

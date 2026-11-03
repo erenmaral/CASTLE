@@ -1,8 +1,8 @@
 {
-  "name": "zafarion",
-  "version": "0.1.0",
+  "name": "seferhan",
+  "version": "0.2.0",
   "private": true,
-  "description": "Zafarion - 2D strateji ve savas oyunu (mobil)",
+  "description": "Seferhan - 2D strateji ve savas oyunu (mobil)",
   "scripts": {
     "sim": "node tests/sim-balance.js",
     "sync": "cap sync android"

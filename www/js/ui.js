@@ -1,4 +1,4 @@
-// Zafarion - arayuz: ana menu sekmeleri, modallar, savas HUD'u
+// Seferhan - arayuz: ana menu sekmeleri, modallar, savas HUD'u
 (function (Z) {
   'use strict';
   var S = Z.Save, A = Z.Audio, $ = function (id) { return document.getElementById(id); };
@@ -79,7 +79,9 @@
 
   function computeDots() {
     var d = S.data, out = { map: false, army: false, vault: false, quests: false };
-    out.vault = !d.daily.claimedToday || S.treasuryPending() >= 150;
+    out.vault = !d.daily.claimedToday || S.treasuryPending() >= 150 || S.wheelFree();
+    out.map = S.anyStarClaimable();
+    if (S.anyAchClaimable()) out.quests = true;
     d.quests.list.forEach(function (q) { if (!q.claimed && q.prog >= S.questDef(q.id).target) out.quests = true; });
     d.deck.forEach(function (u) { if (d.coins >= Z.unitUpgradeCost(d.unitLvl[u]) && d.unitLvl[u] < Z.MAX_UNIT_LVL) out.army = true; });
     return out;
@@ -95,14 +97,22 @@
     html += '<div class="mapwrap" id="mapwrap"><div class="maptrack" style="width:' + w + 'px">' +
       '<svg width="' + w + '" height="340"><path d="' + path + '" fill="none" stroke="#2f3b78" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 22"/></svg>';
     for (i = 1; i <= N; i++) {
-      var st = d.stars[i] || 0, boss = Z.isBoss(i), cls = 'node' + (boss ? ' boss' : '');
+      var st = d.stars[i] || 0, boss = Z.isBoss(i), cls = 'node r' + Z.realmOf(i) + (boss ? ' boss' : '');
       if (st > 0) cls += ' done'; else if (i === d.cleared + 1) cls += ' cur'; else if (i > d.cleared + 1) cls += ' locked';
+      if ((i - 1) % 15 === 0) html += '<div class="realm" style="left:' + (pts[i - 1][0] - 56) + 'px">Diyar ' + (Z.realmOf(i) + 1) + ' · ' + Z.REALMS[Z.realmOf(i)] + '</div>';
       html += '<button class="' + cls + '" data-level="' + i + '" style="left:' + pts[i - 1][0] + 'px;top:' + pts[i - 1][1] + 'px">' +
         (boss ? '<span style="font-size:30px;line-height:1">👑</span>' : '') + i +
         '<span class="st">' + (st ? '★'.repeat(st) : (i > d.cleared + 1 ? '🔒' : '')) + '</span>' +
         '<span class="nm">' + Z.levelInfo(i).name + '</span></button>';
     }
     html += '</div></div>';
+    html += '<div class="sect" style="margin:16px 0 8px">Yıldız Ödülleri <small>⭐ ' + d.stats.totalStars + ' / ' + (N * 3) + '</small></div><div class="starrow">';
+    Z.STAR_MILESTONES.forEach(function (m) {
+      var can = S.starClaimable(m), got = d.starClaimed[m.n];
+      html += '<div class="smile' + (can ? ' can' : '') + (got ? ' got' : '') + '">⭐ ' + m.n + '<span>🪙' + m.coins + ' 💎' + m.gems + '</span>' +
+        (got ? '<span>✔</span>' : can ? '<button class="btn gold" data-star="' + m.n + '">Al</button>' : '<span class="mut">🔒</span>') + '</div>';
+    });
+    html += '</div>';
     html += '<div class="mode-row">' +
       '<button class="panel mode-card" data-act-hub="endless"><span class="big">♾️</span><div><h3>Sonsuz Kuşatma</h3><small>Dalgalara dayan, rekor kır. En iyi: <b style="color:var(--gold)">' + d.endlessBest + '. dalga</b></small></div></button>' +
       '<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>Savaş Ordusu</h3><small>' + d.deck.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '  ·  ' + Z.HEROES[d.hero].icon + ' ' + Z.HEROES[d.hero].name + '</small></div></button>' +
@@ -117,7 +127,7 @@
     var ok = avg >= rec - 0.51;
     UI.modal(
       '<h1>Bölüm ' + n + (info.boss ? ' <span class="badge">PATRON</span>' : '') + '</h1>' +
-      '<p class="mut" style="margin-top:0">' + info.name + '</p>' +
+      '<p class="mut" style="margin-top:0">' + Z.REALMS[info.realm] + ' · ' + info.name + '</p>' +
       '<div class="big-stars" style="font-size:64px">' + star3(st) + '</div>' +
       '<div class="row-lines"><span>Düşman: ' + info.tiers.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '</span>' +
       '<span>Ödül: 🪙 ' + info.rewardCoins + '+ · 💎 ' + info.rewardGems + '</span></div>' +
@@ -177,6 +187,15 @@
       '<small id="vault-sub">Saatte ' + Z.fmt(Z.treasuryRate(d.treasuryLvl, d.cleared)) + ' altın · en çok ' + Z.TREASURY_CAP_H + ' saat birikir' + (S.treasuryFull() ? ' · <b style="color:var(--red)">DOLU!</b>' : '') + '</small></div>' +
       '<div style="display:flex;flex-direction:column;gap:10px"><button class="btn gold" data-collect="1" id="vault-btn">Topla</button>' +
       '<button class="btn small ' + (d.coins >= uc ? '' : 'off') + '" data-tup="1">⬆ Sv.' + d.treasuryLvl + ' · 🪙 ' + Z.fmt(uc) + '</button></div></div></div>';
+    var free = S.wheelFree(), WCOL = ['#7c3aed', '#2563eb', '#0d9488', '#d97706', '#be185d', '#4f46e5', '#15803d', '#b91c1c'], grad = [], wl = '';
+    Z.WHEEL.forEach(function (sg, i) {
+      grad.push(WCOL[i % WCOL.length] + ' ' + (i * 45) + 'deg ' + ((i + 1) * 45) + 'deg');
+      wl += '<span style="transform:rotate(' + (i * 45 + 22.5) + 'deg) translateY(-104px)">' + (sg.gems ? '💎' + sg.gems : '🪙' + sg.coins) + '</span>';
+    });
+    html += '<div class="sect">Şans Çarkı</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">▼</div>' +
+      '<div class="wheel" id="wheel" style="background:conic-gradient(' + grad.join(',') + ')">' + wl + '</div><div class="wheel-hub"></div></div>' +
+      '<div style="flex:1"><h3>' + (free ? 'Bugünkü bedava hakkın hazır!' : 'Bedava hakkını kullandın') + '</h3><p class="small" style="margin:6px 0 16px">Her gün 1 bedava çevirme. Sonrası ' + Z.WHEEL_COST + ' 💎. En büyük ödül: 💎 40!</p>' +
+      '<button class="btn gold" data-spin="1" id="spin-btn">' + (free ? '🎡 Bedava Çevir' : '🎡 Çevir · ' + Z.WHEEL_COST + ' 💎') + '</button></div></div></div>';
     html += '<div class="sect">Günlük Giriş Ödülü</div><div class="panel"><div class="daily">';
     var idx = S.dailyIndex();
     Z.DAILY_REWARDS.forEach(function (r, i) {
@@ -203,6 +222,16 @@
         '<div class="bar' + (done ? ' green' : '') + '"><i style="width:' + (100 * q.prog / def.target) + '%"></i></div><small>' + q.prog + ' / ' + def.target + '  ·  Ödül: 🪙 ' + def.coins + ' 💎 ' + def.gems + '</small></div>' +
         '<button class="btn ' + (q.claimed ? 'off' : done ? 'gold' : 'off') + '" data-quest="' + i + '">' + (q.claimed ? '✔ Alındı' : done ? 'Al' : '…') + '</button></div>';
     });
+    var achs = Z.ACHIEVEMENTS.slice().sort(function (a, b) {
+      var ca = d.achClaimed[a.id] ? 2 : S.achClaimable(a) ? 0 : 1, cb = d.achClaimed[b.id] ? 2 : S.achClaimable(b) ? 0 : 1;
+      return ca - cb || (S.achProgress(b) / b.target) - (S.achProgress(a) / a.target);
+    });
+    html += '<div class="sect">Başarımlar</div>';
+    achs.forEach(function (a) {
+      var got = d.achClaimed[a.id], can = S.achClaimable(a), pr = S.achProgress(a);
+      html += '<div class="panel ach' + (got ? ' claimed' : '') + '"><div class="grow"><h3>' + a.text + '</h3><div class="bar' + (can || got ? ' green' : '') + '"><i style="width:' + (100 * pr / a.target) + '%"></i></div><small>' + Z.fmt(pr) + ' / ' + Z.fmt(a.target) + '  ·  Ödül: 💎 ' + a.gems + '</small></div>' +
+        '<button class="btn ' + (got ? 'off' : can ? 'gold' : 'off') + '" data-ach="' + a.id + '">' + (got ? '✔' : can ? 'Al' : '…') + '</button></div>';
+    });
     html += '<div class="sect">İstatistikler</div><div class="panel"><table class="tbl">' +
       '<tr><td>Oynanan savaş</td><td>' + d.stats.battles + '</td><td>Kazanılan</td><td>' + d.stats.wins + '</td></tr>' +
       '<tr><td>Yenilen düşman</td><td>' + d.stats.kills + '</td><td>Toplam yıldız</td><td>⭐ ' + d.stats.totalStars + '</td></tr>' +
@@ -213,6 +242,27 @@
   // ---------------------------------------------------------------- sekme tiklamalari
   function onTabClick(e) {
     var t = e.target, el, d = S.data;
+    if ((el = t.closest('[data-star]'))) {
+      var sm = S.claimStar(+el.getAttribute('data-star')); if (!sm) return A.deny();
+      A.chest(); UI.toast('Yıldız ödülü: 🪙' + sm.coins + ' 💎' + sm.gems); return UI.renderHub();
+    }
+    if ((el = t.closest('[data-ach]'))) {
+      var ac = S.claimAch(el.getAttribute('data-ach')); if (!ac) return A.deny();
+      A.win(); UI.toast('Başarım ödülü: 💎' + ac.gems); return UI.renderHub();
+    }
+    if ((el = t.closest('[data-spin]'))) {
+      if (UI.spinning) return;
+      var res = S.spin(); if (!res) { A.deny(); return UI.toast('Yeterli elmas yok'); }
+      UI.spinning = true; A.chest();
+      var wheel = $('wheel'), turn = 360 * 6 + (360 - (res.idx * 45 + 22.5));
+      wheel.style.transition = 'transform 3.4s cubic-bezier(.12,.7,.15,1)'; wheel.style.transform = 'rotate(' + turn + 'deg)';
+      setTimeout(function () {
+        UI.spinning = false; A.win();
+        UI.toast('Çarktan: ' + (res.seg.coins ? '🪙' + res.seg.coins : '💎' + res.seg.gems) + '!');
+        if (UI.tab === 'vault') UI.renderHub(); else { $('cur-coins').textContent = Z.fmt(S.data.coins); $('cur-gems').textContent = Z.fmt(S.data.gems); }
+      }, 3600);
+      return;
+    }
     if ((el = t.closest('[data-level]'))) { A.click(); return levelModal(+el.getAttribute('data-level')); }
     if ((el = t.closest('[data-act-hub]'))) {
       A.click(); var k = el.getAttribute('data-act-hub');
@@ -297,7 +347,7 @@
     UI.modal('<h1>Ayarlar</h1>' + row('sound', '🔊 Ses efektleri') + row('music', '🥁 Savaş müziği') + row('vibrate', '📳 Titreşim') +
       '<div class="actions"><button class="btn small red" data-act="reset">Kaydı sıfırla</button><button class="btn gold" data-act="close">Tamam</button></div>' +
       (UI.isBrowser() ? '<p class="small" style="margin-top:14px">💡 Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.</p>' : '') +
-      '<p class="small" style="margin-top:20px">Zafarion v' + Z.VERSION + ' (derleme ' + Z.BUILD + ')<br>Tüm grafik ve sesler kodla üretilmiştir.</p>', acts);
+      '<p class="small" style="margin-top:20px">Seferhan v' + Z.VERSION + ' (derleme ' + Z.BUILD + ')<br>Tüm grafik ve sesler kodla üretilmiştir.</p>', acts);
   };
 
   // ---------------------------------------------------------------- Acilis akisi
@@ -309,9 +359,10 @@
         '<p>🃏 Alttaki bir <b>kartı koridora sürükle</b> (ya da dokun) — birlik çağrılır.</p>' +
         '<p>⛏ <b>Madeni yükselt</b>, daha çok altın kazan. 🔱→🐎→🏹→🔱 : her birlik birine üstündür!</p>' +
         '<div class="actions"><button class="btn gold" data-act="go">⚔ İlk Savaşa Başla</button></div>',
-        { go: function () { d.tutorialDone = true; S.save(); UI.closeModal(); UI.game.startBattle('campaign', 1); } });
+        { go: function () { d.tutorialDone = true; d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.game.startBattle('campaign', 1); } });
       return;
     }
+    if (d.seenVersion !== Z.NOTES_ID) return UI.whatsNew();
     if (!d.daily.claimedToday) {
       var r = Z.DAILY_REWARDS[S.dailyIndex()];
       UI.modal('<h1>🎁 Günlük Ödül</h1><p>Seri: <b>' + (d.daily.streak + 1) + '. gün</b></p><div class="rewards">' +
@@ -381,6 +432,7 @@
     hud.tut = tut;
     $('hint').classList.toggle('hidden', !tut);
     $('hint').textContent = '👆 Bir kartı koridora sürükle!';
+    $('perk-row').innerHTML = '';
     $('info-title').textContent = b.mode === 'endless' ? 'Sonsuz Kuşatma' : 'Bölüm ' + b.level + ' · ' + b.info.name;
     $('btn-speed').textContent = 'x' + (UI.game.speed || 1);
   };
@@ -411,6 +463,9 @@
     else set('title', Math.floor(b.t), function () { $('info-title').textContent = 'Bölüm ' + b.level + ' · ' + b.info.name + ' · ' + Z.fmtTime(b.t); });
     set('combo', b.combo >= 3 ? b.combo : 0, function (v) {
       var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = '🔥 Seri x' + v;
+    });
+    set('perks', Object.keys(b.perks).join(), function () {
+      $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join('');
     });
     if (hud.tut) {
       if (b.stats.spawns >= 3 && b.stats.mines === 0 && b.t < 60) { $('hint').textContent = '⛏ Madeni yükselt: daha çok altın!'; }
@@ -490,6 +545,28 @@
     if (b.useSkill(lane)) return true;
     A.deny(); if (el) el.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }], { duration: 180 });
     return false;
+  };
+
+  UI.perkModal = function (b, done) {
+    var acts = {}, html = '<h1>⚔️ Savaş Ganimeti</h1><p>Birini seç — bu savaş boyunca geçerli olur.</p><div class="perks">';
+    b.perkOffer.forEach(function (id) {
+      var p = Z.PERKS[id];
+      html += '<button class="perk" data-act="p_' + id + '"><span class="p-ico">' + p.icon + '</span><span class="p-name">' + p.name + '</span><span class="p-desc">' + p.desc + '</span></button>';
+      acts['p_' + id] = function () { b.pickPerk(id); UI.closeModal(); if (done) done(); };
+    });
+    UI.modal(html + '</div>', acts);
+  };
+
+  UI.whatsNew = function () {
+    var d = S.data;
+    UI.modal('<h1>🎉 Seferhan 0.2</h1><p>Oyunun adı artık <b style="color:var(--gold)">Seferhan</b>! İşte yenilikler:</p><div class="new-list">' +
+      '🗺️ <b>3 diyar, 45 bölüm</b> — Yeşil Vadi, Kızıl Çöl, Buz Diyarı<br>' +
+      '💚 <b>Şifacı</b> ve 🚩 <b>Sancaktar</b> birlikleri, ❄️ <b>Buz Hatun</b> kahramanı<br>' +
+      '⚔️ <b>Savaş Ganimeti</b> — savaş sırasında 3 güçten birini seç<br>' +
+      '🎡 <b>Şans Çarkı</b>, ⭐ yıldız ödülleri ve 🏆 başarımlar</div>' +
+      '<p class="small">İlerlemen korundu. Yeni birlikler Ordu sekmesinde bölüm ilerledikçe açılır.</p>' +
+      '<div class="actions"><button class="btn gold" data-act="ok">Harika!</button></div>',
+      { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });
   };
 
   UI.pauseModal = function (acts) {

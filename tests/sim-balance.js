@@ -19,12 +19,13 @@ function unlockedAt(L) { return Z.UNIT_ORDER.filter(u => L - 1 >= Z.UNLOCK_AT[u]
 
 function playBot(mode, L, seed) {
   const sv = makeSave(L);
-  const deck = unlockedAt(L).slice(0, 5);
+  const deck = process.env.DECK ? process.env.DECK.split(',') : unlockedAt(L).slice(0, 5);
   const b = new Z.Battle({ mode, level: L, save: sv, deck, hero: 'aslan', seed });
   const rng = Z.mulberry32(seed * 7 + 1);
   let tick = 0;
   const maxT = mode === 'endless' ? 900 : 420;
   while (!b.over && b.t < maxT) {
+    if (b.perkOffer) b.pickPerk(b.perkOffer[0]); // bot: ilk ganimeti al
     b.update(1 / 30);
     b.drain();
     tick -= 1 / 30;

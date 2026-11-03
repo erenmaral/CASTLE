@@ -1,4 +1,4 @@
-// Zafarion - acilis, oyun dongusu, olcekleme, geri tusu
+// Seferhan - acilis, oyun dongusu, olcekleme, geri tusu
 (function (Z) {
   'use strict';
   var S = Z.Save, A = Z.Audio, R = Z.Render, UI = Z.UI;
@@ -25,7 +25,7 @@
       var d = S.data;
       A.init();
       this.battle = new Z.Battle({ mode: mode, level: level, save: d, deck: d.deck, hero: d.heroOwned[d.hero] ? d.hero : 'aslan' });
-      this.paused = false; this.ending = false; this.endTimer = 0;
+      this.paused = false; this.ending = false; this.endTimer = 0; this.perkOpen = false;
       UI.closeModal(); UI.hideHub();
       UI.hudBuild(this.battle);
       R.start(this.battle);
@@ -33,12 +33,12 @@
     },
 
     toMenu: function (tab) {
-      A.musicStop(); R.stop(); this.battle = null; this.paused = false; this.ending = false;
+      A.musicStop(); R.stop(); this.battle = null; this.paused = false; this.ending = false; this.perkOpen = false;
       UI.closeModal(); UI.showHub(tab || (UI.tab || 'map'));
     },
 
     pause: function () {
-      if (!this.battle || this.battle.over || this.paused) return;
+      if (!this.battle || this.battle.over || this.paused || this.battle.perkOffer) return;
       this.paused = true; A.musicStop();
       var self = this;
       UI.pauseModal({
@@ -57,6 +57,7 @@
       Game.last = now;
       var b = Game.battle;
       if (b) {
+        if (b.perkOffer && !Game.perkOpen && !b.over && !Game.paused) { Game.perkOpen = true; UI.perkModal(b, function () { Game.perkOpen = false; }); }
         if (!Game.paused) {
           var steps = Game.speed, i;
           for (i = 0; i < steps; i++) b.update(dt);
@@ -81,6 +82,7 @@
 
     // Android geri tusu
     onBack: function () {
+      if (this.battle && this.battle.perkOffer) return; // ganimet secilmeden kapatilamaz
       if (UI.modalOpen()) {
         if (this.paused) return this.resume();
         return UI.closeModal();

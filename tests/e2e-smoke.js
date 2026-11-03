@@ -49,6 +49,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   for (let i = 0; i < 120; i++) {
     await page.evaluate(() => {
       const b = Z.Game.battle; if (!b || b.over) return;
+      if (b.perkOffer) b.pickPerk(b.perkOffer[0]);
       b.gold = Math.max(b.gold, 200);
       const th = [0, 0, 0]; b.units.forEach(u => { if (u.team === 1) th[u.lane] += u.hp; });
       const m = Math.max(...th), lane = m > 0 ? th.indexOf(m) : Math.floor(Math.random() * 3);

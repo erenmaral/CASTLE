@@ -1,4 +1,4 @@
-// Zafarion - savas simulasyonu (DOM'dan bagimsiz; Node'da bot ile test edilebilir)
+// Seferhan - savas simulasyonu (DOM'dan bagimsiz; Node'da bot ile test edilebilir)
 (function (Z) {
   'use strict';
 
@@ -55,8 +55,10 @@
 
     this.ai = { gold: this.info.startGold, think: 3, pending: null, pendingT: 0, bossDone: 0 };
     // istatistikler
-    this.stats = { kills: 0, spawns: 0, skills: 0, mines: 0, lost: 0 };
+    this.stats = { kills: 0, spawns: 0, skills: 0, mines: 0, lost: 0, perks: 0 };
     this.combo = 0; this.comboT = 0; this.bestCombo = 0;
+    this.theme = Z.realmOf(this.mode === 'endless' ? 1 : this.level);
+    this.perks = {}; this.perkIdx = 0; this.perkOffer = null;
   }
   Z.Battle = Battle;
 
@@ -75,7 +77,7 @@
     if (w >= 2) t.push('cav'); if (w >= 4) t.push('knight'); if (w >= 6) t.push('mage'); if (w >= 8) t.push('cata');
     return t;
   };
-  P.income = function () { return Z.mineIncome(this.mine); };
+  P.income = function () { return Z.mineIncome(this.mine) * (this.perks.gold ? 1.25 : 1); };
   P.goldCap = function () { return Z.mineCap(this.mine); };
   P.mineCost = function () { return this.mine < Z.MINE_COSTS.length ? Z.MINE_COSTS[this.mine] : null; };
   P.emit = function (e) { this.events.push(e); };
@@ -91,7 +93,7 @@
     if (this.laneCount(0, lane) >= MAX_PER_LANE) return false;
     var def = Z.UNITS[type];
     this.gold -= def.cost;
-    this.cooldown[type] = def.cd;
+    this.cooldown[type] = def.cd * (this.perks.cd ? 0.75 : 1);
     this.spawn(0, type, lane);
     this.stats.spawns++;
     return true;
@@ -132,7 +134,15 @@
         }
       }
     }
-    this.heroCd = hero.cd;
+    if (hero.type === 'freeze') {
+      var frozen = this.units.filter(function (e) { return e.team === 1 && e.lane === lane && !e.dead; });
+      for (i = 0; i < frozen.length; i++) {
+        frozen[i].stunUntil = this.t + Math.min(6, 3.5 * pw);
+        this.emit({ type: 'freeze', x: frozen[i].x, lane: lane });
+        this.damage(frozen[i], 55 * pw, 'freeze', false, true);
+      }
+    }
+    this.heroCd = hero.cd * (this.perks.skill ? 0.7 : 1);
     this.stats.skills++;
     this.emit({ type: 'skill', kind: hero.type, lane: lane });
     return true;
@@ -149,11 +159,12 @@
       hpM = s; dmgM = 1 + (s - 1) * 0.8;
     }
     if (boss) { hpM *= 3; dmgM *= 1.15; }
+    if (team === 0 && this.perks.hp) hpM *= 1.15;
     var u = {
       id: this.nextId++, team: team, type: type, cls: def.cls, lane: lane, boss: !!boss,
       x: team === 0 ? C.PF + 10 : C.EF - 10,
       hp: def.hp * hpM, max: def.hp * hpM, dmg: def.dmg * dmgM,
-      int: def.int, range: def.range, speed: def.speed, ranged: def.ranged, aoe: def.aoe || 0, minRange: def.minRange || 0,
+      int: def.int, range: def.range, speed: def.speed, ranged: def.ranged, aoe: def.aoe || 0, minRange: def.minRange || 0, heal: !!def.heal, aura: !!def.aura, stunUntil: 0,
       atkCd: def.int * 0.5, atkAnim: 0, flash: 0, age: 0, dead: false, charged: false, wardUntil: 0, moving: false
     };
     this.units.push(u);
@@ -196,7 +207,7 @@
 
   // ---- Ana dongu --------------------------------------------------------
   P.update = function (dtRaw) {
-    if (this.over) return;
+    if (this.over || this.perkOffer) return;
     var dt = Math.min(dtRaw, 0.05), i;
     this.t += dt;
     this.gold = Math.min(this.goldCap(), this.gold + this.income() * dt);
@@ -210,22 +221,30 @@
     for (i = 0; i < this.units.length; i++) if (!this.units[i].dead) this.stepUnit(this.units[i], dt);
     this.updateProjectiles(dt);
     this.updateBases(dt);
+    if (this.perks.regen) {
+      for (i = 0; i < this.units.length; i++) { var ru = this.units[i]; if (ru.team === 0 && !ru.dead) ru.hp = Math.min(ru.max, ru.hp + ru.max * 0.015 * dt); }
+    }
     this.units = this.units.filter(function (u) { return !u.dead; });
 
     if (this.base[1].hp <= 0) this.finish(true);
     else if (this.base[0].hp <= 0) this.finish(false);
+    else if (this.perkIdx < Z.PERK_KILLS.length && this.stats.kills >= Z.PERK_KILLS[this.perkIdx]) { this.perkIdx++; this.offerPerk(); }
   };
 
   P.stepUnit = function (u, dt) {
     u.age += dt; u.atkCd -= dt;
     if (u.flash > 0) u.flash -= dt;
     if (u.atkAnim > 0) u.atkAnim -= dt;
-    var dir = u.team === 0 ? 1 : -1, tgt = null, best = 1e9, allyAhead = 1e9, enemyAhead = 1e9;
+    if (u.stunUntil > this.t) { u.moving = false; return; } // dondurulmus
+    var dir = u.team === 0 ? 1 : -1, tgt = null, best = 1e9, allyAhead = 1e9, enemyAhead = 1e9, hurt = null, hurtR = 2;
 
     for (var i = 0; i < this.units.length; i++) {
       var e = this.units[i];
       if (e === u || e.dead || e.lane !== u.lane) continue;
       var d = (e.x - u.x) * dir;
+      if (u.heal && e.team === u.team && e.hp < e.max && Math.abs(e.x - u.x) <= u.range) {
+        var r = e.hp / e.max; if (r < hurtR) { hurtR = r; hurt = e; }
+      }
       if (d < -6) continue;
       if (e.team !== u.team) {
         if (d < enemyAhead) enemyAhead = d;
@@ -234,6 +253,13 @@
       } else if (d > 0 && d < allyAhead) {
         allyAhead = d;
       }
+    }
+
+    // Sifaci: savasmaz, yarali dostu iyilestirir, dusmana yaklasmaz
+    if (u.heal) {
+      if (hurt && u.atkCd <= 0) this.healUnit(u, hurt);
+      if (allyAhead < 26 || enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * dt; u.moving = true; }
+      return;
     }
 
     var baseDist = u.team === 0 ? (C.EF - u.x) : (u.x - C.PF);
@@ -255,6 +281,8 @@
     u.atkCd = u.int / (buff ? 1.35 : 1);
     u.atkAnim = 0.25;
     var dmg = u.dmg * (buff ? 1.35 : 1);
+    if (u.team === 0 && this.perks.dmg) dmg *= 1.15;
+    if (this.auraNear(u)) dmg *= 1.2;
     if (u.cls === 'cav' && !u.charged) { u.charged = true; dmg *= 2; this.emit({ type: 'charge', x: u.x, lane: u.lane }); }
     if (u.ranged) {
       var tx = tgt ? tgt.x : (u.team === 0 ? C.EF : C.PF);
@@ -301,6 +329,39 @@
     }
   };
 
+  // Sancaktar aurasi: ayni koridorda 160 birim icindeki baska bir sancaktar
+  P.auraNear = function (u) {
+    for (var i = 0; i < this.units.length; i++) {
+      var b = this.units[i];
+      if (b.aura && b !== u && !b.dead && b.team === u.team && b.lane === u.lane && Math.abs(b.x - u.x) <= 160) return true;
+    }
+    return false;
+  };
+  P.healUnit = function (healer, target) {
+    var amt = healer.dmg * (healer.team === 0 && this.perks.dmg ? 1.15 : 1);
+    healer.atkCd = healer.int; healer.atkAnim = 0.25;
+    target.hp = Math.min(target.max, target.hp + amt);
+    this.emit({ type: 'heal', x: target.x, lane: target.lane, v: amt, team: healer.team });
+  };
+
+  // ---- Savas ganimeti ---------------------------------------------------
+  P.offerPerk = function () {
+    var self = this, pool = Object.keys(Z.PERKS).filter(function (k) { return !self.perks[k]; }), out = [];
+    while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(this.rng() * pool.length), 1)[0]);
+    if (out.length) this.perkOffer = out;
+  };
+  P.pickPerk = function (id) {
+    if (!this.perkOffer || this.perkOffer.indexOf(id) < 0) return false;
+    this.perks[id] = true; this.perkOffer = null; this.stats.perks++;
+    var i, u;
+    if (id === 'hp') { for (i = 0; i < this.units.length; i++) { u = this.units[i]; if (u.team === 0 && !u.dead) { u.max *= 1.15; u.hp *= 1.15; } } }
+    if (id === 'castle') { var b = this.base[0]; b.max *= 1.15; b.hp = Math.min(b.max, b.hp + b.max * 0.3); }
+    if (id === 'loot') this.gold = Math.min(this.goldCap() + 100, this.gold + 150);
+    if (id === 'skill') this.heroCd *= 0.7;
+    this.emit({ type: 'perk', id: id });
+    return true;
+  };
+
   // Kale okcu kuleleri
   P.updateBases = function (dt) {
     for (var team = 0; team < 2; team++) {
@@ -317,6 +378,7 @@
       if (tgt) {
         b.shoot = 1.5;
         var dm = 11 * (team === 0 ? 1 + 0.1 * ((this.sv.castleLvl || 1) - 1) : 1 + (this.enemyScale() - 1) * 0.8);
+        if (team === 0 && this.perks.tower) dm *= 2;
         this.damage(tgt, dm, 'tower', true);
         this.emit({ type: 'tower', team: team, lane: tgt.lane, x: tgt.x });
       } else {
@@ -403,7 +465,8 @@
     var d = S.data, r = b.result, out = { coins: 0, gems: 0, chest: null, firstClear: false, newUnits: [], newBest: false, stars: r.stars, win: r.win };
     d.stats.battles++;
     d.stats.kills += b.stats.kills;
-    S.track('kills', b.stats.kills); S.track('spawns', b.stats.spawns); S.track('skills', b.stats.skills); S.track('mines', b.stats.mines);
+    S.track('kills', b.stats.kills); S.track('spawns', b.stats.spawns); S.track('skills', b.stats.skills); S.track('mines', b.stats.mines); S.track('perks', b.stats.perks);
+    d.stats.perks += b.stats.perks; if (b.bestCombo > d.stats.maxCombo) d.stats.maxCombo = b.bestCombo;
 
     if (b.mode === 'endless') {
       out.coins = r.wave * 25 + b.stats.kills * 2;

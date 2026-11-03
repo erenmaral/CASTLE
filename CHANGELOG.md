@@ -1,9 +1,18 @@
-# Zafarion — Sürüm Notları
+# Seferhan — Sürüm Notları
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
-## Yayınlanmamış
+## 0.2.0 — Seferhan
+- ✏️ **Oyunun adı Seferhan oldu** (eski adı Zafarion). Yeni ikon: sancaklı kale kulesi. İlerleme ve kayıtlar korunur.
+- 🗺️ **3 diyar, 45 bölüm:** Yeşil Vadi, Kızıl Çöl (kum tozu), Buz Diyarı (kar yağışı). Her diyarın kendi manzarası var.
+- 💚 **Şifacı:** koridordaki yaralı dostları iyileştirir (6. bölümden sonra açılır).
+- 🚩 **Sancaktar:** yanındaki dostlara %20 hasar bonusu (10. bölümden sonra açılır).
+- ❄️ **Buz Hatun** kahramanı: *Don Fırtınası* ile koridoru dondurur.
+- ⚔️ **Savaş Ganimeti:** savaş sırasında 3 güçten birini seç (9 farklı güç) — her savaş farklı oynanır.
+- 🎡 **Şans Çarkı:** günlük bedava çevirme, sonrası 💎 ile.
+- ⭐ **Yıldız ödülleri** (6 kilometre taşı) ve 🏆 **18 başarım**.
 - 🌐 **Tarayıcı sürümü (GitHub Pages / PWA):** ana ekrana eklenebilir, çevrimdışı çalışır.
+- Denge: son diyarların zorluk artışı yumuşatıldı; savaşta ganimet seçimi eklendiği için erken bölümler biraz kolaylaştı.
 
 ## 0.1.0 — İlk sürüm
 - ⚔️ **Sefer:** 30 bölüm, her 5. bölüm patron. Yıldız sistemi (kale canına göre 1–3 ⭐).

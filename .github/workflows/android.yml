@@ -64,7 +64,7 @@ jobs:
           else
             PASS=$(openssl rand -hex 16)
             keytool -genkeypair -noprompt -keystore "$KS" -storetype PKCS12 -alias zafarion -keyalg RSA -keysize 2048 \
-              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Zafarion, O=Zafarion, C=TR"
+              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Seferhan, O=Seferhan, C=TR"
             echo "::warning::ZAFARION_KEYSTORE_B64 / ZAFARION_KEYSTORE_PASSWORD secret'lari tanimli degil. Gecici anahtar uretildi: bu APK'yi guncellemek icin eskisini once silmek gerekir (kayit gider). README'deki 'Imza anahtari' bolumune bakin."
           fi
           echo "::add-mask::$PASS"
@@ -87,12 +87,12 @@ jobs:
       - name: APK adini duzenle
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk "dist/Zafarion-${{ steps.ver.outputs.name }}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/Seferhan-${{ steps.ver.outputs.name }}.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Zafarion-${{ steps.ver.outputs.name }}
+          name: Seferhan-${{ steps.ver.outputs.name }}
           path: dist/*.apk
 
       - name: GitHub Release olustur
@@ -101,7 +101,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           MSG=$(git log -1 --pretty=%s)
-          gh release create "build-${{ github.run_number }}" "dist/Zafarion-${{ steps.ver.outputs.name }}.apk" \
+          gh release create "build-${{ github.run_number }}" "dist/Seferhan-${{ steps.ver.outputs.name }}.apk" \
             --target "${{ github.sha }}" --prerelease \
-            --title "Zafarion ${{ steps.ver.outputs.name }}" \
+            --title "Seferhan ${{ steps.ver.outputs.name }}" \
             --notes "Otomatik derleme #${{ github.run_number }} — ${MSG}"

@@ -1,4 +1,4 @@
-// Zafarion - kayit sistemi (localStorage) + cevrimdisi hazine + gunluk sifirlama
+// Seferhan - kayit sistemi (localStorage) + cevrimdisi hazine + gunluk sifirlama
 (function (Z) {
   'use strict';
   var KEY = 'zafarion.save.v1';
@@ -20,16 +20,17 @@
       v: 1,
       coins: 150, gems: 20,
       unitLvl: unitLvl,
-      heroOwned: { aslan: true }, heroLvl: { aslan: 1, yildiz: 1, demir: 1 }, hero: 'aslan',
+      heroOwned: { aslan: true }, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1 }, hero: 'aslan',
       deck: ['spear', 'archer', 'cav'],
       castleLvl: 1, treasuryLvl: 1, treasuryLast: Date.now(),
       cleared: 0, stars: {}, endlessBest: 0,
       daily: { lastDay: '', streak: 0, claimedToday: false },
       quests: { day: '', list: [] },
-      stats: { battles: 0, wins: 0, kills: 0, totalStars: 0 },
+      stats: { battles: 0, wins: 0, kills: 0, totalStars: 0, maxCombo: 0, perks: 0, spins: 0 },
+      achClaimed: {}, starClaimed: {}, wheel: { day: '', used: false },
       settings: { sound: true, music: true, vibrate: true },
       seenUnlock: { spear: true, archer: true, cav: true },
-      tutorialDone: false
+      tutorialDone: false, seenVersion: ''
     };
   }
 
@@ -67,6 +68,7 @@
         d.daily.claimedToday = false;
         d.daily.lastDay = t;
       }
+      if (d.wheel.day !== t) d.wheel = { day: t, used: false };
       if (d.quests.day !== t) {
         var pool = Z.QUEST_POOL.slice(), h = hashStr(t), list = [];
         for (var i = 0; i < 3 && pool.length; i++) {
@@ -114,6 +116,39 @@
     collectTreasury: function () {
       var n = this.treasuryPending(); this.data.coins += n; this.data.treasuryLast = Date.now(); this.save(); return n;
     },
+
+    // ---- Sans carki ----
+    wheelFree: function () { return !this.data.wheel.used; },
+    spin: function () {
+      var d = this.data, free = !d.wheel.used;
+      if (!free) { if (d.gems < Z.WHEEL_COST) return null; d.gems -= Z.WHEEL_COST; } else { d.wheel.used = true; }
+      var total = 0, i; Z.WHEEL.forEach(function (s) { total += s.w; });
+      var r = Math.random() * total, idx = 0;
+      for (i = 0; i < Z.WHEEL.length; i++) { r -= Z.WHEEL[i].w; if (r <= 0) { idx = i; break; } }
+      var seg = Z.WHEEL[idx];
+      d.coins += seg.coins || 0; d.gems += seg.gems || 0; d.stats.spins++;
+      this.save();
+      return { idx: idx, seg: seg, free: free };
+    },
+
+    // ---- Basarimlar ----
+    achProgress: function (a) { return Math.min(a.target, a.get(this.data)); },
+    achClaimable: function (a) { return !this.data.achClaimed[a.id] && a.get(this.data) >= a.target; },
+    claimAch: function (id) {
+      var a = Z.ACHIEVEMENTS.filter(function (x) { return x.id === id; })[0];
+      if (!a || !this.achClaimable(a)) return null;
+      this.data.achClaimed[id] = true; this.data.gems += a.gems; this.save(); return a;
+    },
+    anyAchClaimable: function () { var self = this; return Z.ACHIEVEMENTS.some(function (a) { return self.achClaimable(a); }); },
+
+    // ---- Yildiz odulleri ----
+    starClaimable: function (m) { return !this.data.starClaimed[m.n] && this.data.stats.totalStars >= m.n; },
+    claimStar: function (n) {
+      var m = Z.STAR_MILESTONES.filter(function (x) { return x.n === n; })[0];
+      if (!m || !this.starClaimable(m)) return null;
+      this.data.starClaimed[n] = true; this.data.coins += m.coins; this.data.gems += m.gems; this.save(); return m;
+    },
+    anyStarClaimable: function () { var self = this; return Z.STAR_MILESTONES.some(function (m) { return self.starClaimable(m); }); },
 
     unlockedUnits: function () {
       var c = this.data.cleared;

@@ -1,11 +1,11 @@
-# ⚔️ Zafarion
+# ⚔️ Seferhan
 
 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
 Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
 
 ## APK nasıl alınır?
 Her `push` sonrası GitHub Actions otomatik APK derler:
-**GitHub → bu depo → Releases** → en yeni `Zafarion x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
+**GitHub → bu depo → Releases** → en yeni `Seferhan x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
 (Ayarlar'dan "bilinmeyen kaynaklardan yüklemeye" izin vermek gerekir).
 Tüm sürümler aynı anahtarla imzalandığı için yeni APK eskisinin **üzerine kurulur, kayıtlarınız silinmez**.
 
@@ -23,6 +23,8 @@ node tests/sim-balance.js 8 -2        # 2 seviye geride bir oyuncu
 node tests/sim-balance.js 6 0 endless # sonsuz mod
 node tests/e2e-smoke.js               # Playwright ile ekran görüntülü duman testi
 node tests/pwa-check.js <adres>       # manifest, service worker ve çevrimdışı açılış kontrolü
+node tests/unit-features.js           # şifacı, aura, dondurma, ganimet, çark, kayıt göçü mantık testleri
+node tests/e2e-v02.js                 # v0.2 özellikleri + eski kayıtla açılış (ekran görüntülü)
 python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 ```
 
@@ -36,6 +38,8 @@ python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 | `www/js/save.js` | Kayıt (localStorage), hazine, günlük ödül/görev |
 | `android/` | Capacitor Android projesi |
 | `.github/workflows/android.yml` | Otomatik APK derleme + Release |
+
+> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Paket kimliği (`com.zafarion.game`), kayıt anahtarı ve `ZAFARION_*` secret adları, mevcut kurulumlar ve ilerleme bozulmasın diye bilerek değiştirilmedi.
 
 ## İmza anahtarı (güncellemelerin üst üste kurulması için — bir kez yapılır)
 Anahtar ve şifre **depoda tutulmaz**. Bir kez kendi anahtarınızı üretip GitHub Secrets'a ekleyin:
