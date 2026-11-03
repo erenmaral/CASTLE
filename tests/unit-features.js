@@ -1,7 +1,7 @@
 // v0.2 ozellikleri icin hizli mantik testleri: node tests/unit-features.js
 const path = require('path'); const assert = require('assert');
 globalThis.localStorage = { getItem() { return null; }, setItem() {} };
-['version', 'data', 'save', 'sim'].forEach(f => require(path.join('..', 'www', 'js', f + '.js')));
+['version', 'data', 'save', 'sim', 'field'].forEach(f => require(path.join('..', 'www', 'js', f + '.js')));
 const Z = globalThis.Z;
 const mk = (deck, hero, level, extra) => {
   const sv = { unitLvl: {}, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1, ejder: 1 }, castleLvl: 1 }; Z.UNIT_ORDER.forEach(u => (sv.unitLvl[u] = 1));
@@ -143,5 +143,67 @@ const still = (b) => b.units.forEach(u => { if (u.team === 1) u.atkCd = 99; });
   for (let n = 1; n <= Z.MAX_LEVEL; n++) Z.levelInfo(n).tiers.forEach(t => assert(Z.UNITS[t], 'dusman kademesinde bilinmeyen birim: ' + t));
   assert(Z.levelInfo(60).tiers.includes('flamer') && Z.levelInfo(22).tiers.includes('assassin'), 'yeni birimler dusman kademelerinde'); assert(Z.unitUpgradeCost(Z.MAX_UNIT_LVL - 1) > Z.unitUpgradeCost(10), 'maliyet egrisi');
   ok('Veri tutarlılığı: 75 bölüm, ' + Z.UNIT_ORDER.length + ' birim, ' + Z.HERO_ORDER.length + ' kahraman eksiksiz'); }
+
+
+// ---- v0.5: iki savas turu + gecis ----
+{ assert(Z.levelType(3) === 'field' && Z.levelType(4) === 'field' && Z.levelType(1) === 'castle' && Z.levelType(5) === 'castle' && Z.levelType(8) === 'field', 'savas turu dagilimi');
+  const ft = []; for (let n = 1; n <= Z.MAX_LEVEL; n++) if (Z.levelType(n) === 'field') ft.push(n); assert(ft.length === 30, 'acik alan bolum sayisi ' + ft.length);
+  const objs = new Set(ft.map(n => Z.fieldObjective(n, [Z.ruleOf(n)]))); assert(objs.has('commander') && objs.has('capture') && objs.has('survive'), 'uc hedef de kullanilmali');
+  ok('Savaş türleri: 75 bölümde 30 açık alan (komutan / bayrak / dayanma hedefleri)'); }
+const fmk = (deck, level, extra) => {
+  const sv = { unitLvl: {}, heroLvl: { aslan: 1, yildiz: 1, demir: 1, buz: 1, ejder: 1 }, castleLvl: 1 }; Z.UNIT_ORDER.forEach(u => (sv.unitLvl[u] = 1));
+  const b = new Z.FieldBattle(Object.assign({ level: level || 3, save: sv, deck, hero: 'aslan', seed: 9 }, extra || {}));
+  b.ai.gold = -1e9; b.ai.think = 1e9; return b;
+};
+const clearEnemy = b => { b.units = b.units.filter(u => u.team === 0 || u.commander); };
+// F1) Harita deterministik; arazi yerlesim bolgelerine tasmaz
+{ const a = Z.fieldMap(8, 'capture'), b = Z.fieldMap(8, 'capture'), c = Z.fieldMap(13, 'commander');
+  assert(JSON.stringify(a) === JSON.stringify(b), 'harita bolum numarasina gore sabit olmali'); assert(JSON.stringify(a) !== JSON.stringify(c), 'farkli bolum farkli harita');
+  assert(a.flags.length === 3 && a.river === null, 'bayrak modunda 3 bayrak ve nehir yok');
+  for (let n = 1; n <= 75; n++) { const m = Z.fieldMap(n, 'commander'); [].concat(m.forests, m.hills, m.rocks).forEach(o => assert(o.y - o.r > 150 && o.y + o.r < Z.FH - 150, 'arazi yerlesim alanina tasti: bolum ' + n)); if (m.river) assert(m.river.gaps[0].x1 < m.river.gaps[1].x0, 'gecitler cakisiyor: ' + n); }
+  ok('Açık alan haritası: bölüme göre sabit, araziler ordugah bölgelerini kapatmaz, nehir geçitleri ayrık'); }
+// F2) Yerlestirme: butce, iade, bolge, engel
+{ const b = fmk(['spear', 'archer']); const g0 = b.gold, cost = Z.UNITS.spear.cost;
+  const u = b.place('spear', 300, Z.FH - 100); assert(u && b.gold === g0 - cost, 'butce dusmedi');
+  assert(!b.place('spear', 300, 300), 'oyuncu alani disina yerlestirildi'); assert(!b.canPlace(5, Z.FH - 50), 'kenara yerlestirildi');
+  assert(b.moveUnit(u.id, 200, Z.FH - 60) && Math.abs(u.x - 200) < 1e-9, 'tasima'); assert(b.removeUnit(u.id) && b.gold === g0, 'iade tam olmali');
+  const n0 = b.autoPlace(); assert(n0 >= 6 && b.countTeam(0) === n0 + 1 && b.gold < Z.UNITS.spear.cost, 'otomatik dizilis butceyi kullanmali');
+  b.startBattle(); assert(b.phase === 'battle' && !b.removeUnit(b.units.find(x => x.team === 0 && !x.commander).id), 'savasta iade yapilamaz'); assert(!b.canPlace(300, Z.FH - 150), 'savasta yalniz alt serit');
+  ok('Yerleştirme: bütçe, geri alma tam iade, bölge/kenar kuralları, otomatik diziliş'); }
+// F3) Hazirlikta savas yok; komutanlar var
+{ const b = fmk(['spear']); b.place('spear', 300, Z.FH - 60); for (let i = 0; i < 90; i++) b.update(1 / 30); assert(b.t === 0, 'hazirlikta zaman akmamali');
+  assert(b.cmdP && b.cmdE && b.cmdP.team === 0 && b.cmdE.team === 1 && b.cmdE.hp > b.cmdP.hp * 0.5, 'komutanlar'); ok('Hazırlık aşamasında savaş işlemez; iki taraf da komutanla başlar'); }
+// F4) Birlikler birbirini gecebilir (hizli, yavas dostun onunde takilmaz)
+{ const b = fmk(['spear', 'cav']); clearEnemy(b); b.cmdE.x = 600; b.cmdE.y = 40; b.cmdE.hp = b.cmdE.max = 1e9;
+  const slow = b.spawn(0, 'knight', 300, 600), fast = b.spawn(0, 'cav', 300, 700); slow.speed = 20; b.phase = 'battle';
+  let passed = false; for (let i = 0; i < 400 && !passed; i++) { b.update(1 / 30); if (fast.y < slow.y - 20) passed = true; } assert(passed, 'hizli birlik yavasi gecemedi');
+  ok('Açık alanda hızlı birlik, yavaş dostun yanından geçer'); }
+// F5) Orman yavaslatir, ormanda menzilli hasari azalir
+{ const b = fmk(['spear']); b.map.forests = [{ x: 200, y: 500, r: 90 }]; b.map.hills = []; b.map.river = null; b.map.rocks = []; clearEnemy(b); b.cmdE.hp = b.cmdE.max = 1e9; b.cmdE.x = 600; b.cmdE.y = 60; b.phase = 'battle';
+  const inF = b.spawn(0, 'spear', 200, 520), out = b.spawn(0, 'spear', 520, 520);
+  for (let i = 0; i < 30; i++) b.update(1 / 30); const dIn = 520 - inF.y, dOut = 520 - out.y; assert(dIn < dOut * 0.8 && dIn > 0, 'orman yavaslatmali ' + dIn + ' ' + dOut);
+  const t1 = b.spawn(1, 'archer', 100, 100); const vs = (tgt) => { tgt.hp = tgt.max = 1e5; b.damage(tgt, 100, 'archer', true); return 1e5 - tgt.hp; };
+  const dmgOut = vs(out), dmgIn = vs(inF); assert(Math.abs(dmgIn / dmgOut - 0.75) < 0.01, 'orman siperi ×0.75 ' + dmgIn / dmgOut); void t1;
+  ok('Orman: hareket yavaşlar, okçu hasarı ×0.75'); }
+// F6) Nehir: gecit disindan gecilmez, gecitten gecer
+{ const b = fmk(['spear']); b.map.river = { y: 420, hw: 26, gaps: [{ x0: 80, x1: 200 }, { x0: 500, x1: 620 }] }; b.map.forests = []; b.map.hills = []; b.map.rocks = []; clearEnemy(b);
+  b.cmdE.x = 360; b.cmdE.y = 60; b.cmdE.hp = b.cmdE.max = 1e9; b.phase = 'battle'; const u = b.spawn(0, 'spear', 340, 600); let cross = null;
+  for (let i = 0; i < 900; i++) { b.update(1 / 30); if (Math.abs(u.y - 420) < 22 && !(u.x >= 76 && u.x <= 204) && !(u.x >= 496 && u.x <= 624)) assert.fail('nehirin icinden gecildi: x=' + Math.round(u.x)); if (u.y < 380 && cross === null) cross = u.x; if (u.dead) break; }
+  assert(cross !== null, 'nehir hic asilmadi'); ok('Nehir: yalnızca geçitlerden aşılır (birlik x=' + Math.round(cross) + ' geçidinden geçti)'); }
+// F7) Komutan olurse savas biter
+{ const b = fmk(['spear']); b.phase = 'battle'; b.kill(b.cmdE); assert(b.over && b.result.win, 'dusman komutani oldu: zafer'); const c = fmk(['spear']); c.phase = 'battle'; c.kill(c.cmdP); assert(c.over && !c.result.win, 'komutan oldu: yenilgi');
+  ok('Komutan düşünce savaş biter (düşman: zafer, senin: yenilgi)'); }
+// F8) Bayrak ele gecirme
+{ const b = fmk(['spear'], 8); assert(b.objective === 'capture' && b.flags.length === 3, 'bayrak modu'); clearEnemy(b); b.cmdE.hp = b.cmdE.max = 1e9; b.cmdE.x = 20; b.cmdE.y = 20; b.cmdP.hp = b.cmdP.max = 1e9; b.phase = 'battle';
+  b.flags.forEach(f => { for (let k = 0; k < 4; k++) b.spawn(0, 'spear', f.x + k * 6, f.y); });
+  for (let i = 0; i < 30 * 70 && !b.over; i++) { b.update(1 / 30); if (b.perkOffer) b.pickPerk(b.perkOffer[0]); } assert(b.over && b.result.win && b.scores.p >= 100, 'bayraklar tutuldu ama kazanilmadi: ' + b.scores.p); ok('Bayrak hedefi: 3 bayrağı tutan taraf 100 puana ulaşıp kazanır'); }
+// F9) Durus: savunmada birlik uzak dusmana yurumez; yetenek noktaya etki eder; settle uyumlu
+{ const b = fmk(['spear']); clearEnemy(b); b.phase = 'battle'; b.cmdE.hp = b.cmdE.max = 1e9; b.cmdE.x = 360; b.cmdE.y = 30; b.setStance('defend'); const u = b.spawn(0, 'spear', 360, 700), y0 = u.y;
+  for (let i = 0; i < 60; i++) b.update(1 / 30); assert(Math.abs(u.y - y0) < 2, 'savunmada yururken: ' + (y0 - u.y));
+  const e1 = b.spawn(1, 'spear', 60, 300), e2 = b.spawn(1, 'spear', 600, 300); e1.hp = e1.max = e2.hp = e2.max = 1e5; b.heroCd = 0; const hero = Z.HEROES[b.heroId];
+  if (hero.target !== 'none') { assert(b.useSkill(60, 300), 'yetenek'); assert(e1.hp < 1e5 || e1.burnUntil > b.t || e1.stunUntil > b.t, 'yakindaki etkilenmeli'); assert(e2.hp === 1e5 && e2.stunUntil <= b.t, 'uzaktaki etkilenmemeli'); }
+  ok('Duruş: savunmada yerinde durur; kahraman yeteneği yalnızca hedef noktadaki birliklere etki eder'); }
+{ Z.Save.reset(); const S = Z.Save; const b = fmk(['spear'], 3); b.phase = 'battle'; b.kill(b.cmdE); const out = Z.settleBattle(b, S); assert(out.win && out.coins > 0 && S.data.cleared >= 3 && S.data.stars[3] >= 1, 'oduller islenmedi');
+  ok('Açık alan zaferi ödülleri ve ilerlemeyi işler (settleBattle uyumlu)'); }
 
 console.log(n + ' test geçti');

@@ -24,16 +24,18 @@
       S.sanitizeDeck();
       var d = S.data;
       A.init();
-      this.battle = new Z.Battle({ mode: mode, level: mode === 'daily' ? opts.daily.level : level, save: d, deck: d.deck, hero: d.heroOwned[d.hero] ? d.hero : 'aslan',
+      var lvl = mode === 'daily' ? opts.daily.level : level, isField = mode !== 'endless' && Z.levelType(lvl) === 'field';
+      var cfg = { mode: mode, level: lvl, save: d, deck: d.deck, hero: d.heroOwned[d.hero] ? d.hero : 'aslan',
         diff: opts.diff || 0, daily: opts.daily, rules: opts.daily ? opts.daily.rules : undefined,
-        theme: mode === 'daily' ? opts.daily.theme : mode === 'endless' ? Math.floor(Math.random() * Z.REALMS.length) : undefined });
+        theme: mode === 'daily' ? opts.daily.theme : mode === 'endless' ? Math.floor(Math.random() * Z.REALMS.length) : undefined };
+      this.battle = isField ? new Z.FieldBattle(cfg) : new Z.Battle(cfg);
       this.battle.startOpts = opts;
       this.paused = false; this.ending = false; this.endTimer = 0; this.perkOpen = false;
       UI.closeModal(); UI.hideHub();
       UI.hudBuild(this.battle);
       R.start(this.battle);
-      R.banner = { text: mode === 'endless' ? 'SONSUZ KUŞATMA' : mode === 'daily' ? 'GÜNLÜK SEFER' : 'SEFER ' + level, col: '#ffd166', t: 1.8 };
-      A.musicStart();
+      if (!this.battle.kind) R.banner = { text: mode === 'endless' ? 'SONSUZ KUŞATMA' : mode === 'daily' ? 'GÜNLÜK SEFER' : 'SEFER ' + level, col: '#ffd166', t: 1.8 };
+      A.musicStart(); if (!this.battle.kind) A.battleStart(); // acik alanda borazan 'SAVAS' dugmesine basinca calar
     },
 
     toMenu: function (tab) {
@@ -61,6 +63,7 @@
       Game.last = now;
       var b = Game.battle;
       if (b) {
+        Game.intT = (Game.intT || 0) + dt; if (Game.intT > 0.5) { Game.intT = 0; A.setIntensity(b.units.length / 34); } // savas yogunlugu -> muzik/ortam sesi
         if (b.perkOffer && !Game.perkOpen && !b.over && !Game.paused) { Game.perkOpen = true; UI.perkModal(b, function () { Game.perkOpen = false; }); }
         if (!Game.paused) {
           var steps = Game.speed, i;

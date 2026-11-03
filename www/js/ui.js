@@ -104,12 +104,12 @@
       '<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>Savaş Ordusu</h3><small>' + d.deck.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + ' ' + Z.HEROES[d.hero].icon + '</small></div></button></div>';
     html += '<div class="maptrack" id="maptrack" style="height:' + h + 'px"><svg viewBox="0 0 720 ' + h + '" preserveAspectRatio="none" height="' + h + '"><path d="' + path + '" fill="none" stroke="#2f3b78" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 22"/></svg>';
     for (i = 1; i <= N; i++) {
-      var st = d.stars[i] || 0, boss = Z.isBoss(i), cls = 'node r' + Z.realmOf(i) + (boss ? ' boss' : ''), info = Z.levelInfo(i);
+      var st = d.stars[i] || 0, boss = Z.isBoss(i), info = Z.levelInfo(i), cls = 'node r' + Z.realmOf(i) + (boss ? ' boss' : '') + (info.type === 'field' ? ' fld' : '');
       if (st > 0) cls += ' done'; else if (i === d.cleared + 1) cls += ' cur'; else if (i > d.cleared + 1) cls += ' locked';
       if ((i - 1) % 15 === 0) html += '<div class="realm" style="top:' + (pts[i - 1][1] - 96) + 'px">Diyar ' + (Z.realmOf(i) + 1) + ' · ' + Z.REALMS[Z.realmOf(i)] + '</div>';
       html += '<button class="' + cls + '" data-level="' + i + '" style="left:' + (pts[i - 1][0] / 7.2).toFixed(2) + '%;top:' + pts[i - 1][1] + 'px">' +
         (info.rule !== 'none' ? '<span class="rl">' + Z.RULES[info.rule].icon + '</span>' : '') +
-        (boss ? '<span style="font-size:28px;line-height:1">👑</span>' : '') + i +
+        (info.type === 'field' ? '<span class="ft">🏕️</span>' : '') + (boss ? '<span style="font-size:28px;line-height:1">👑</span>' : '') + i +
         '<span class="st">' + (st ? '★'.repeat(st) : (i > d.cleared + 1 ? '🔒' : '')) + (d.hardCleared[i] ? Z.DIFFS[d.hardCleared[i]].icon : '') + '</span>' +
         '<span class="nm">' + info.name + '</span></button>';
     }
@@ -129,6 +129,16 @@
       '<small>' + Z.REALMS[di.theme] + ' · ' + di.rules.map(function (r) { return Z.RULES[r].icon + ' ' + Z.RULES[r].name; }).join(' + ') + '</small></div></button>';
   }
 
+  // Hedef satiri: kale kusatmasi mi, acik alan mi
+  function goalHtml(n, rules) {
+    var info = Z.levelInfo(n);
+    if (info.type === 'field') {
+      var ob = Z.FIELD_OBJECTIVES[Z.fieldObjective(n, rules)];
+      return '<div class="rule-box field-box"><b>🏕️ Açık Alan Savaşı · ' + ob.icon + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + ' Önce <b>' + Z.fieldBudget(n) + ' komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.</span></div>';
+    }
+    return '<p style="margin:6px 0">🎯 Hedef: ' + (rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + '</b> boyunca kaleni savun' : 'düşman kalesini yık') + '</p>';
+  }
+
   function levelModal(n, diff) {
     diff = diff || 0;
     var d = S.data, info = Z.levelInfo(n), st = d.stars[n] || 0, avg = avgDeckLevel(), rec = Math.round(recommendedLevel(n) * (diff === 0 ? 1 : diff === 1 ? 1.3 : 1.7)), rl = Z.RULES[info.rule], D = Z.DIFFS[diff];
@@ -143,11 +153,11 @@
         : !Z.diffUnlocked(d, n, 2) ? '<p class="small" style="margin:2px 0 8px">🔒 Efsane: bu seferi Zor kademede kazanınca açılır.</p>' : '';
     }
     UI.modal(
-      '<h1>Sefer ' + n + (info.boss ? ' <span class="badge">PATRON</span>' : '') + '</h1>' +
+      '<h1>Sefer ' + n + (info.boss ? ' <span class="badge">PATRON</span>' : '') + (info.type === 'field' ? ' <span class="badge fld">AÇIK ALAN</span>' : '') + '</h1>' +
       '<p class="mut" style="margin:0">' + Z.REALMS[info.realm] + ' · ' + info.name + (d.hardCleared[n] ? ' · ' + Z.DIFFS[d.hardCleared[n]].icon : '') + '</p>' +
       '<p class="story">“' + info.story + '”</p>' + drow +
       (info.rule !== 'none' ? '<div class="rule-box"><b>' + rl.icon + ' Sefer kuralı: ' + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
-      '<p style="margin:6px 0">🎯 Hedef: ' + (surv ? '<b>' + Z.fmtTime(info.surviveTime) + '</b> boyunca kaleni savun' : 'düşman kalesini yık') + '</p>' +
+      goalHtml(n, [info.rule]) +
       '<div class="big-stars" style="font-size:54px;margin:0">' + star3(st) + '</div>' +
       '<div class="row-lines"><span>Düşman: ' + info.tiers.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '</span>' +
       '<span>Ödül: 🪙 ' + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
@@ -169,7 +179,7 @@
     var d = S.data, di = S.dailyInfo(), won = d.dailySefer.won, info = Z.levelInfo(di.level);
     var rb = di.rules.map(function (r) { var R = Z.RULES[r]; return '<div class="rule-box"><b>' + R.icon + ' ' + R.name + '</b><br><span class="small">' + R.desc + '</span></div>'; }).join('');
     UI.modal('<h1>📅 Günlük Sefer</h1><p class="mut" style="margin:0">' + Z.REALMS[di.theme] + ' · Sefer ' + di.level + ' seviyesinde</p>' + rb +
-      '<p style="margin:6px 0">🎯 Hedef: ' + (di.rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + '</b> boyunca kaleni savun' : 'düşman kalesini yık') + '</p>' +
+      goalHtml(di.level, di.rules) +
       '<div class="rewards"><span class="coin">🪙 ' + di.rewardCoins + '</span><span class="gem">💎 ' + di.rewardGems + '</span></div>' +
       '<p class="small">' + (won ? '✔ Bugünkü ödülü aldın. İstersen ödülsüz tekrar oynayabilirsin.' : 'Ödül günde bir kez, ilk galibiyette verilir. Her gün yeni bir sefer!') + '</p>' +
       '<div class="actions"><button class="btn small" data-act="close">Geri</button><button class="btn gold" data-act="go">⚔ SEFERE ÇIK</button></div>',
@@ -456,7 +466,7 @@
     } else if (r.win) {
       var base = out.coins - (out.chest ? out.chest.coins : 0), bg = out.gems - (out.chest ? out.chest.gems : 0);
       html = '<h1>' + (b.mode === 'daily' ? 'GÜNLÜK SEFER TAMAM!' : 'ZAFER!') + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + Z.DIFFS[b.diff].icon + ' ' + Z.DIFFS[b.diff].name + ' kademe</p>' : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : '') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">★</span>'; }).join('') + '</div>' +
-        '<p class="mut">Süre ' + Z.fmtTime(r.time) + ' · Kale canı %' + Math.round(r.basePct * 100) + ' · ' + r.kills + ' düşman</p>' +
+        '<p class="mut">Süre ' + Z.fmtTime(r.time) + ' · ' + (b.kind === 'field' ? 'Ordu korundu %' : 'Kale canı %') + Math.round(r.basePct * 100) + ' · ' + r.kills + ' düşman</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + base + '</span>' + (bg > 0 ? '<span class="gem">💎 ' + bg + '</span>' : '') + '</div>' +
         (out.chest ? '<div id="chest-area"><button class="chest" data-act="chest" style="font-size:110px">🎁</button><p class="small">Sandığı aç!</p></div>' : '') +
         (b.mode === 'daily' && !out.dailyFirst ? '<p class="small">Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).</p>' : '') +
@@ -472,7 +482,7 @@
         }, 750);
       };
     } else {
-      html = '<h1 style="color:var(--red)">Yenilgi</h1><p>Kalen düştü. Ordunu güçlendirip tekrar dene!</p>' +
+      html = '<h1 style="color:var(--red)">Yenilgi</h1><p>' + (b.kind === 'field' ? (b.cmdP.dead || b.cmdP.hp <= 0 ? 'Komutanın düştü! Onu arkada, korunaklı tut.' : 'Süre doldu ya da bayraklar kaybedildi. Dizilişini değiştirip tekrar dene!') : 'Kalen düştü. Ordunu güçlendirip tekrar dene!') + '</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + out.coins + '</span></div><p class="small">İpucu: Düşman birliklerine karşı üstün olanı çağır (🔱 > 🐎 > 🏹 > 🔱).</p>';
     }
     html += '<div class="actions">' + (r.win || isE ? '' : '<button class="btn small" data-act="army">🛡️ Ordu</button>') +
@@ -506,9 +516,85 @@
     if (rtxt) { rc.textContent = rtxt; rc.classList.remove('hidden'); } else rc.classList.add('hidden');
     $('info-title').textContent = b.mode === 'endless' ? 'Sonsuz Kuşatma' : (b.mode === 'daily' ? 'Günlük Sefer' : 'Bölüm ' + b.level) + ' · ' + b.info.name;
     $('btn-speed').textContent = 'x' + (UI.game.speed || 1);
+    var f = b.kind === 'field';
+    $('hud').classList.toggle('field', f);
+    $('lane-pick').classList.toggle('hidden', f); $('field-bar').classList.toggle('hidden', !f); $('obj-chip').classList.toggle('hidden', !f);
+    hud.sel = f ? b.deck[0] : null; hud.fdrag = null; Z.Render.fhover = null;
+    if (f) {
+      $('fb-stance').classList.add('hidden'); $('fb-go').classList.remove('hidden'); $('fb-auto').classList.remove('hidden'); $('fb-clear').classList.remove('hidden');
+      $('fb-stance').innerHTML = '⚔<small>Saldır</small>';
+      hud.fieldTut = !S.data.fieldTutDone; $('hint').classList.toggle('hidden', !hud.fieldTut);
+      $('hint').textContent = '👆 Kartı sahaya sürükle · birliğe dokun: geri al';
+    }
+  };
+
+  // ---- Acik alan arayuzu ----
+  function fieldHudUpdate(b) {
+    var L = hud.last, set = function (k, v, fn) { if (L[k] !== v) { L[k] = v; fn(v); } }, prep = b.phase === 'prep';
+    set('g', Math.floor(b.gold), function (v) { $('gold-val').textContent = v; });
+    set('cap', prep ? b.budget0 : b.goldCap(), function (v) { $('gold-cap').textContent = '/' + v; });
+    set('rate', prep ? -1 : b.income(), function (v) { $('gold-rate').textContent = v < 0 ? 'komuta puanı' : '+' + (Math.round(v * 10) / 10) + '/sn'; });
+    b.deck.forEach(function (id) {
+      var cd = b.cooldown[id], def = Z.UNITS[id], c = hud.cards[id], f = Math.round(100 * cd / def.cd) / 100;
+      set('cd' + id, f, function (v) { c.cd.style.transform = 'scaleY(' + v + ')'; });
+      set('p' + id, b.gold < def.cost, function (v) { c.el.classList.toggle('poor', v); });
+      set('s' + id, hud.sel === id, function (v) { c.el.classList.toggle('sel', v); });
+    });
+    var h = Z.HEROES[b.heroId];
+    set('hcd', prep ? 1 : Math.round(100 * b.heroCd / h.cd) / 100, function (v) { document.querySelector('#btn-skill .cd').style.transform = 'scaleY(' + v + ')'; });
+    set('hst', prep ? 'Savaşta' : b.heroCd <= 0 ? 'HAZIR!' : Math.ceil(b.heroCd) + ' sn', function (v) { $('skill-state').textContent = v; $('btn-skill').classList.toggle('ready', !prep && b.heroCd <= 0); });
+    var mc = b.mineCost();
+    set('mine', prep + ':' + b.mine + ':' + (mc !== null && b.gold >= mc), function () {
+      $('mine-txt').innerHTML = mc === null ? 'Maden MAKS' : 'Maden Sv.' + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
+      $('btn-mine').classList.toggle('off', prep || mc === null || b.gold < mc);
+    });
+    set('phase', b.phase, function () {
+      $('fb-go').classList.toggle('hidden', !prep); $('fb-auto').classList.toggle('hidden', !prep); $('fb-clear').classList.toggle('hidden', !prep); $('fb-stance').classList.toggle('hidden', prep);
+      if (!prep) { hud.fieldTut = false; S.data.fieldTutDone = true; S.save(); $('hint').classList.add('hidden'); }
+    });
+    set('stance', b.stance, function (v) { $('fb-stance').innerHTML = (v === 'defend' ? '🛡<small>Savun</small>' : '⚔<small>Saldır</small>'); $('fb-stance').classList.toggle('def', v === 'defend'); });
+    var oc = $('obj-chip'), txt;
+    if (b.objective === 'capture') txt = '🚩 ' + Math.floor(b.scores.p) + ' – ' + Math.floor(b.scores.e);
+    else if (b.objective === 'survive') txt = '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t));
+    else txt = '👑 ' + Math.round(100 * Math.max(0, b.cmdE.hp) / b.cmdE.max) + '%';
+    txt = '🛡 ' + Math.round(100 * Math.max(0, b.cmdP.hp) / b.cmdP.max) + '% · ' + txt;
+    set('obj', txt, function (v) { oc.textContent = v; });
+    set('title', Math.floor(b.t / 2), function () { $('info-title').textContent = (b.mode === 'daily' ? 'Günlük Sefer' : 'Sefer ' + b.level) + ' · ' + b.info.name + (prep ? ' · Hazırlık' : ' · ' + Z.fmtTime(b.t)); });
+    set('combo', b.combo >= 3 ? b.combo : 0, function (v) { var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = '🔥 Seri x' + v; });
+    set('perks', Object.keys(b.perks).join(), function () { $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join(''); });
+  }
+  UI.fieldPlace = function (type, x, y, el) {
+    var b = hud.battle;
+    if (b.phase === 'battle' && y < Z.FH - Z.FZONE.battle) { A.deny(); UI.toast('Takviye yalnızca alt şeritten gelir'); return false; }
+    var cost = Z.UNITS[type].cost;
+    if (b.gold < cost) { A.deny(); UI.toast(b.phase === 'prep' ? 'Komuta puanın yetmiyor' : 'Altın yetmiyor'); return false; }
+    if (b.phase === 'battle' && b.cooldown[type] > 0) { A.deny(); return false; }
+    if (!b.canPlace(x, y)) { A.deny(); UI.toast(y < Z.FH - Z.FZONE.prep ? 'Burası yerleştirme alanı dışında' : 'Buraya yerleştirilemez (nehir/kaya)'); return false; }
+    if (!b.place(type, x, y)) { A.deny(); UI.toast('Ordu dolu'); return false; }
+    if (b.phase === 'prep') A.click();
+    return true;
+  };
+  UI.fieldSkill = function (x, y, el) {
+    var b = hud.battle;
+    if (b.phase !== 'battle') { A.deny(); UI.toast('Yetenek savaşta kullanılır'); return false; }
+    if (b.useSkill(x, y)) return true;
+    A.deny(); if (el) el.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }], { duration: 180 });
+    return false;
+  };
+  UI.fieldSkillAuto = function (el) { // dokununca: dusman kalabaligina (sifa icin kendi ordunun merkezine)
+    var b = hud.battle, h = Z.HEROES[b.heroId], team = h.type === 'ward' ? 0 : 1, best = null, bn = -1, i, j, n, o;
+    if (h.target === 'none') return UI.fieldSkill(0, 0, el);
+    for (i = 0; i < b.units.length; i++) {
+      o = b.units[i]; if (o.team !== team || o.dead) continue;
+      n = 0; for (j = 0; j < b.units.length; j++) if (b.units[j].team === team && !b.units[j].dead && Math.hypot(b.units[j].x - o.x, b.units[j].y - o.y) < 120) n++;
+      if (n > bn) { bn = n; best = o; }
+    }
+    if (!best) { A.deny(); return false; }
+    return UI.fieldSkill(best.x, best.y, el);
   };
 
   UI.hudUpdate = function (b) {
+    if (b.kind === 'field') return fieldHudUpdate(b);
     var L = hud.last, i, set = function (k, v, fn) { if (L[k] !== v) { L[k] = v; fn(v); } };
     var g = Math.floor(b.gold);
     set('g', g, function (v) { $('gold-val').textContent = v; });
@@ -552,7 +638,17 @@
     var Rn = Z.Render, canvas = $('game');
     canvas.addEventListener('pointerdown', function (e) {
       if (!hud.battle || UI.game.paused) return;
-      var p = stagePoint(e), lane = Rn.laneAt(p.x, p.y);
+      var p = stagePoint(e);
+      if (hud.battle.kind === 'field') {
+        var b = hud.battle, w = Rn.toWorld(p.x, p.y); A.init();
+        if (b.phase === 'prep') {
+          var u = b.unitAt(w.x, w.y, 24);
+          if (u && !u.commander) { try { canvas.setPointerCapture(e.pointerId); } catch (x) { /* eski WebView */ } hud.fdrag = { id: u.id, pid: e.pointerId, x: e.clientX, y: e.clientY, moved: false }; return; }
+        }
+        if (hud.sel) UI.fieldPlace(hud.sel, w.x, w.y);
+        return;
+      }
+      var lane = Rn.laneAt(p.x, p.y);
       if (lane >= 0) { Rn.selLane = lane; A.init(); }
     });
     function startDrag(el, action, e) {
@@ -566,7 +662,19 @@
     $('btn-skill').addEventListener('pointerdown', function (e) {
       if (hud.battle && !UI.game.paused) startDrag($('btn-skill'), { kind: 'skill' }, e);
     });
+    function fieldHover(d, p) {
+      var b = hud.battle, w = Rn.toWorld(p.x, p.y);
+      if (d.action.kind === 'skill') Rn.fhover = { kind: 'skill', x: w.x, y: w.y };
+      else { w.y -= 34; Rn.fhover = { kind: 'unit', x: w.x, y: w.y, ok: b.canPlace(w.x, w.y) && (b.phase === 'prep' || w.y >= Z.FH - Z.FZONE.battle) && b.gold >= Z.UNITS[d.action.type].cost }; }
+      return w;
+    }
     function move(e) {
+      var fd = hud.fdrag;
+      if (fd && e.pointerId === fd.pid) {
+        if (!fd.moved && Math.hypot(e.clientX - fd.x, e.clientY - fd.y) > 10 * UI.game.stage.scale) fd.moved = true;
+        if (fd.moved && hud.battle) { var pf = stagePoint(e), wf = Rn.toWorld(pf.x, pf.y); wf.y -= 24; var okf = hud.battle.canPlace(wf.x, wf.y); if (okf) hud.battle.moveUnit(fd.id, wf.x, wf.y); Rn.fhover = { kind: 'unit', x: wf.x, y: wf.y, ok: okf }; }
+        return;
+      }
       var d = hud.drag; if (!d || e.pointerId !== d.id) return;
       if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 14 * UI.game.stage.scale) {
         d.moved = true;
@@ -576,14 +684,31 @@
       }
       if (d.moved) {
         var p = stagePoint(e); hud.ghost.style.left = p.x + 'px'; hud.ghost.style.top = p.y + 'px';
-        Rn.dragLane = Rn.laneAt(p.x, p.y);
+        if (hud.battle.kind === 'field') fieldHover(d, p); else Rn.dragLane = Rn.laneAt(p.x, p.y);
       }
     }
     function up(e) {
+      var fd = hud.fdrag;
+      if (fd && e.pointerId === fd.pid) {
+        hud.fdrag = null; Rn.fhover = null;
+        var bf = hud.battle, pf = stagePoint(e);
+        if (!bf || UI.game.paused || bf.phase !== 'prep') return;
+        if (!fd.moved || pf.y > UI.game.stage.h - 262) { var un = bf.units.filter(function (q) { return q.id === fd.id; })[0]; if (bf.removeUnit(fd.id)) { A.click(); UI.toast('Geri alındı +' + (un ? un.cost : 0) + ' puan'); } }
+        return;
+      }
       var d = hud.drag; if (!d || e.pointerId !== d.id) return;
       hud.drag = null;
       if (hud.ghost) { hud.ghost.remove(); hud.ghost = null; }
       var lane = Rn.dragLane; Rn.dragLane = -1;
+      if (hud.battle && hud.battle.kind === 'field') {
+        var hv = Rn.fhover; Rn.fhover = null;
+        if (UI.game.paused) return;
+        var pu = stagePoint(e), over = pu.y > UI.game.stage.h - 262;
+        if (!d.moved) { if (d.action.kind === 'unit') { hud.sel = d.action.type; A.click(); } else UI.fieldSkillAuto(d.el); return; }
+        if (over) return; // kart alanina birakildi: iptal
+        if (d.action.kind === 'unit') { if (hv) UI.fieldPlace(d.action.type, hv.x, hv.y, d.el); } else if (hv) UI.fieldSkill(hv.x, hv.y, d.el);
+        return;
+      }
       if (!hud.battle || UI.game.paused) return;
       if (!d.moved) lane = Rn.selLane;
       else if (lane < 0) return; // sahaya birakilmadi: iptal
@@ -593,7 +718,7 @@
     }
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
-    document.addEventListener('pointercancel', function (e) { var d = hud.drag; if (d && e.pointerId === d.id) { hud.drag = null; Rn.dragLane = -1; if (hud.ghost) { hud.ghost.remove(); hud.ghost = null; } } });
+    document.addEventListener('pointercancel', function (e) { if (hud.fdrag) { hud.fdrag = null; Rn.fhover = null; } var d = hud.drag; if (d && e.pointerId === d.id) { Rn.fhover = null; hud.drag = null; Rn.dragLane = -1; if (hud.ghost) { hud.ghost.remove(); hud.ghost = null; } } });
 
     $('lane-pick').addEventListener('click', function (e) {
       var el = e.target.closest('[data-lane]'); if (!el || !hud.battle) return;
@@ -603,6 +728,14 @@
       if (!hud.battle || UI.game.paused) return;
       if (!hud.battle.upgradeMine()) { A.deny(); } else { A.coin(); }
     });
+    $('fb-auto').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep') return; A.click(); b.autoPlace(); UI.toast('Ordu otomatik dizildi — dilediğin gibi sürükleyip değiştir'); });
+    $('fb-clear').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep') return; A.click(); b.units.filter(function (u) { return u.team === 0 && !u.commander; }).forEach(function (u) { b.removeUnit(u.id); }); });
+    $('fb-go').addEventListener('click', function () {
+      var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep' || UI.game.paused) return;
+      if (b.countTeam(0) < 2) { A.deny(); UI.toast('Önce birlik yerleştir (ya da 🎲 Otomatik)'); return; }
+      b.startBattle();
+    });
+    $('fb-stance').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field') return; A.click(); b.setStance(b.stance === 'attack' ? 'defend' : 'attack'); UI.toast(b.stance === 'defend' ? '🛡 Savunma: birlikler yakındaki düşmana karşılık verir' : '⚔ Saldırı: birlikler düşmana yürür'); });
     $('btn-pause').addEventListener('click', function () { A.click(); UI.game.pause(); });
     $('btn-speed').addEventListener('click', function () {
       var g = UI.game; g.speed = g.speed === 1 ? 2 : 1; $('btn-speed').textContent = 'x' + g.speed; A.click();
@@ -635,13 +768,13 @@
 
   UI.whatsNew = function () {
     var d = S.data;
-    UI.modal('<h1>🎉 Seferhan 0.4</h1><p>Sefer hiç bitmiyor! İşte yenilikler:</p><div class="new-list">' +
-      '🌋 <b>2 yeni diyar, 75 bölüm:</b> Volkan Diyarı ve Gölge Bataklığı<br>' +
-      '🗡️ <b>Suikastçı</b>, 🗿 <b>Taş Dev</b>, 🔥 <b>Alevci</b> ve 🐉 <b>Ejder Hatun</b><br>' +
-      '📅 <b>Günlük Sefer:</b> her gün yeni bir meydan okuma<br>' +
-      '🔥💀 <b>Zor ve Efsane</b> kademeleri: daha çok ödül<br>' +
-      '🛒 <b>Pazar</b> ve 📤 <b>kayıt taşıma</b> (Ayarlar)</div>' +
-      '<p class="small">İlerlemen korundu. Yükseltme maliyetleri uzun vadeye göre yeniden dengelendi.</p>' +
+    UI.modal('<h1>🎉 Seferhan 0.5</h1><p>Artık sadece kale kuşatmak yok — <b>açık alan savaşları</b> geldi!</p><div class="new-list">' +
+      '🏕️ <b>Açık alan seferleri:</b> 30 bölümde ordunu sahaya <b>istediğin yere yerleştir</b><br>' +
+      '👑 <b>Komutan</b> düşerse yenilirsin — onu koru! 🚩 Bayrakları ele geçir ya da ⏳ mevzii tut<br>' +
+      '🌊 <b>Arazi:</b> nehir geçitleri, 🌲 orman (siper), ⛰️ tepe (menzil), 🪨 kaya<br>' +
+      '🛡️ Saldırı / Savunma duruşu, 🎯 noktaya kahraman yeteneği, alt şeritten takviye<br>' +
+      '🏃 Askerler artık <b>birbirini geçebiliyor</b> · 🔊 yepyeni <b>savaş sesleri</b> (kılıç, ok, davul, boru)</div>' +
+      '<p class="small">Kale kuşatmaları aynen devam ediyor; bölümler sırayla iki türü de getirir.</p>' +
       '<div class="actions"><button class="btn gold" data-act="ok">Sefere çıkalım!</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });
   };

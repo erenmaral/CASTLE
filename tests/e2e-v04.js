@@ -16,7 +16,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(700);
 
   // Yenilikler penceresi (0.3 kaydi ile)
-  check(/Seferhan 0\.4/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.4 penceresi gösterildi');
+  check(/Seferhan 0\.5/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.5 penceresi gösterildi');
   await shot('v04-01-whatsnew'); await p.click('[data-act="ok"]'); await p.waitForTimeout(400);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); }); await p.waitForTimeout(300);
   check(await p.evaluate(() => document.querySelectorAll('.node').length === 75), 'Harita 75 bölümü gösteriyor');
@@ -33,7 +33,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   check(/Günlük Sefer/.test(await p.locator('#info-title').innerText()) && (await p.locator('#rule-chip').innerText()).length > 0, 'HUD: başlık ve kural rozeti');
   await shot('v04-04-daily-battle');
   const g0 = await p.evaluate(() => Z.Save.data.gems), c0 = await p.evaluate(() => Z.Save.data.coins);
-  await p.evaluate(() => { const b = Z.Game.battle; b.base[1].hp = 0; }); await p.waitForSelector('.modal h1', { timeout: 8000 }); await p.waitForTimeout(800);
+  await p.evaluate(() => { const b = Z.Game.battle; if (b.kind) b.kill(b.cmdE); else b.base[1].hp = 0; }); await p.waitForSelector('.modal h1', { timeout: 8000 }); await p.waitForTimeout(800);
   check(/GÜNLÜK SEFER TAMAM/.test(await p.locator('.modal h1').first().innerText()), 'Günlük sefer zafer ekranı');
   check(await p.evaluate(([g, c, di]) => Z.Save.data.dailySefer.won && Z.Save.data.coins - c >= di.rewardCoins && Z.Save.data.gems - g >= 12, [g0, c0, di]), 'Günlük ödül hesaba eklendi');
   await shot('v04-05-daily-result');
@@ -41,7 +41,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   check(await p.locator('.daily-card.done').count() === 1, 'Kart "Tamam" durumuna geçti');
 
   // Zorluk kademeleri
-  await p.evaluate(() => { document.querySelector('[data-level="8"]').click(); }); await p.waitForTimeout(400);
+  await p.evaluate(() => { document.querySelector('[data-level="7"]').click(); }); await p.waitForTimeout(400);
   check(await p.locator('.diff').count() === 3 && await p.locator('.diff.lock').count() === 1, 'Brifingde 3 kademe, Efsane kilitli');
   await p.click('[data-act="diff1"]'); await p.waitForTimeout(300); await shot('v04-06-diff-hard');
   check(/Zor/.test(await p.locator('.diff.on').innerText()) && /ödül ×2/.test(await p.locator('.modal').innerText()), 'Zor kademe seçildi, ödül ×2 yazıyor');
@@ -51,7 +51,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   check(await p.evaluate(() => Z.Game.battle.diff === 1 && Z.Game.battle.D.name === 'Zor'), 'Savaş Zor kademede başladı');
   check(/🔥/.test(await p.locator('#rule-chip').innerText()), 'HUD\'da zorluk simgesi');
   await p.evaluate(() => Z.Game.battle.base[1].hp = 0); await p.waitForSelector('.modal h1', { timeout: 8000 }); await p.waitForTimeout(700);
-  check(await p.evaluate(() => Z.Save.data.hardCleared[8] === 1), 'Zor galibiyeti kaydedildi'); await shot('v04-07-hard-result');
+  check(await p.evaluate(() => Z.Save.data.hardCleared[7] === 1), 'Zor galibiyeti kaydedildi'); await shot('v04-07-hard-result');
   await p.click('[data-act="menu"]'); await p.waitForTimeout(300);
 
   // Pazar

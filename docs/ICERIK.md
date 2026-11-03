@@ -29,6 +29,13 @@ node tests/gallery.js              # görsel galeri (ekran görüntüsü) — ye
 3. `style.css` → `.node.rN` düğüm rengi (N = diyar sırası).
 4. **Dengeyi ölç:** `LMIN=<ilkBölüm> node tests/sim-balance.js 6 -2` — hedef ~%40-60. `Z.levelInfo` içindeki `scale` ve `aiRate` eğrilerini ayarla (düşman geliri oyuncunun azami gelirini ~27 geçmesin).
 
+## Açık alan (serbest meydan) savaşları
+- Hangi bölümün hangi türde olduğu `Z.levelType(n)` içinde (`data.js`): şu an `n % 5` ∈ {3,4} → açık alan. Hedef: `Z.fieldObjective` (komutan / bayrak / dayanma). Yerleştirme bütçesi: `Z.fieldBudget(n)`.
+- Simülasyon `www/js/field.js` (`Z.FieldBattle`, DOM'suz, Node'da test edilir), çizim `www/js/fieldrender.js`. Harita `Z.fieldMap(level, objective)`; bölüm numarasından tohumlanır, aynı bölüm hep aynı haritadır.
+- Yeni arazi türü eklemek: `fieldMap` içinde üret → `terrainAt`/`stepUnit`/`damage` içinde etkisini tanımla → `R.fieldBuildBg` içinde çiz → `tests/unit-features.js`'e test ekle.
+- Denge: `ENEMY_BUDGET`, `HPX` ve `late` çarpanı `field.js` başında; `node tests/field-balance.js 8` hedef ≈ %65–75 kazanma. Savaşlar ~45–70 sn sürmelidir.
+- Yeni birim eklerken ayrıca bir şey gerekmez: açık alan, `Z.UNITS` içindeki sınıfı (`cls`, `ranged`, `splash`, `flame`, `assassin` …) olduğu gibi kullanır; yalnızca `render.js` içinde sprite çizimi eklemen yeterli.
+
 ## Yeni sefer kuralı
 `Z.RULES` (ad, simge, açıklama) → `sim.js` içinde `this.rl('kuralAdi')` ile etkisini yaz → `Z.ruleOf` döngüsüne (`RULE_CYCLE`) ve gerekirse `Z.dailySefer` havuzuna ekle. Çelişen kurallar (`rich`+`famine` gibi) günlük seferde birlikte gelmemeli.
 

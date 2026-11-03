@@ -229,3 +229,21 @@ textarea{width:100%;background:rgba(0,0,0,.45);border:3px solid var(--line);bord
 .node::before{content:"";position:absolute;left:14%;right:14%;top:6%;height:38%;border-radius:50%;background:linear-gradient(rgba(255,255,255,.34),rgba(255,255,255,0));pointer-events:none}
 .tab.active{box-shadow:0 0 18px rgba(251,191,36,.35)}
 .perk{box-shadow:inset 0 2px 0 rgba(255,255,255,.14),0 6px 14px rgba(0,0,0,.35)}
+
+/* ---- Acik alan savasi ---- */
+#field-bar{display:flex;gap:8px;flex:none}
+.fbtn{width:92px;height:84px;border-radius:18px;background:rgba(10,14,34,.86);border:3px solid var(--line);font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;line-height:1;color:#fff}
+.fbtn small{font-size:17px;color:var(--mut);margin-top:3px;font-weight:800}
+.fbtn.go{width:128px;background:linear-gradient(#e0483a,#a1241b);border-color:#ffb4a8;animation:glow 1.1s infinite}
+.fbtn.go small{color:#fff}
+.fbtn.stance{width:150px;border-color:#7aa7ff}
+.fbtn.stance.def{border-color:#6ee7b7;background:rgba(20,80,60,.7)}
+.fbtn.stance small{color:#fff;font-size:20px}
+.fbtn:active{transform:translateY(2px)}
+#obj-chip{display:inline-block;background:rgba(10,14,34,.85);border:2px solid #7aa7ff;color:#cfe0ff;font-weight:800;font-size:18px;padding:2px 12px;border-radius:999px;text-shadow:none;white-space:nowrap}
+.card.sel{border-color:var(--gold);box-shadow:0 0 0 3px rgba(251,191,36,.55),0 5px 0 #0b1030,0 8px 14px rgba(0,0,0,.5);transform:translateY(-6px)}
+#hud.field #perk-row{top:calc(var(--stp) + 108px)}
+#hud.field #hint{bottom:272px}
+.badge.fld{background:linear-gradient(#3b82f6,#1d4ed8);color:#fff}
+.rule-box.field-box{border-color:#7aa7ff;background:rgba(40,70,140,.35)}
+.node .ft{position:absolute;left:-10px;top:-12px;font-size:24px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.7))}

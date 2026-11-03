@@ -33,8 +33,13 @@ jobs:
       - name: Bagimliliklari kur
         run: npm ci
 
-      - name: Oyun mantigi duman testi (denge botu)
-        run: node tests/sim-balance.js 2 | tail -5
+      - name: Birim testleri
+        run: node tests/unit-features.js | tail -3
+
+      - name: Oyun mantigi duman testi (denge botu: kale + acik alan)
+        run: |
+          node tests/sim-balance.js 2 | tail -5
+          LMAX=30 node tests/field-balance.js 2 | tail -4
 
       - name: Surum bilgisi
         id: ver

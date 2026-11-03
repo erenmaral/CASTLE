@@ -22,7 +22,7 @@ const OLD_SAVE = { v: 1, coins: 842, gems: 31, unitLvl: { spear: 4, archer: 3, c
   // 1) Eski v0.1 kaydi ile acilis
   let p = await mk(`if(!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', ${JSON.stringify(JSON.stringify(OLD_SAVE))});`);
   await shot(p, 'v02-01-whatsnew');
-  check(await p.locator('.modal h1').first().innerText().then(t => /Seferhan 0\.4/.test(t)), 'Yenilikler penceresi gösterildi');
+  check(await p.locator('.modal h1').first().innerText().then(t => /Seferhan 0\.5/.test(t)), 'Yenilikler penceresi gösterildi');
   check(await p.evaluate(() => Z.Save.data.coins === 842 && Z.Save.data.cleared === 7 && Z.Save.data.unitLvl.healer === 1), 'Eski ilerleme korundu (altın 842, 7. bölüm)');
   await p.click('[data-act="ok"]'); await p.waitForTimeout(500);
   check(await p.locator('.modal h1').first().innerText().then(t => /Günlük Ödül/.test(t)), 'Ardından günlük ödül penceresi geldi');
@@ -39,7 +39,7 @@ const OLD_SAVE = { v: 1, coins: 842, gems: 31, unitLvl: { spear: 4, archer: 3, c
 
   // 2) Ganimet secimi (savas icinde)
   await p.evaluate(() => { Z.Save.data.cleared = 12; Z.Save.sanitizeDeck(); });
-  await p.evaluate(() => Z.Game.startBattle('campaign', 3)); await p.waitForTimeout(1200);
+  await p.evaluate(() => Z.Game.startBattle('campaign', 1)); await p.waitForTimeout(1200);
   await p.evaluate(() => { Z.Game.battle.stats.kills = Z.PERK_KILLS[0]; });
   await p.waitForSelector('.perk', { timeout: 5000 }); await p.waitForTimeout(400); await shot(p, 'v02-07-perk-modal');
   const t0 = await p.evaluate(() => Z.Game.battle.t); await p.waitForTimeout(500);
@@ -49,7 +49,7 @@ const OLD_SAVE = { v: 1, coins: 842, gems: 31, unitLvl: { spear: 4, archer: 3, c
   await p.evaluate(() => Z.Game.toMenu());
 
   // 3) Diyar temalari + yeni birlikler
-  for (const [lvl, name] of [[20, 'col'], [38, 'buz']]) {
+  for (const [lvl, name] of [[20, 'col'], [40, 'buz']]) {
     await p.evaluate((l) => { Z.Save.data.cleared = 44; Z.Save.data.unitLvl.healer = 3; Z.Save.data.deck = ['spear', 'healer', 'banner', 'archer', 'cav']; Z.Game.startBattle('campaign', l); }, lvl);
     await p.evaluate(() => { const b = Z.Game.battle; b.gold = 999; ['spear', 'banner', 'healer', 'archer', 'spear'].forEach((t, i) => { b.cooldown[t] = 0; b.deploy(t, i % 3); }); b.cooldown.spear = 0; b.deploy('spear', 1); b.cooldown.spear = 0; b.deploy('banner', 1); });
     await p.waitForTimeout(7000);

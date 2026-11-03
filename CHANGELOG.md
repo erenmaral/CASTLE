@@ -2,6 +2,17 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.5.0 — Açık Alan Savaşları
+- 🏕️ **Açık alan seferleri:** 75 bölümün 30'u (3-4, 8-9, 13-14 …) artık kale kuşatması değil **serbest meydan savaşı**. Savaştan önce *komuta puanı* ile ordunu sahada **istediğin yere yerleştirirsin** (kartı sürükle ya da kartı seç + dokun; birliği sürükleyerek taşı, dokunarak geri al, 🎲 Otomatik ile hızlı diz). Sonra ⚔ SAVAŞ!
+- 👑 **Komutan:** iki tarafın da komutanı var; senin komutanın düşerse yenilirsin. Üç hedef: **Komutanı Yok Et**, **🚩 Bayrakları Ele Geçir** (3 bayrak, 100 puan), **⏳ Mevzii Tut**.
+- 🌍 **Arazi (bölüme göre sabit harita):** 🌊 nehir (yalnızca 2 sığ geçitten geçilir — ordular geçitlerde çarpışır), 🌲 orman (hareketi yavaşlatır, okçu hasarını ×0.75 azaltır), ⛰️ tepe (+%20 menzil, +%10 hasar), 🪨 kayalar.
+- 🧭 **Taktik araçlar:** ⚔ Saldır / 🛡 Savun duruşu, kahraman yeteneğini **sahada bir noktaya** sürükleyerek kullanma (çevresindeki birliklere etki eder), savaş sırasında alt şeritten takviye, ganimet ve madenler.
+- 🏃 **Birlikler artık birbirini geçebiliyor:** kale kuşatmalarında hızlı birlik yavaş dostun önünde takılmaz (yola yayılır), açık alanda yandan dolaşır.
+- 🔊 **Savaş sesleri yeniden yazıldı:** kılıç/kalkan çarpması, ok vızıltısı, kanca/çığlık, at nalı, savaş davulu ve borusu, savaş yoğunluğuna göre değişen müzik/ortam. Hâlâ hiç ses dosyası yok (hepsi kodla üretiliyor).
+- 🎨 Açık alan için yeni çizim motoru: nehir/geçit, orman kümeleri, katmanlı tepeler, bayraklar, komutan sprite'ı (altın taç + sancak), yönüne dönen askerler, yerleştirme önizlemesi. Komutanlara özel görünüm.
+- ⚖️ **Denge:** düşman can/hasar eğrisi ve geliri yeniden ayarlandı (bot testleri: kale ≈%66, açık alan ≈%70 kazanma).
+- 🧰 `tests/field-balance.js` (açık alan botu), 11 yeni mantık testi (harita, yerleştirme, geçişler, nehir, orman, bayrak, komutan, duruş, ödül), `tests/e2e-v05.js` (sürükle-bırak dahil uçtan uca).
+
 ## 0.4.0 — Sürdürülebilir Seferhan
 - 🌋 **2 yeni diyar, 75 bölüm:** **Volkan Diyarı** (lav çatlaklı yollar, yanmış ağaçlar, kor yağmuru, ufukta yanardağlar) ve **Gölge Bataklığı** (sis, ateşböcekleri, ışıldayan mantarlar, sazlıklar). Diyar bölüm adları temalarına uygun.
 - 🗡️ **Suikastçı:** çok hızlı; düşman saflarının arasından geçip okçu/büyücü/şifacıyı avlar. 🗿 **Taş Dev:** çok dayanıklı, darbesi çevreye de vurur. 🔥 **Alevci:** kısa menzilli alev, yanma hasarı.

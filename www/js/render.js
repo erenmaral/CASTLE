@@ -367,7 +367,7 @@
         switch (e.type) {
           case 'spawn':
             this.puff(this.roadX(e.unit.lane, this.Y(e.unit.x)), this.Y(e.unit.x), 7, '#d9c9a0');
-            if (e.unit.team === 0) A.spawn();
+            if (e.unit.team === 0) A.spawn(e.unit.cls);
             break;
           case 'hit':
             this.sparks(ex, ey - 6, e.strong ? 7 : 3, e.strong ? '#ffd166' : '#ffffff');
@@ -401,7 +401,7 @@
           case 'perk': A.perk(); break;
           case 'flame': { var fy = this.Y(e.to), fx2 = this.roadX(e.lane, fy); this.sparks(fx2, fy - 6, 10, '#ff9a3a'); this.sparks(fx2, fy - 6, 5, '#ffe08a'); this.fx.push({ k: 'ring', x: fx2, y: fy, r: 30, t: 0.25, max: 0.25, col: '#ff8a2a' }); A.fire(); break; }
           case 'burn': this.sparks(ex, ey - 10, 2, '#ff8a2a'); break;
-          case 'charge': this.fx.push({ k: 'ring', x: ex, y: ey, r: 40, t: 0.3, max: 0.3, col: '#ffe08a' }); break;
+          case 'charge': this.fx.push({ k: 'ring', x: ex, y: ey, r: 40, t: 0.3, max: 0.3, col: '#ffe08a' }); A.charge(); break;
           case 'baseHit':
             this.shake = Math.max(this.shake, e.team === 0 ? 8 : 3);
             this.puff(this.ox + 60 + Math.random() * 600, e.team === 0 ? this.pY + 20 : this.eY - 20, 5, '#cfc6b4');
@@ -471,6 +471,7 @@
       this.drawCastle(c, 1); this.drawCastle(c, 0);
       for (i = 0; i < this.fx.length; i++) if (this.fx[i].k === 'decal') this.drawDecal(c, this.fx[i]);
 
+      this.spreadLanes(b, dt);
       var self = this, order = b.units.slice().sort(function (a, d) { return self.Y(a.x) - self.Y(d.x); });
       for (i = 0; i < order.length; i++) this.drawUnit(c, order[i]);
       for (i = 0; i < b.projs.length; i++) this.drawProj(c, b.projs[i]);
@@ -716,6 +717,22 @@
       c.restore();
     },
 
+    // Birlikler yolda birbirini gecebilsin: ayni konumdakiler yola yayilir (5 serit), yumusak gecisle
+    spreadLanes: function (b, dt) {
+      var groups = {}, SL = [0, 1, -1, 2, -2], GAP = 26, k = Math.min(1, dt * 7), i, u;
+      for (i = 0; i < b.units.length; i++) { u = b.units[i]; (groups[u.lane * 2 + u.team] || (groups[u.lane * 2 + u.team] = [])).push(u); }
+      for (var key in groups) {
+        var arr = groups[key].sort(function (a, c) { return a.x - c.x; }), last = [-1e9, -1e9, -1e9, -1e9, -1e9];
+        for (i = 0; i < arr.length; i++) {
+          u = arr[i]; var s = -1, j;
+          for (j = 0; j < 5; j++) if (u.x - last[j] >= GAP) { s = j; break; }
+          if (s < 0) { s = 0; for (j = 1; j < 5; j++) if (last[j] < last[s]) s = j; }
+          last[s] = u.x;
+          var tg = SL[s] * 24; u._ox = u._ox === undefined ? tg : u._ox + (tg - u._ox) * k;
+        }
+      }
+    },
+
     // ---- Birlikler (kusbakisi; oyuncu yukari, dusman asagi bakar) ---------
     // Performans: her sinif x takim x durum (bekle/yuru/saldir) kareleri bir kez cizilip onbellege alinir,
     // her karede yalnizca drawImage ile basilir. Sade efektler (donma, parlama, kalkan) uste canli cizilir.
@@ -752,7 +769,7 @@
       return cv;
     },
     drawUnit: function (c, u) {
-      var y = this.Y(u.x), x = this.roadX(u.lane, y) + ((u.id * 37) % 5 - 2) * 13, dirY = u.team === 0 ? 1 : -1, s = (u.boss ? 1.55 : 1) * SPR;
+      var y = this.Y(u.x), x = this.roadX(u.lane, y) + (u._ox || 0), dirY = u.team === 0 ? 1 : -1, s = (u.boss ? 1.55 : 1) * SPR;
       if (u.age < 0.3) { var q = u.age / 0.3; s *= 0.5 + 0.5 * (1 - Math.pow(1 - q, 3)); }
       var atk = u.atkAnim > 0 ? u.atkAnim / 0.25 : 0, st, idx;
       if (atk > 0) { st = 'a'; idx = Math.min(this.SN.a - 1, Math.floor((1 - atk) * this.SN.a)); }
@@ -965,4 +982,7 @@
       this.helmet(c, -1, -7, 7.2, pal, team);
     }
   };
+  // Acik alan cizicisi (fieldrender.js) icin ortak yardimcilar
+  R.THEMES = THEMES; R.PAL = PAL; R.SPR = SPR; R.OUT = OUT;
+  R.util = { ell: ell, circ: circ, rrect: rrect, line: line, seeded: seeded, hash: hash, star: star, E: E, O: O, RR: RR, poly: poly, outline: outline, mgrad: mgrad, TAU: TAU };
 })(globalThis.Z = globalThis.Z || {});

@@ -20,6 +20,7 @@
   Z.mulberry32 = mulberry32;
 
   var MAX_PER_LANE = 14;
+  var ENGAGE_CAP = +(globalThis.__ENGAGE_CAP || 3); // ayni dusmana ayni anda saldirabilen yakin dovusu sayisi
   var PRIO = { archer: 1, mage: 1, healer: 1, cata: 1, banner: 1 }; // suikastcinin oncelikli avlari
 
   // opts: { mode:'campaign'|'endless', level, save:{unitLvl,heroLvl,castleLvl}, deck:[], hero:'aslan', seed }
@@ -235,6 +236,7 @@
     this.base[0].flash = Math.max(0, this.base[0].flash - dt);
     this.base[1].flash = Math.max(0, this.base[1].flash - dt);
 
+    for (i = 0; i < this.units.length; i++) this.units[i].engaged = 0;
     this.updateAI(dt);
     for (i = 0; i < this.units.length; i++) if (!this.units[i].dead) this.stepUnit(this.units[i], dt);
     this.updateProjectiles(dt);
@@ -292,7 +294,7 @@
     // Sifaci: savasmaz, yarali dostu iyilestirir, dusmana yaklasmaz
     if (u.heal) {
       if (hurt && u.atkCd <= 0) this.healUnit(u, hurt);
-      if (allyAhead < 26 || enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; }
+      if (enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; }
       return;
     }
 
@@ -302,10 +304,12 @@
 
     if (hasTarget || atBase) {
       u.moving = false;
+      // dostlar birbirini engellemez (gecebilir); ama ayni hedefe en cok ENGAGE_CAP yakin dovusu saldirir, gerisi bekler
+      if (hasTarget && !u.ranged && !u.heal && !u.assassin) { if (tgt.engaged >= ENGAGE_CAP) return; tgt.engaged++; }
       if (u.atkCd <= 0) this.attack(u, hasTarget ? tgt : null);
     } else {
       // dusmanla temas varsa (mancinik gibi ates edemeyenler dahil) ilerleme
-      var blocked = allyAhead < 26 || enemyAhead < 30;
+      var blocked = enemyAhead < 30; // dost birlikler engel degil: hizli olan yavasi gecer
       if (!blocked) { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; } else { u.moving = false; }
     }
   };

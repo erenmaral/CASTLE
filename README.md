@@ -3,6 +3,8 @@
 **Dikey (portre)** 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
 Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
 
+**İki savaş türü:** 🏰 3 koridorlu **kale kuşatması** ve 🏕️ ordunu sahaya serbestçe yerleştirdiğin **açık alan savaşı** (komutan, bayrak, nehir geçitleri, orman, tepe). Bölümler sırayla ikisini de getirir.
+
 ## APK nasıl alınır?
 Her `push` sonrası GitHub Actions otomatik APK derler:
 **GitHub → bu depo → Releases** → en yeni `Seferhan x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
@@ -40,7 +42,9 @@ python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 |---|---|
 | `www/js/data.js` | Birlikler, kahramanlar, bölümler, **denge sayıları** |
 | `www/js/sim.js` | Savaş simülasyonu (DOM'dan bağımsız, Node'da test edilir) |
+| `www/js/field.js` | **Açık alan** savaş simülasyonu (2D, arazi, komutan; Node'da test edilir) |
 | `www/js/render.js` | Canvas çizimi: birlikler, kaleler, efektler |
+| `www/js/fieldrender.js` | Açık alan çizimi: arazi, bayraklar, komutan, yerleştirme önizlemesi |
 | `www/js/ui.js` | Menüler, modallar, savaş HUD'u |
 | `www/js/save.js` | Kayıt (localStorage), hazine, günlük ödül/görev |
 | `android/` | Capacitor Android projesi |

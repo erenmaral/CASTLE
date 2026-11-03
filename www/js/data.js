@@ -202,6 +202,18 @@
     return RULE_CYCLE[k % RULE_CYCLE.length];
   };
   Z.isBoss = function (n) { return n % 5 === 0; };
+  // Savas turu: 3,4,8,9,13,14... ACIK ALAN (serbest yerlestirme, komutan, arazi); digerleri KALE KUSATMASI
+  Z.levelType = function (n) { var m = n % 5; return (m === 3 || m === 4) ? 'field' : 'castle'; };
+  Z.FIELD_OBJECTIVES = {
+    commander: { icon: '👑', name: 'Komutanı Yok Et', desc: 'Düşman komutanını öldür. Komutanın düşerse yenilirsin!' },
+    capture:   { icon: '🚩', name: 'Bayrakları Ele Geçir', desc: 'Orta alandaki 3 bayrağı tutarak 100 puana ulaş. Komutanın düşerse yenilirsin!' },
+    survive:   { icon: '⏳', name: 'Mevzii Tut', desc: 'Komutanını koruyarak süre dolana kadar dayan.' }
+  };
+  Z.fieldObjective = function (n, rules) {
+    if (rules && rules.indexOf('survive') >= 0) return 'survive';
+    return Math.floor(n / 5) % 2 === 1 ? 'capture' : 'commander';
+  };
+  Z.fieldBudget = function (n) { return 300 + 55 * n; }; // savas oncesi yerlestirme butcesi (komuta puani)
   Z.levelInfo = function (n) {
     var tiers = ['spear', 'archer'];
     if (n >= 3) tiers.push('cav');
@@ -218,12 +230,13 @@
       name: Z.LEVEL_NAMES[(n - 1) % Z.LEVEL_NAMES.length],
       boss: Z.isBoss(n),
       realm: Z.realmOf(n),
+      type: Z.levelType(n),
       rule: Z.ruleOf(n),
       story: Z.STORIES[(n - 1) % Z.STORIES.length],
       surviveTime: Math.round(90 + 2.5 * n),
-      scale: 1 + 0.040 * Math.min(n - 1, 29) + 0.028 * Math.max(0, Math.min(n - 30, 15)) + 0.008 * Math.max(0, n - 45),
+      scale: 1 + 0.033 * Math.min(n - 1, 29) + 0.028 * Math.max(0, Math.min(n - 30, 15)) + 0.008 * Math.max(0, n - 45),
       baseHp: 700 + 130 * n,
-      aiRate: n <= 40 ? 8 + 0.35 * n : 20 + 0.04 * (n - 40), // oyuncunun azami geliriyle (27.5) dengeli kalir
+      aiRate: n <= 40 ? 8 + 0.29 * n : 20 + 0.04 * (n - 40), // oyuncunun azami geliriyle (27.5) dengeli kalir
       // // oyuncunun azami geliriyle (27.5) dengeli kalir
       startGold: 60 + 8 * n,
       tiers: tiers,

@@ -25,7 +25,7 @@
       <div id="gold-chip"><span class="ico">🪙</span><b id="gold-val">0</b><small id="gold-cap">/400</small><em id="gold-rate">+10/sn</em></div>
       <button id="btn-mine"><span class="ico">⛏</span><span id="mine-txt">Maden</span></button>
     </div>
-    <div id="hud-info"><div id="info-title"></div><div id="info-chips"><span id="rule-chip" class="hidden"></span><span id="combo-chip" class="hidden"></span></div></div>
+    <div id="hud-info"><div id="info-title"></div><div id="info-chips"><span id="obj-chip" class="hidden"></span><span id="rule-chip" class="hidden"></span><span id="combo-chip" class="hidden"></span></div></div>
     <div id="perk-row"></div>
     <div id="hint" class="hidden"></div>
     <div id="hud-bottom">
@@ -34,6 +34,12 @@
           <button class="lane-btn" data-lane="0">▲<b>1</b></button>
           <button class="lane-btn" data-lane="1">▲<b>2</b></button>
           <button class="lane-btn" data-lane="2">▲<b>3</b></button>
+        </div>
+        <div id="field-bar" class="hidden">
+          <button id="fb-auto" class="fbtn">🎲<small>Otomatik</small></button>
+          <button id="fb-clear" class="fbtn">🗑<small>Temizle</small></button>
+          <button id="fb-go" class="fbtn go">⚔<small>SAVAŞ</small></button>
+          <button id="fb-stance" class="fbtn stance hidden">⚔<small>Saldır</small></button>
         </div>
         <button id="btn-skill" class="card skill"><div class="cd"></div><div class="c-ico" id="skill-ico"></div><div class="s-txt"><div class="c-name" id="skill-name"></div><div class="c-cost" id="skill-state"></div></div></button>
       </div>
@@ -68,7 +74,9 @@
 <script src="js/save.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/sim.js"></script>
+<script src="js/field.js"></script>
 <script src="js/render.js"></script>
+<script src="js/fieldrender.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

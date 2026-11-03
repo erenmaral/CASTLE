@@ -2,7 +2,7 @@
 // CI, 'seferhan-dev' degerini her derlemede calisma numarasiyla degistirir.
 const CACHE = 'seferhan-dev';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'js/version.js', 'js/data.js', 'js/save.js', 'js/audio.js', 'js/sim.js', 'js/render.js', 'js/ui.js', 'js/main.js',
+  'js/version.js', 'js/data.js', 'js/save.js', 'js/audio.js', 'js/sim.js', 'js/field.js', 'js/render.js', 'js/fieldrender.js', 'js/ui.js', 'js/main.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

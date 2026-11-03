@@ -10,7 +10,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   const shot = (n) => p.screenshot({ path: path.join(out, n + '.png') });
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
-  await ctx.addInitScript(() => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.4', cleared: 13, coins: 900, gems: 30, stars: { 1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3, 12: 3, 13: 2 }, stats: { totalStars: 35, wins: 13 }, daily: { lastDay: new Date().toISOString().slice(0,10), claimedToday: true, streak: 1 } })); } catch (e) {} });
+  await ctx.addInitScript(() => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.5', cleared: 13, coins: 900, gems: 30, stars: { 1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3, 12: 3, 13: 2 }, stats: { totalStars: 35, wins: 13 }, daily: { lastDay: new Date().toISOString().slice(0,10), claimedToday: true, streak: 1 } })); } catch (e) {} });
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(800);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); });
   await p.waitForTimeout(400); await shot('v03-01-map');
@@ -19,9 +19,9 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   // sefer brifingi: kurallı bolum (14 = savunma seferi)
   await p.evaluate(() => { document.querySelector('[data-level="14"]').click(); }); await p.waitForTimeout(500); await shot('v03-02-briefing-survive');
   const txt = await p.locator('.modal').innerText();
-  check(/Sefer 14/.test(txt) && /Savunma Seferi/.test(txt) && /boyunca kaleni savun/.test(txt) && /Zehir Nehri/.test(txt), 'Brifingde sefer no, hikâye, kural ve hedef var');
-  await p.evaluate(() => { Z.UI.closeModal(); document.querySelector('[data-level="8"]').click(); }); await p.waitForTimeout(400); await shot('v03-03-briefing-ambush');
-  check(/Pusu/.test(await p.locator('.modal').innerText()), 'Pusu seferinin kuralı gösteriliyor');
+  check(/Sefer 14/.test(txt) && /Savunma Seferi/.test(txt) && /Mevzii Tut/.test(txt) && /Zehir Nehri/.test(txt), 'Brifingde sefer no, hikâye, kural ve hedef var');
+  await p.evaluate(() => { Z.UI.closeModal(); document.querySelector('[data-level="7"]').click(); }); await p.waitForTimeout(400); await shot('v03-03-briefing-heavy');
+  check(/Zırhlı Ordu|Ağır/i.test(await p.locator('.modal').innerText()) || (await p.locator('.rule-box').count()) > 0, 'Kural kutusu gösteriliyor');
   await p.locator('[data-act="fight"]').click(); await p.waitForTimeout(1800); await shot('v03-04-battle-start');
 
   // koridor secici
@@ -50,7 +50,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await shot('v03-05-battle-lanes');
 
   // savunma seferi arayuzu
-  await p.evaluate(() => Z.Game.startBattle('campaign', 14)); await p.waitForTimeout(1200);
+  await p.evaluate(() => { Z.Game.startBattle('campaign', 16); const b = Z.Game.battle; b.rules = ['survive']; b.rule = 'survive'; Z.UI.hudBuild(b); }); await p.waitForTimeout(1200);
   check(/⏳/.test(await p.locator('#info-title').innerText()) && !(await p.locator('#rule-chip').getAttribute('class') || '').includes('hidden'), 'Savunma seferinde geri sayım ve kural rozeti görünür');
   await p.evaluate(() => { Z.Game.battle.t = Z.Game.battle.info.surviveTime - 0.2; }); await p.waitForTimeout(1800);
   check(await p.evaluate(() => Z.Game.battle.over && Z.Game.battle.result.win), 'Süre dolunca savunma seferi kazanılır');

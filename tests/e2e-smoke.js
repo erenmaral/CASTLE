@@ -81,7 +81,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   for (const [w, h, n] of [[360, 640, 'small'], [768, 1024, 'tablet'], [1280, 720, 'desktop']]) {
     const p2 = await newPage(w, h); await p2.goto(url); await p2.waitForFunction(() => Z.ready); await p2.waitForTimeout(700);
     await p2.evaluate(() => { Z.Save.data.tutorialDone = true; Z.Save.data.daily.claimedToday = true; Z.UI.closeModal(); Z.Save.data.cleared = 13; Z.Save.data.unitLvl.spear = 6; });
-    await p2.evaluate(() => Z.Game.startBattle('campaign', 14));
+    await p2.evaluate(() => Z.Game.startBattle('campaign', 16));
     await p2.evaluate(() => { const b = Z.Game.battle; b.gold = 999; ['spear','archer','cav','knight','mage'].forEach((t, i) => { if (b.deck.includes(t)) { b.cooldown[t] = 0; b.deploy(t, i % 3); } }); });
     await p2.waitForTimeout(6000);
     await shot(p2, '09-battle-' + n);
