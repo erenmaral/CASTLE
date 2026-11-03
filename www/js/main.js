@@ -6,17 +6,16 @@
 
   var Game = Z.Game = {
     battle: null, paused: false, speed: 1, ending: false, endTimer: 0, last: 0,
-    stage: { scale: 1, w: 1280, h: 720 },
+    stage: { scale: 1, w: 720, h: 1280, left: 0 },
 
-    // Sahne boyutu: yukseklik 720 mantiksal birime sigar; genislik ekrana gore uzar (en az 1280)
+    // Dikey sahne: tasarim 720x1280 mantiksal birim. Telefon dar/uzunsa yukseklik uzar; genis pencerede (masaustu) sutun ortalanir.
     resize: function () {
       var iw = globalThis.innerWidth, ih = globalThis.innerHeight;
-      var scale = Math.min(ih / 720, iw / 1280);
-      var w = iw / scale, h = ih / scale, st = $('stage');
-      this.stage = { scale: scale, w: w, h: h };
-      st.style.width = w + 'px'; st.style.height = h + 'px'; st.style.transform = 'scale(' + scale + ')';
+      var scale = Math.min(iw / 720, ih / 1280);
+      var w = Math.min(iw / scale, 1000), h = ih / scale, st = $('stage'), left = (iw - w * scale) / 2;
+      this.stage = { scale: scale, w: w, h: h, left: left };
+      st.style.width = w + 'px'; st.style.height = h + 'px'; st.style.left = left + 'px'; st.style.transform = 'scale(' + scale + ')';
       st.style.setProperty('--s', scale);
-      var hud = $('hud'); hud.style.left = '0px'; hud.style.width = w + 'px'; hud.style.top = (h - 720) / 2 + 'px';
       R.resize(w, h, scale);
     },
 
@@ -29,6 +28,7 @@
       UI.closeModal(); UI.hideHub();
       UI.hudBuild(this.battle);
       R.start(this.battle);
+      R.banner = { text: mode === 'endless' ? 'SONSUZ KUŞATMA' : 'SEFER ' + level, col: '#ffd166', t: 1.8 };
       A.musicStart();
     },
 

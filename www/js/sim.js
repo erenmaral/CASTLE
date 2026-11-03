@@ -48,10 +48,13 @@
     this.roarUntil = 0;
 
     var castle = Z.castleHp(this.sv.castleLvl || 1);
+    this.rule = this.mode === 'endless' ? 'none' : this.info.rule;
+    var eHp = this.mode === 'endless' || this.rule === 'survive' ? 1e9 : this.info.baseHp * (this.rule === 'fortress' ? 1.4 : 1); // savunma seferinde kale yikilamaz
     this.base = [
       { hp: castle, max: castle, shoot: 0.8, flash: 0 },
-      { hp: this.mode === 'endless' ? 1e9 : this.info.baseHp, max: this.mode === 'endless' ? 1e9 : this.info.baseHp, shoot: 1.2, flash: 0 }
+      { hp: eHp, max: eHp, shoot: 1.2, flash: 0 }
     ];
+    this.ambushIdx = 0;
 
     this.ai = { gold: this.info.startGold, think: 3, pending: null, pendingT: 0, bossDone: 0 };
     // istatistikler
@@ -77,7 +80,7 @@
     if (w >= 2) t.push('cav'); if (w >= 4) t.push('knight'); if (w >= 6) t.push('mage'); if (w >= 8) t.push('cata');
     return t;
   };
-  P.income = function () { return Z.mineIncome(this.mine) * (this.perks.gold ? 1.25 : 1); };
+  P.income = function () { return Z.mineIncome(this.mine) * (this.perks.gold ? 1.25 : 1) * (this.rule === 'rich' ? 1.3 : this.rule === 'famine' ? 0.8 : 1); };
   P.goldCap = function () { return Z.mineCap(this.mine); };
   P.mineCost = function () { return this.mine < Z.MINE_COSTS.length ? Z.MINE_COSTS[this.mine] : null; };
   P.emit = function (e) { this.events.push(e); };
@@ -93,7 +96,7 @@
     if (this.laneCount(0, lane) >= MAX_PER_LANE) return false;
     var def = Z.UNITS[type];
     this.gold -= def.cost;
-    this.cooldown[type] = def.cd * (this.perks.cd ? 0.75 : 1);
+    this.cooldown[type] = def.cd * (this.perks.cd ? 0.75 : 1) * (this.rule === 'fortress' ? 0.85 : 1);
     this.spawn(0, type, lane);
     this.stats.spawns++;
     return true;
@@ -156,7 +159,7 @@
       hpM = Z.unitHpMult(lvl); dmgM = Z.unitDmgMult(lvl);
     } else {
       var s = this.enemyScale();
-      hpM = s; dmgM = 1 + (s - 1) * 0.8;
+      hpM = s * (this.rule === 'heavy' ? 1.2 : 1); dmgM = 1 + (s - 1) * 0.8;
     }
     if (boss) { hpM *= 3; dmgM *= 1.15; }
     if (team === 0 && this.perks.hp) hpM *= 1.15;
@@ -191,7 +194,7 @@
     if (u.team === 1) {
       this.stats.kills++;
       this.comboT = 3; this.combo++; if (this.combo > this.bestCombo) this.bestCombo = this.combo;
-      var g = Math.round(Z.UNITS[u.type].cost * 0.4 * (u.boss ? 4 : 1) * (1 + 0.05 * Math.min(this.combo, 10)));
+      var g = Math.round(Z.UNITS[u.type].cost * 0.4 * (u.boss ? 4 : 1) * (1 + 0.05 * Math.min(this.combo, 10)) * (this.rule === 'famine' ? 1.5 : 1));
       this.gold = Math.min(this.goldCap() + 100, this.gold + g);
       this.emit({ type: 'coin', x: u.x, lane: u.lane, v: g });
     } else {
@@ -221,13 +224,15 @@
     for (i = 0; i < this.units.length; i++) if (!this.units[i].dead) this.stepUnit(this.units[i], dt);
     this.updateProjectiles(dt);
     this.updateBases(dt);
-    if (this.perks.regen) {
-      for (i = 0; i < this.units.length; i++) { var ru = this.units[i]; if (ru.team === 0 && !ru.dead) ru.hp = Math.min(ru.max, ru.hp + ru.max * 0.015 * dt); }
+    var regen = (this.perks.regen ? 0.015 : 0) + (this.rule === 'rally' ? 0.01 : 0);
+    if (regen) {
+      for (i = 0; i < this.units.length; i++) { var ru = this.units[i]; if (ru.team === 0 && !ru.dead) ru.hp = Math.min(ru.max, ru.hp + ru.max * regen * dt); }
     }
     this.units = this.units.filter(function (u) { return !u.dead; });
 
     if (this.base[1].hp <= 0) this.finish(true);
     else if (this.base[0].hp <= 0) this.finish(false);
+    else if (this.rule === 'survive' && this.t >= this.info.surviveTime) this.finish(true);
     else if (this.perkIdx < Z.PERK_KILLS.length && this.stats.kills >= Z.PERK_KILLS[this.perkIdx]) { this.perkIdx++; this.offerPerk(); }
   };
 
@@ -258,7 +263,7 @@
     // Sifaci: savasmaz, yarali dostu iyilestirir, dusmana yaklasmaz
     if (u.heal) {
       if (hurt && u.atkCd <= 0) this.healUnit(u, hurt);
-      if (allyAhead < 26 || enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * dt; u.moving = true; }
+      if (allyAhead < 26 || enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rule === 'swift' ? 1.25 : 1) * dt; u.moving = true; }
       return;
     }
 
@@ -272,7 +277,7 @@
     } else {
       // dusmanla temas varsa (mancinik gibi ates edemeyenler dahil) ilerleme
       var blocked = allyAhead < 26 || enemyAhead < 30;
-      if (!blocked) { u.x += dir * u.speed * dt; u.moving = true; } else { u.moving = false; }
+      if (!blocked) { u.x += dir * u.speed * (this.rule === 'swift' ? 1.25 : 1) * dt; u.moving = true; } else { u.moving = false; }
     }
   };
 
@@ -400,6 +405,14 @@
         this.emit({ type: 'boss' });
       }
     }
+    if (this.rule === 'ambush') { // kenar koridorlardan baskin
+      var amb = [1.5, 50, 100];
+      if (this.ambushIdx < amb.length && this.t >= amb[this.ambushIdx]) {
+        this.ambushIdx++;
+        this.spawn(1, this.ambushIdx === 2 ? 'cav' : 'spear', 0); this.spawn(1, this.ambushIdx === 2 ? 'cav' : 'spear', 2);
+        this.emit({ type: 'ambush' });
+      }
+    }
     ai.think -= dt;
     if (ai.think > 0) return;
     ai.think = Math.max(0.6, 1.5 - (this.mode === 'endless' ? this.wave() * 0.03 : this.level * 0.02)) + this.rng() * 0.8;
@@ -478,7 +491,7 @@
         d.stats.wins++; S.track('wins', 1);
         if (r.stars === 3) S.track('threeStars', 1);
         var prev = d.stars[b.level] || 0;
-        out.coins = Math.round(info.rewardCoins * (1 + 0.25 * (r.stars - 1)) * (info.boss ? 1.5 : 1));
+        out.coins = Math.round(info.rewardCoins * (1 + 0.25 * (r.stars - 1)) * (info.boss ? 1.5 : 1) * (b.rule === 'heavy' || b.rule === 'famine' ? 1.3 : 1));
         if (prev === 0) { out.firstClear = true; out.gems += info.rewardGems; }
         if (r.stars > prev) { d.stats.totalStars += r.stars - prev; d.stars[b.level] = r.stars; if (prev > 0) out.gems += (r.stars - prev) * 2; }
         if (b.level > d.cleared) {

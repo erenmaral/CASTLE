@@ -2,6 +2,16 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.3.0 — Dikey Seferler
+- 📱 **Oyun artık dikey (portre):** menüler, harita ve savaş telefonu dik tutarak oynanır. Android'de ekran dikeye kilitli, tarayıcı sürümü de dikey açılır.
+- ⚔️ **Dikey savaş:** kalen altta, düşman kalesi üstte; 3 koridor yan yana, birlikler yukarı doğru yürür. Birlikler kuşbakışı yeniden çizildi.
+- 🎯 **Koridor seçimi:** alttaki **1-2-3 düğmeleri**, sahada koridora dokunmak ya da kartı koridora sürüklemek. Seçili koridorun kapısında altın ok görünür.
+- 🗺️ **Her bölüm ayrı bir sefer:** kendi hikâyesi, **sefer kuralı** ve hedefi var. Sefer brifingi ekranı eklendi.
+  - Kurallar: 💰 Altın Damarı, 🌪️ Fırtına Rüzgârı, 🛡️ Zırhlı Ordu, 🗡️ Pusu, 🌾 Kıtlık, 📯 Moral Çağrısı, 🏰 Kale Kuşatması, ⏳ Savunma Seferi (süreyi doldur).
+  - Her diyarın bölüm adları kendi temasına uygun hâle getirildi (çöl/buz).
+- Harita dikey kaydırmalı bir yola dönüştü; yıldız ödülleri üstte yatay kaydırmalı.
+- Denge: sefer kuralları eklendi, genel kazanma oranı ~%68 (3 seviye ilerideki oyuncuda ~%82).
+
 ## 0.2.0 — Seferhan
 - ✏️ **Oyunun adı Seferhan oldu** (eski adı Zafarion). Yeni ikon: sancaklı kale kulesi. İlerleme ve kayıtlar korunur.
 - 🗺️ **3 diyar, 45 bölüm:** Yeşil Vadi, Kızıl Çöl (kum tozu), Buz Diyarı (kar yağışı). Her diyarın kendi manzarası var.

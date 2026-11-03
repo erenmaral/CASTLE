@@ -18,7 +18,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   }
   const shot = (page, n) => page.screenshot({ path: path.join(out, n + '.png') });
 
-  const page = await newPage(915, 412);
+  const page = await newPage(412, 915);
   await page.goto(url);
   await page.waitForFunction(() => globalThis.Z && Z.ready);
   await page.waitForTimeout(800);
@@ -30,12 +30,11 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const drag = async (sel, lane) => {
     const box = await page.locator(sel).boundingBox();
     const sc = await page.evaluate(() => Z.Game.stage.scale);
-    const oy = await page.evaluate(() => Z.Render.oy);
-    const ty = (oy + [265, 370, 475][lane]) * sc;
+    const tgt = await page.evaluate((l) => { const s = Z.Game.stage, R = Z.Render; return { x: R.laneX(l) * s.scale + s.left, y: (R.eY + (R.pY - R.eY) * 0.55) * s.scale }; }, lane);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2, box.y - 40, { steps: 3 });
-    await page.mouse.move(300, ty, { steps: 6 });
+    await page.mouse.move(tgt.x, tgt.y, { steps: 6 });
     await shot(page, 'drag-mid');
     await page.mouse.up();
   };
@@ -79,7 +78,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await page.waitForTimeout(400); await shot(page, '08-level-modal');
 
   // farkli ekran: genis telefon + tablet
-  for (const [w, h, n] of [[1280, 720, 'desktop'], [1024, 768, 'tablet'], [800, 360, 'small']]) {
+  for (const [w, h, n] of [[360, 640, 'small'], [768, 1024, 'tablet'], [1280, 720, 'desktop']]) {
     const p2 = await newPage(w, h); await p2.goto(url); await p2.waitForFunction(() => Z.ready); await p2.waitForTimeout(700);
     await p2.evaluate(() => { Z.Save.data.tutorialDone = true; Z.Save.data.daily.claimedToday = true; Z.UI.closeModal(); Z.Save.data.cleared = 13; Z.Save.data.unitLvl.spear = 6; });
     await p2.evaluate(() => Z.Game.startBattle('campaign', 14));

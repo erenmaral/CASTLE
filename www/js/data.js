@@ -73,17 +73,84 @@
   Z.MAX_LEVEL = 45;
   Z.REALMS = ['Yeşil Vadi', 'Kızıl Çöl', 'Buz Diyarı'];
   Z.realmOf = function (n) { return Math.min(2, Math.floor((n - 1) / 15)); };
+  // Her diyarin adlari kendi temasina uygun (1-15 Yesil Vadi, 16-30 Kizil Col, 31-45 Buz Diyari)
   Z.LEVEL_NAMES = [
     'Kızıl Vadi', 'Sis Geçidi', 'Kuzgun Tepesi', 'Demirkapı', 'Gölge Ormanı',
     'Kırık Köprü', 'Ateş Ovası', 'Taşkale Eteği', 'Fırtına Burnu', 'Kara Bataklık',
-    'Çelik Dağ', 'Bozkurt Yaylası', 'Altın Çöl', 'Zehir Nehri', 'Buzul Boğazı',
-    'Yıldız Kalesi', 'Kemik Çölü', 'Alev Boğazı', 'Rüzgâr Ovası', 'Kül Vadisi',
-    'Tuz Gölü', 'Karanlık Orman', 'Yıkık Şehir', 'Kızıl Kule', 'Ejder Geçidi',
-    'Kurt Kapanı', 'Siyah Kale', 'Gök Kubbe', 'Son Sur', 'Çöl Tahtı',
-    'Kum Fırtınası', 'Akrep Vadisi', 'Güneş Tapınağı', 'Kayıp Vaha', 'Kervan Yolu',
+    'Çelik Dağ', 'Bozkurt Yaylası', 'Altın Çayır', 'Zehir Nehri', 'Kartal Kayalığı',
+    'Kum Fırtınası', 'Akrep Vadisi', 'Güneş Tapınağı', 'Kayıp Vaha', 'Kemik Çölü',
+    'Alev Boğazı', 'Tuz Düzü', 'Yıkık Şehir', 'Kervan Yolu', 'Kızıl Kule',
+    'Ejder Geçidi', 'Kurt Kapanı', 'Siyah Kale', 'Kül Vadisi', 'Çöl Tahtı',
     'Buzul Kapısı', 'Kar Fırtınası', 'Donmuş Göl', 'Kurt Yurdu', 'Kristal Mağara',
-    'Ayaz Boğazı', 'Beyaz Kale', 'Kutup Işığı', 'Dondurucu Zirve', 'Seferhan Tahtı'
+    'Ayaz Boğazı', 'Beyaz Kale', 'Kutup Işığı', 'Don Vadisi', 'Dondurucu Zirve',
+    'Buz Köprüsü', 'Kış Nöbeti', 'Yıldız Kalesi', 'Son Sur', 'Seferhan Tahtı'
   ];
+  // Her bolum ayri bir sefer: kisa hikaye
+  Z.STORIES = [
+    'Sınırda ilk çatışma! Düşman öncüleri vadiye girdi — sancağını dik, Seferhan.',
+    'Sis her şeyi yutuyor. Düşman nerede, ne kadar? Önce savun, sonra vur.',
+    'Kuzgunlar tepede dönüyor: süvari baskını yakın. Mızrakçılarını hazırla.',
+    'Demirkapı\'yı tutan birlik dağıtılırsa yol açılacak.',
+    'PATRON — Gölge Ormanı\'nın efendisi yolunu kesti. Ordunu topla!',
+    'Köprü yıkık, düşman karşı yakada. Şifacıların cephede şart.',
+    'Ova alev içinde. Zaman az: hızlı ilerle, düşman toparlanmadan vur.',
+    'Taşkale\'nin eteğinde ağır zırhlı şövalyeler dizildi.',
+    'Fırtına Burnu\'nda denizden gelen takviyeyi karşıla.',
+    'PATRON — Kara Bataklık\'ın efendisi çamurdan doğruldu.',
+    'Çelik Dağ madenleri ordunun can damarı. Ele geçir!',
+    'Bozkurt Yaylası\'nda hızlı bir akıncı ordusu pusuda bekliyor.',
+    'Altın Çayır\'da zengin kervanlar var. Ganimet seni bekliyor.',
+    'Zehir Nehri\'nin kıyısında düşman nöbet tutuyor. Sessiz ve hızlı ol.',
+    'PATRON — Kartal Kayalığı\'nın koruyucusu seni gökten izliyor.',
+    'Kum Fırtınası! Çölün kapısında görüş yok, sabır var.',
+    'Akrep Vadisi\'nin her taşı bir tuzak. Kalkanlarını yükselt.',
+    'Güneş Tapınağı\'nın muhafızları kutsal toprağı bırakmayacak.',
+    'Kayıp Vaha\'yı ele geçiren ordu su kaynağını kontrol ediyor.',
+    'PATRON — Kemik Çölü\'nün kadim komutanı kumların altından yükseldi.',
+    'Alev Boğazı\'ndan geçiş tek yol. Dar ve tehlikeli.',
+    'Tuz Düzü\'nde kervan yolları kesilmiş. Yolları yeniden aç.',
+    'Yıkık Şehir\'in surları hâlâ dik. Mancınıklar işe yarayacak.',
+    'Kervan Yolu\'nu soyan haydut ordusu seni bekliyor.',
+    'PATRON — Kızıl Kule\'nin efendisi kulesinden inmeyecek.',
+    'Ejder Geçidi\'nde kanatlı gölgeler dolaşıyor. Ürkme, ilerle.',
+    'Kurt Kapanı: ya sen avlanırsın ya düşman.',
+    'Siyah Kale\'nin önündeki son meydan okuma.',
+    'Kül Vadisi\'nde savaşın külleri hâlâ sıcak.',
+    'PATRON — Çöl Tahtı\'nın hükümdarı seni sınamak için bekliyor.',
+    'Buzul Kapısı\'nı geçtin: artık dondurucu soğukta savaşıyorsun.',
+    'Kar fırtınasında ordular birbirini zor görüyor. Sancaklar yol göstersin.',
+    'Donmuş Göl\'ün buzu ince. Düşman hızını kesmek istiyor.',
+    'Kurt Yurdu\'nun sürüsü kar altında koşuyor.',
+    'PATRON — Kristal Mağara\'nın buz devi uyandı!',
+    'Ayaz Boğazı: nefes bile donuyor. Şifacılarını koru.',
+    'Beyaz Kale\'nin surları buzdan, ama inatçı.',
+    'Kutup Işığı altında gizemli bir ordu belirdi.',
+    'Don Vadisi\'nde pusuya düşmemek için dikkatli ol.',
+    'PATRON — Dondurucu Zirve\'nin bekçisi geçit vermeyecek.',
+    'Buz Köprüsü çatırdıyor; hızlı geçmek gerek.',
+    'Kış Nöbeti: düşman son yedeklerini sürüyor.',
+    'Yıldız Kalesi\'nin kapıları sana açılmayı bekliyor.',
+    'Son Sur\'un ardında Seferhan Tahtı var. Son hazırlık!',
+    'PATRON — Seferhan Tahtı! Tüm seferlerin sonu. Tahtı ele geçir.'
+  ];
+  // Sefer kurallari: her sefere ozgu bir savas kosulu
+  Z.RULES = {
+    none:     { name: '', icon: '', desc: '' },
+    rich:     { name: 'Altın Damarı',    icon: '💰', desc: 'Altın kazancın %30 artar.' },
+    swift:    { name: 'Fırtına Rüzgârı', icon: '🌪️', desc: 'Tüm birlikler %25 daha hızlı yürür.' },
+    heavy:    { name: 'Zırhlı Ordu',     icon: '🛡️', desc: 'Düşman %20 daha dayanıklı. Ödüller %30 fazla.' },
+    ambush:   { name: 'Pusu',            icon: '🗡️', desc: 'Düşman kenar koridorlardan baskın yapar.' },
+    famine:   { name: 'Kıtlık',          icon: '🌾', desc: 'Altın kazancın %20 azalır, her düşman %50 fazla altın verir. Ödüller %30 fazla.' },
+    rally:    { name: 'Moral Çağrısı',   icon: '📯', desc: 'Dost birlikler saniyede %1 can yeniler.' },
+    fortress: { name: 'Kale Kuşatması',  icon: '🏰', desc: 'Düşman kalesi %40 daha sağlam. Kart bekleme süreleri %15 kısalır.' },
+    survive:  { name: 'Savunma Seferi',  icon: '⏳', desc: 'Kalen düşmeden süreyi doldur! Düşman kalesi yıkılamaz.' }
+  };
+  var RULE_CYCLE = ['rich', 'survive', 'swift', 'heavy', 'ambush', 'rally', 'famine', 'fortress'];
+  Z.ruleOf = function (n) {
+    if (n <= 2 || n % 5 === 0) return 'none'; // ilk iki bolum ve patronlar kuralsiz
+    var k = 0; for (var i = 3; i < n; i++) if (i % 5 !== 0) k++;
+    return RULE_CYCLE[k % RULE_CYCLE.length];
+  };
   Z.isBoss = function (n) { return n % 5 === 0; };
   Z.levelInfo = function (n) {
     var tiers = ['spear', 'archer'];
@@ -98,6 +165,9 @@
       name: Z.LEVEL_NAMES[(n - 1) % Z.LEVEL_NAMES.length],
       boss: Z.isBoss(n),
       realm: Z.realmOf(n),
+      rule: Z.ruleOf(n),
+      story: Z.STORIES[(n - 1) % Z.STORIES.length],
+      surviveTime: Math.round(90 + 2.5 * n),
       scale: 1 + 0.040 * Math.min(n - 1, 29) + 0.028 * Math.max(0, n - 30),
       baseHp: 700 + 130 * n,
       aiRate: 8 + 0.35 * n,

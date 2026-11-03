@@ -17,25 +17,32 @@
 <div id="stage">
   <canvas id="game" class="hidden"></canvas>
 
-  <!-- SAVAS ARAYUZU (1280x720 alanina oturur) -->
-  <div id="hud" class="hidden">
+  <!-- SAVAS ARAYUZU (720 genisliginde ortalanmis sutun) -->
+  <div id="hud" class="hidden"><div class="col">
     <div id="hud-top">
       <button id="btn-pause" class="hbtn" aria-label="Duraklat">⏸</button>
       <button id="btn-speed" class="hbtn">x1</button>
       <div id="gold-chip"><span class="ico">🪙</span><b id="gold-val">0</b><small id="gold-cap">/400</small><em id="gold-rate">+10/sn</em></div>
       <button id="btn-mine"><span class="ico">⛏</span><span id="mine-txt">Maden</span></button>
-      <div id="hud-info"><div id="info-title"></div><div id="combo-chip" class="hidden"></div></div>
     </div>
+    <div id="hud-info"><div id="info-title"></div><div id="info-chips"><span id="rule-chip" class="hidden"></span><span id="combo-chip" class="hidden"></span></div></div>
     <div id="perk-row"></div>
     <div id="hint" class="hidden"></div>
     <div id="hud-bottom">
+      <div id="hud-row1">
+        <div id="lane-pick" aria-label="Koridor seç">
+          <button class="lane-btn" data-lane="0">▲<b>1</b></button>
+          <button class="lane-btn" data-lane="1">▲<b>2</b></button>
+          <button class="lane-btn" data-lane="2">▲<b>3</b></button>
+        </div>
+        <button id="btn-skill" class="card skill"><div class="cd"></div><div class="c-ico" id="skill-ico"></div><div class="s-txt"><div class="c-name" id="skill-name"></div><div class="c-cost" id="skill-state"></div></div></button>
+      </div>
       <div id="cards"></div>
-      <button id="btn-skill" class="card skill"><div class="cd"></div><div class="c-ico" id="skill-ico"></div><div class="c-name" id="skill-name"></div><div class="c-cost" id="skill-state"></div></button>
     </div>
-  </div>
+  </div></div>
 
   <!-- ANA MENU -->
-  <div id="hub" class="hidden">
+  <div id="hub" class="hidden"><div id="hub-col">
     <div id="hub-top">
       <div class="logo">SEFERHAN</div>
       <div class="spacer"></div>
@@ -43,16 +50,14 @@
       <div class="curr"><span class="ico">💎</span><b id="cur-gems">0</b></div>
       <button id="btn-settings" class="round">⚙</button>
     </div>
-    <div id="hub-body">
-      <nav id="tabs">
-        <button data-tab="map" class="tab"><span>⚔️</span>Sefer</button>
-        <button data-tab="army" class="tab"><span>🛡️</span>Ordu</button>
-        <button data-tab="vault" class="tab"><span>💰</span>Hazine</button>
-        <button data-tab="quests" class="tab"><span>📜</span>Görev</button>
-      </nav>
-      <main id="tab-content"></main>
-    </div>
-  </div>
+    <main id="tab-content"></main>
+    <nav id="tabs">
+      <button data-tab="map" class="tab"><span>⚔️</span>Sefer</button>
+      <button data-tab="army" class="tab"><span>🛡️</span>Ordu</button>
+      <button data-tab="vault" class="tab"><span>💰</span>Hazine</button>
+      <button data-tab="quests" class="tab"><span>📜</span>Görev</button>
+    </nav>
+  </div></div>
 
   <div id="modal-layer" class="hidden"></div>
   <div id="toast" class="hidden"></div>
