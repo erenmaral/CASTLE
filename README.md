@@ -45,7 +45,7 @@ python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 | `www/js/field.js` | **Açık alan** savaş simülasyonu (2D, arazi, komutan; Node'da test edilir) |
 | `www/js/render.js` | Canvas çizimi: birlikler, kaleler, efektler |
 | `www/js/fieldrender.js` | Açık alan çizimi: arazi, bayraklar, komutan, yerleştirme önizlemesi |
-| `www/js/ui.js` | Menüler, modallar, savaş HUD'u |
+| `www/js/ui.js` | Ana menü, sefer merkezi (harita/ordu/hazine/görev), modallar, savaş HUD'u, etkileşimli öğretici |
 | `www/js/save.js` | Kayıt (localStorage), hazine, günlük ödül/görev |
 | `android/` | Capacitor Android projesi |
 | `.github/workflows/android.yml` | Otomatik APK derleme + Release |

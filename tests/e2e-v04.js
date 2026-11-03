@@ -13,10 +13,10 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
   const stars = {}; for (let i = 1; i <= 20; i++) stars[i] = 3;
   await ctx.addInitScript((st) => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.3', cleared: 20, coins: 5000, gems: 100, stars: st, stats: { totalStars: 60, wins: 20 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
-  await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(700);
+  await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(700);
 
   // Yenilikler penceresi (0.3 kaydi ile)
-  check(/Sefer Vakti 0\.6/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.6 penceresi gösterildi');
+  check(/Sefer Vakti 0\.7/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.7 penceresi gösterildi');
   await shot('v04-01-whatsnew'); await p.click('[data-act="ok"]'); await p.waitForTimeout(400);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); }); await p.waitForTimeout(300);
   check(await p.evaluate(() => document.querySelectorAll('.node').length === 105), 'Harita 105 bölümü gösteriyor');

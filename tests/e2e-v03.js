@@ -10,8 +10,8 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   const shot = (n) => p.screenshot({ path: path.join(out, n + '.png') });
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
-  await ctx.addInitScript(() => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.6', cleared: 13, coins: 900, gems: 30, stars: { 1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3, 12: 3, 13: 2 }, stats: { totalStars: 35, wins: 13 }, daily: { lastDay: new Date().toISOString().slice(0,10), claimedToday: true, streak: 1 } })); } catch (e) {} });
-  await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(800);
+  await ctx.addInitScript(() => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.7', cleared: 13, coins: 900, gems: 30, stars: { 1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3, 12: 3, 13: 2 }, stats: { totalStars: 35, wins: 13 }, daily: { lastDay: new Date().toISOString().slice(0,10), claimedToday: true, streak: 1 } })); } catch (e) {} });
+  await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(800);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); });
   await p.waitForTimeout(400); await shot('v03-01-map');
   check(await p.evaluate(() => { const c = document.getElementById('tab-content'); return c.scrollTop > 300; }), 'Harita, sıradaki sefere kendiliğinden kayar');
@@ -26,8 +26,9 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 
   // koridor secici
   check(await p.evaluate(() => Z.Render.selLane === 1), 'Varsayılan koridor ortadaki');
-  await p.locator('.lane-btn[data-lane="2"]').click(); await p.waitForTimeout(200);
-  check(await p.evaluate(() => Z.Render.selLane === 2) && await p.locator('.lane-btn.on').getAttribute('data-lane') === '2', 'Alttaki 3. düğme koridoru değiştirir');
+  await p.evaluate(() => { document.getElementById('tut-skip') && document.getElementById('tut-skip').click(); });
+  const lp = await p.evaluate(() => { const s = Z.Game.stage; return { x: s.left + Z.Render.laneX(2) * s.scale, y: 640 * s.scale }; }); await p.mouse.click(lp.x, lp.y); await p.waitForTimeout(200);
+  check(await p.evaluate(() => Z.Render.selLane === 2) && await p.locator('.lane-btn').count() === 0, 'Yola dokununca koridor seçilir; sol alttaki koridor düğmeleri kalktı')
   const tap = await p.evaluate(() => { const s = Z.Game.stage, R = Z.Render; return { x: R.laneX(0) * s.scale + s.left, y: (R.eY + 300) * s.scale }; });
   await p.mouse.click(tap.x, tap.y); await p.waitForTimeout(200);
   check(await p.evaluate(() => Z.Render.selLane === 0), 'Sahada 1. koridora dokunmak onu seçer');

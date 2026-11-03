@@ -2,6 +2,13 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.7.0 — Ana menü ve öğretici
+- 🏠 **Ayrı ana menü:** oyun artık büyük bir ana menüyle açılır (arkada canlı savaş + savaş müziği). **▶ Sefere Devam** sıradaki seferin brifingini açar; *Sefer Haritası, Ordu, Günlük Sefer, Sonsuz Kuşatma, Hazine, Görevler, Ayarlar* düğmeleri ayrı. Harita ana menüde görünmez, kendi ekranındadır; sol üstteki ‹ ve Android geri tuşu ana menüye döner.
+- 🔋 Canlı savaş yalnızca ana menüde çalışır; harita/ordu ekranlarında durur (pil ve akıcılık).
+- 🎓 **Etkileşimli öğretici:** ilk kez oynayanlar 1. seferi adım adım öğrenerek oynar (kart sürükle, üstünlük üçgeni, başka yola çağır, madeni yükselt, kahraman yeteneği). Parlayan çerçeve ve el işareti gösterir; gerekirse "Öğreticiyi geç".
+- 🧹 **Savaşta sol alttaki koridor seçici kalktı:** kartı doğrudan istediğin yola sürükle (kart dokunuşu, dokunarak seçilen yola gönderir).
+- 🧰 `tests/e2e-v07.js` (ana menü akışı + öğretici adımları).
+
 ## 0.6.0 — Sefer Vakti
 - 🏷️ **Oyunun adı artık Sefer Vakti** (uygulama adı, tarayıcı sekmesi, açılış ekranı). Paket kimliği aynı kaldı: yeni APK eskisinin üzerine kurulur, kaydın korunur.
 - ⚔️ **Canlı ana menü:** arkada gerçek bir savaş (bot oynuyor, her seferinde farklı diyar) ve savaş müziği/ortam sesi çalıyor. Ayarlar'dan *Menüde canlı savaş* kapatılabilir (pil/performans). Menüde 30 kare/sn çizilir.

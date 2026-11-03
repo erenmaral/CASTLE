@@ -10,7 +10,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   await ctx.addInitScript(() => { try { localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.3', cleared: 74, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} });
-  await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(600);
+  await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(600);
   for (const [lvl, name] of [[1, 'orman'], [20, 'col'], [40, 'buz'], [50, 'volkan'], [65, 'batak']]) {
     await p.evaluate((l) => { Z.UI.closeModal(); Z.Save.data.deck = ['spear', 'archer', 'cav', 'knight', 'mage']; Z.Game.startBattle('campaign', l); }, lvl);
     await p.waitForTimeout(500);

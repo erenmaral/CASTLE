@@ -30,11 +30,6 @@
     <div id="hint" class="hidden"></div>
     <div id="hud-bottom">
       <div id="hud-row1">
-        <div id="lane-pick" aria-label="Koridor seç">
-          <button class="lane-btn" data-lane="0">▲<b>1</b></button>
-          <button class="lane-btn" data-lane="1">▲<b>2</b></button>
-          <button class="lane-btn" data-lane="2">▲<b>3</b></button>
-        </div>
         <div id="field-bar" class="hidden">
           <button id="fb-auto" class="fbtn">🎲<small>Otomatik</small></button>
           <button id="fb-clear" class="fbtn">🗑<small>Temizle</small></button>
@@ -47,9 +42,23 @@
     </div>
   </div></div>
 
-  <!-- ANA MENU -->
+  <!-- ANA MENU (canli savas arkada) -->
+  <div id="home" class="hidden"><div id="home-col">
+    <div id="home-cur"><div class="curr"><span class="ico">🪙</span><b id="home-coins">0</b></div><div class="curr"><span class="ico">💎</span><b id="home-gems">0</b></div></div>
+    <div id="home-logo"><div class="hl-top">⚔️</div><div class="hl-name">SEFER<br>VAKTİ</div><div class="hl-tag">Ordunu kur. Seferi kazan.</div></div>
+    <div id="home-btns">
+      <button class="hbig" data-home="play"><span id="hb-main">▶ SEFERE ÇIK</span><small id="hb-sub"></small></button>
+      <div class="hrow"><button data-home="map">🗺️<span>Sefer Haritası</span></button><button data-home="army">🛡️<span>Ordu</span></button></div>
+      <div class="hrow"><button data-home="daily">📅<span>Günlük Sefer</span></button><button data-home="endless">♾️<span>Sonsuz Kuşatma</span></button></div>
+      <div class="hrow three"><button data-home="vault">💰<span>Hazine</span></button><button data-home="quests">📜<span>Görevler</span></button><button data-home="settings">⚙️<span>Ayarlar</span></button></div>
+    </div>
+    <div id="home-ver"></div>
+  </div></div>
+
+  <!-- SEFER MERKEZI (harita / ordu / hazine / gorev) -->
   <div id="hub" class="hidden"><div id="hub-col">
     <div id="hub-top">
+      <button id="btn-home" class="round" aria-label="Ana menü">‹</button>
       <div class="logo">SEFER VAKTİ</div>
       <div class="spacer"></div>
       <div class="curr"><span class="ico">🪙</span><b id="cur-coins">0</b></div>
@@ -65,6 +74,8 @@
     </nav>
   </div></div>
 
+  <div id="tut" class="hidden"><div id="tut-ring"></div><div id="tut-hand">👆</div>
+    <div id="tut-bubble"><div id="tut-step"></div><div id="tut-text"></div><div id="tut-row"><button id="tut-skip" class="btn small">Öğreticiyi geç</button><button id="tut-ok" class="btn gold small">Tamam</button></div></div></div>
   <div id="modal-layer" class="hidden"></div>
   <div id="toast" class="hidden"></div>
   <div id="boot"><div class="logo big">SEFER VAKTİ</div><div class="sub">Yükleniyor…</div></div>

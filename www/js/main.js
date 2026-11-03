@@ -41,7 +41,7 @@
 
     toMenu: function (tab) {
       A.musicStop(); R.stop(); this.battle = null; this.demo = null; this.paused = false; this.ending = false; this.perkOpen = false;
-      UI.closeModal(); UI.showHub(tab || (UI.tab || 'map'));
+      UI.tutStop(false); UI.closeModal(); UI.showHub(tab || (UI.tab || 'map'));
     },
 
     // ---- Ana menu: arkada savasin surdugu canli sahne + savas muzigi ----
@@ -50,12 +50,17 @@
       if (this.battle) return;
       A.setSfxLevel(0.4); A.noVibrate = true;
       var on = S.data.settings.menuBattle;
-      $('hub').classList.toggle('opaque', !on);
+      $('home').classList.toggle('opaque', !on);
       if (!on) { this.demo = null; R.stop(); $('game').classList.add('hidden'); this.menuMusic(); return; }
       if (!this.demo || force === 'new') this.newDemo();
       $('game').classList.remove('hidden');
       this.menuMusic();
     },
+    menuHub: function () { // sefer merkezi: canli savas durur (pil), muzik surer
+      if (this.battle) return;
+      this.demo = null; R.stop(); $('game').classList.add('hidden'); A.setSfxLevel(1); A.noVibrate = false; this.menuMusic();
+    },
+    refreshMenu: function () { if (this.battle) return; if (!$('home').classList.contains('hidden')) this.menuStart(true); else this.menuHub(); },
     newDemo: function () {
       var levels = [6, 16, 26, 36, 46, 56, 66, 76, 86, 96], lv = levels[Math.floor(Math.random() * levels.length)], unitLvl = {}, i;
       Z.UNIT_ORDER.forEach(function (u) { unitLvl[u] = 14; });
@@ -112,7 +117,7 @@
         if (b.perkOffer && !Game.perkOpen && !b.over && !Game.paused) { Game.perkOpen = true; UI.perkModal(b, function () { Game.perkOpen = false; }); }
         if (!Game.paused) {
           var steps = Game.speed, i;
-          for (i = 0; i < steps; i++) b.update(dt);
+          if (!Game.tutHold) for (i = 0; i < steps; i++) b.update(dt);
           if (b.over && !Game.ending) {
             Game.ending = true; Game.endTimer = 1.1;
           }
@@ -140,7 +145,10 @@
         return UI.closeModal();
       }
       if (this.battle && !this.battle.over) return this.pause();
-      if (!this.battle && UI.tab !== 'map') { UI.tab = 'map'; return UI.renderHub(); }
+      if (!this.battle && $('home').classList.contains('hidden')) { // sefer merkezinden: once haritaya, sonra ana menuye
+        if (UI.tab !== 'map') { UI.tab = 'map'; return UI.renderHub(); }
+        return UI.showHome();
+      }
       try { var App = globalThis.Capacitor && globalThis.Capacitor.Plugins && globalThis.Capacitor.Plugins.App; if (App && App.exitApp) App.exitApp(); } catch (e) { /* tarayici */ }
     }
   };
@@ -170,7 +178,7 @@
         App.addListener('pause', function () { Game.pause(); });
       }
     } catch (e) { /* tarayici */ }
-    UI.showHub('map');
+    UI.showHome();
     var bootEl = $('boot'); bootEl.style.opacity = 0; setTimeout(function () { bootEl.remove(); }, 600);
     UI.welcome();
     Game.last = performance.now();

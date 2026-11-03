@@ -48,15 +48,46 @@
     });
     $('tab-content').addEventListener('click', onTabClick);
     $('btn-settings').addEventListener('click', function () { A.click(); UI.settingsModal(); });
+    $('btn-home').addEventListener('click', function () { A.click(); UI.showHome(); });
+    $('home').addEventListener('click', onHomeClick);
     bindHud();
   };
 
+  // Sefer merkezi: harita / ordu / hazine / gorev (ana menuden ayri ekran)
   UI.showHub = function (tab) {
     if (tab) UI.tab = tab;
-    $('hub').classList.remove('hidden'); $('hud').classList.add('hidden'); $('game').classList.add('hidden');
-    UI.renderHub(); if (UI.game && UI.game.menuStart) UI.game.menuStart();
+    $('home').classList.add('hidden'); $('hub').classList.remove('hidden'); $('hub').classList.add('opaque'); $('hud').classList.add('hidden'); $('game').classList.add('hidden');
+    UI.renderHub(); if (UI.game && UI.game.menuHub) UI.game.menuHub();
   };
-  UI.hideHub = function () { $('hub').classList.add('hidden'); clearInterval(UI.vaultTimer); };
+  UI.hideHub = function () { $('hub').classList.add('hidden'); $('home').classList.add('hidden'); clearInterval(UI.vaultTimer); };
+
+  // Ana menu: arkada canli savas, buyuk dugmeler (harita burada gorunmez)
+  UI.showHome = function () {
+    $('hub').classList.add('hidden'); $('hud').classList.add('hidden'); $('home').classList.remove('hidden'); clearInterval(UI.vaultTimer);
+    UI.renderHome(); if (UI.game && UI.game.menuStart) UI.game.menuStart();
+  };
+  UI.homeLevel = function () { return Math.min(Z.MAX_LEVEL, S.data.cleared + 1); };
+  UI.renderHome = function () {
+    var d = S.data, n = UI.homeLevel(), info = Z.levelInfo(n), dots = computeDots();
+    $('home-coins').textContent = Z.fmt(d.coins); $('home-gems').textContent = Z.fmt(d.gems);
+    $('hb-main').textContent = d.cleared === 0 ? '▶ İLK SEFERE ÇIK' : d.cleared >= Z.MAX_LEVEL ? '▶ SEFERİ TEKRARLA' : '▶ SEFERE DEVAM';
+    $('hb-sub').textContent = (info.type === 'field' ? '🏕️ Açık alan' : '🏰 Kale kuşatması') + ' · Sefer ' + n + ' · ' + info.name;
+    Array.prototype.forEach.call(document.querySelectorAll('#home [data-home]'), function (b) {
+      var k = b.getAttribute('data-home'), old = b.querySelector('.dot'); if (old) old.remove();
+      var map = { map: 'map', army: 'army', vault: 'vault', quests: 'quests' };
+      if (map[k] && dots[map[k]]) { var i = document.createElement('i'); i.className = 'dot'; b.appendChild(i); }
+    });
+    $('home-ver').textContent = 'v' + Z.VERSION + (Z.BUILD !== 'dev' ? ' · derleme ' + Z.BUILD : '');
+  };
+  function onHomeClick(e) {
+    var el = e.target.closest('[data-home]'); if (!el) return;
+    A.init(); A.click(); var k = el.getAttribute('data-home');
+    if (k === 'play') return levelModal(UI.homeLevel());
+    if (k === 'daily') { if (S.dailyAvailable()) return UI.dailyModal(); A.deny(); return UI.toast(Z.DAILY_UNLOCK + '. bölümü kazanınca açılır'); }
+    if (k === 'endless') return UI.endlessModal();
+    if (k === 'settings') return UI.settingsModal();
+    UI.showHub(k);
+  }
 
   UI.renderHub = function () {
     $('cur-coins').textContent = Z.fmt(S.data.coins);
@@ -203,6 +234,7 @@
       });
   }
 
+  UI.levelModal = levelModal;
   UI.dailyModal = function () {
     var d = S.data, di = S.dailyInfo(), won = d.dailySefer.won, info = Z.levelInfo(di.level);
     var rb = di.rules.map(function (r) { var R = Z.RULES[r]; return '<div class="rule-box"><b>' + R.icon + ' ' + R.name + '</b><br><span class="small">' + R.desc + '</span></div>'; }).join('');
@@ -423,7 +455,7 @@
     var acts = { close: UI.closeModal };
     ['sound', 'music', 'vibrate', 'menuBattle'].forEach(function (k) {
       acts['t_' + k] = function () {
-        st[k] = !st[k]; S.save(); A.enabled = st.sound; A.musicOn = st.music; if (!st.sound || !st.music) A.musicStop(); else if (!UI.game.battle) UI.game.menuStart(true);
+        st[k] = !st[k]; S.save(); A.enabled = st.sound; A.musicOn = st.music; if (!st.sound || !st.music) A.musicStop(); else if (UI.game.refreshMenu) UI.game.refreshMenu();
         UI.settingsModal();
       };
     });
@@ -463,9 +495,8 @@
     var d = S.data;
     if (!d.tutorialDone) {
       UI.modal('<h1>Hoş geldin, Komutan!</h1>' +
-        '<p>🏰 Kaleni koru, düşman kalesini yık.</p>' +
-        '<p>🃏 Alttaki bir <b>kartı koridora sürükle</b> (ya da dokun) — birlik çağrılır.</p>' +
-        '<p>⛏ <b>Madeni yükselt</b>, daha çok altın kazan. 🔱→🐎→🏹→🔱 : her birlik birine üstündür!</p>' +
+        '<p>Sınırda düşman ordusu toplanıyor. Kaleni koru, ordunu kur ve <b>Sefer Vakti</b>\'ni başlat!</p>' +
+        '<p class="small">İlk savaşta sana adım adım nasıl oynanacağını göstereceğim.</p>' +
         '<div class="actions"><button class="btn gold" data-act="go">⚔ İlk Savaşa Başla</button></div>',
         { go: function () { d.tutorialDone = true; d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.game.startBattle('campaign', 1); } });
       return;
@@ -538,10 +569,8 @@
     });
     var hero = Z.HEROES[b.heroId];
     $('skill-ico').textContent = hero.icon; $('skill-name').textContent = hero.skill;
-    var tut = !S.data.tutorialDone2 && b.mode === 'campaign' && b.level <= 2;
-    hud.tut = tut;
-    $('hint').classList.toggle('hidden', !tut);
-    $('hint').textContent = '👆 Bir kartı koridora sürükle!';
+    hud.tut = false; $('hint').classList.add('hidden');
+    UI.tutStop(false);
     $('perk-row').innerHTML = '';
     var rc = $('rule-chip'), rtxt = (b.diff > 0 ? Z.DIFFS[b.diff].icon + ' ' : '') + b.rules.map(function (r) { return Z.RULES[r].icon + (b.rules.length === 1 ? ' ' + Z.RULES[r].name : ''); }).join(' ');
     if (rtxt) { rc.textContent = rtxt; rc.classList.remove('hidden'); } else rc.classList.add('hidden');
@@ -549,7 +578,7 @@
     $('btn-speed').textContent = 'x' + (UI.game.speed || 1);
     var f = b.kind === 'field';
     $('hud').classList.toggle('field', f);
-    $('lane-pick').classList.toggle('hidden', f); $('field-bar').classList.toggle('hidden', !f); $('obj-chip').classList.toggle('hidden', !f);
+    $('field-bar').classList.toggle('hidden', !f); $('obj-chip').classList.toggle('hidden', !f);
     hud.sel = f ? b.deck[0] : null; hud.fdrag = null; Z.Render.fhover = null;
     if (f) {
       $('fb-stance').classList.add('hidden'); $('fb-go').classList.remove('hidden'); $('fb-auto').classList.remove('hidden'); $('fb-clear').classList.remove('hidden');
@@ -557,6 +586,48 @@
       hud.fieldTut = !S.data.fieldTutDone; $('hint').classList.toggle('hidden', !hud.fieldTut);
       $('hint').textContent = '👆 Kartı sahaya sürükle · birliğe dokun: geri al';
     }
+    if (!f && b.mode === 'campaign' && b.level === 1 && !S.data.tutorialDone2) UI.tutStart(b);
+  };
+
+  // ---- Etkilesimli ogretici (ilk kez oynayan: Sefer 1) ----
+  var tut = null;
+  var TUT = [
+    { kind: 'info', hold: true, text: 'Hoş geldin, Komutan! 🏰 Aşağıdaki kale <b>senin</b>, yukarıdaki <b>düşmanın</b>. Amaç: düşman kalesini yıkmak.', ok: 'Devam' },
+    { kind: 'action', hold: true, text: '🃏 Bir <b>birlik kartını</b> sürükleyip yukarıdaki <b>yollardan birine</b> bırak.', target: function (b) { return '[data-unit="' + b.deck[0] + '"]'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 1; }, assist: function (b) { b.gold = Math.max(b.gold, Z.UNITS[b.deck[0]].cost + 1); } },
+    { kind: 'info', hold: true, text: '⚔️ Her birliğin bir üstünlüğü var:<br><b>🔱 mızrakçı › 🐎 süvari › 🏹 okçu › 🔱</b><br>Düşmanın ne çıkardığına bak, ona karşı olanı çağır.', ok: 'Anladım' },
+    { kind: 'action', text: '🛤️ Altın birikince bu kez <b>başka bir yola</b> birlik çağır. (Bir yola dokunup seçip karta dokunmak da çalışır.)', target: function () { return '#cards'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 2; }, assist: function (b) { b.gold = Math.max(b.gold, 60); } },
+    { kind: 'action', text: '⛏ <b>Madeni yükselt!</b> Daha çok altın, daha çok ordu demek.', target: function () { return '#btn-mine'; }, hand: 'tap', cond: function (b) { return b.mine >= 1; }, assist: function (b) { var c = b.mineCost(); if (c) b.gold = Math.max(b.gold, c + 1); } },
+    { kind: 'action', text: '🦁 <b>Kahraman yeteneği!</b> Düğmeyi sürükleyip düşmanların olduğu <b>yola bırak</b>.', target: function () { return '#btn-skill'; }, hand: 'up', cond: function (b) { return b.stats.skills >= 1; }, assist: function (b) { if (b.heroCd > 0) b.heroCd = 0; } },
+    { kind: 'info', text: '🎉 Harika! Şimdi ordunu çağırmaya devam et ve <b>düşman kalesini yık</b>. Kazanınca yıldız, altın ve yeni birlikler seni bekliyor!', ok: 'Savaşa devam' }
+  ];
+  UI.tutActive = function () { return !!tut; };
+  UI.tutStop = function (done) {
+    var wasOn = !!tut; tut = null; $('tut').classList.add('hidden'); $('tut').classList.remove('block'); if (UI.game) UI.game.tutHold = false;
+    if (done && wasOn) { S.data.tutorialDone2 = true; S.save(); }
+  };
+  UI.tutStart = function (b) { tut = { i: -1, t: 0 }; $('tut').classList.remove('hidden'); UI.tutNext(b); };
+  UI.tutNext = function (b) {
+    tut.i++; if (tut.i >= TUT.length) return UI.tutStop(true);
+    var st = TUT[tut.i], info = st.kind === 'info';
+    $('tut-step').textContent = 'Öğretici ' + (tut.i + 1) + ' / ' + TUT.length; $('tut-text').innerHTML = st.text;
+    $('tut-ok').classList.toggle('hidden', !info); if (info) $('tut-ok').textContent = st.ok || 'Tamam';
+    $('tut').classList.toggle('block', info); UI.game.tutHold = !!st.hold; A.click();
+    tut.target = st.target ? st.target(b) : null; tut.pos = 0; if (st.assist) st.assist(b); UI.tutPlace();
+  };
+  UI.tutPlace = function () {
+    var ring = $('tut-ring'), hand = $('tut-hand'), el = tut && tut.target ? document.querySelector(tut.target) : null, st = TUT[tut.i];
+    if (!el || !el.getBoundingClientRect().width) { ring.classList.add('hidden'); hand.classList.add('hidden'); return; }
+    var r = el.getBoundingClientRect(), s = UI.game.stage, x = (r.left - (s.left || 0)) / s.scale, y = r.top / s.scale, w = r.width / s.scale, h = r.height / s.scale;
+    ring.classList.remove('hidden'); ring.style.cssText = 'left:' + (x - 8) + 'px;top:' + (y - 8) + 'px;width:' + (w + 16) + 'px;height:' + (h + 16) + 'px';
+    hand.classList.remove('hidden'); hand.className = st.hand === 'up' ? 'up' : 'tap'; hand.style.left = (x + w / 2 - 20) + 'px'; hand.style.top = (y + h / 2 - 8) + 'px';
+  };
+  UI.tutUpdate = function (b) {
+    if (!tut) return;
+    if (b.over) return UI.tutStop(true);
+    var st = TUT[tut.i]; tut.t++;
+    if (st.assist && tut.t % 30 === 0) st.assist(b);
+    if (tut.t % 15 === 0) UI.tutPlace();
+    if (st.kind === 'action' && st.cond(b)) UI.tutNext(b);
   };
 
   // ---- Acik alan arayuzu ----
@@ -649,18 +720,13 @@
     });
     if (b.mode === 'endless') set('title', 'w' + b.wave(), function () { $('info-title').textContent = 'Dalga ' + b.wave() + ' · ' + Z.fmtTime(b.t); });
     else set('title', Math.floor(b.t), function () { $('info-title').textContent = (b.mode === 'daily' ? 'Günlük Sefer' : 'Sefer ' + b.level) + ' · ' + b.info.name + ' · ' + (b.rl('survive') ? '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t)) : Z.fmtTime(b.t)); });
-    set('lane', Z.Render.selLane, function (v) { Array.prototype.forEach.call(document.querySelectorAll('.lane-btn'), function (el) { el.classList.toggle('on', +el.getAttribute('data-lane') === v); }); });
     set('combo', b.combo >= 3 ? b.combo : 0, function (v) {
       var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = '🔥 Seri x' + v;
     });
     set('perks', Object.keys(b.perks).join(), function () {
       $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join('');
     });
-    if (hud.tut) {
-      if (b.stats.spawns >= 3 && b.stats.mines === 0 && b.t < 60) { $('hint').textContent = '⛏ Madeni yükselt: daha çok altın!'; }
-      if (b.stats.spawns >= 3 && b.stats.mines > 0) { hud.tut = false; $('hint').classList.add('hidden'); }
-      if (b.t > 70) { hud.tut = false; $('hint').classList.add('hidden'); }
-    }
+    if (UI.tutActive()) UI.tutUpdate(b);
   };
 
   function stagePoint(e) { var s = UI.game.stage; return { x: (e.clientX - (s.left || 0)) / s.scale, y: e.clientY / s.scale }; }
@@ -751,10 +817,8 @@
     document.addEventListener('pointerup', up);
     document.addEventListener('pointercancel', function (e) { if (hud.fdrag) { hud.fdrag = null; Rn.fhover = null; } var d = hud.drag; if (d && e.pointerId === d.id) { Rn.fhover = null; hud.drag = null; Rn.dragLane = -1; if (hud.ghost) { hud.ghost.remove(); hud.ghost = null; } } });
 
-    $('lane-pick').addEventListener('click', function (e) {
-      var el = e.target.closest('[data-lane]'); if (!el || !hud.battle) return;
-      Rn.selLane = +el.getAttribute('data-lane'); A.init(); A.click();
-    });
+    $('tut-ok').addEventListener('click', function () { if (tut) UI.tutNext(hud.battle); });
+    $('tut-skip').addEventListener('click', function () { A.click(); UI.tutStop(true); UI.toast('Öğretici geçildi'); });
     $('btn-mine').addEventListener('click', function () {
       if (!hud.battle || UI.game.paused) return;
       if (!hud.battle.upgradeMine()) { A.deny(); } else { A.coin(); }
@@ -775,7 +839,7 @@
 
   UI.tryDeploy = function (type, lane, el) {
     var b = hud.battle;
-    if (b.deploy(type, lane)) { if (hud.tut) { $('hint').classList.add('hidden'); } return true; }
+    if (b.deploy(type, lane)) return true;
     A.deny();
     if (el) { el.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }], { duration: 180 }); }
     return false;
@@ -799,12 +863,10 @@
 
   UI.whatsNew = function () {
     var d = S.data;
-    UI.modal('<h1>🎉 Sefer Vakti 0.6</h1><p>Oyunun adı artık <b>Sefer Vakti</b>! İşte yenilikler:</p><div class="new-list">' +
-      '⚔️ <b>Canlı ana menü:</b> arkada savaş sürüyor, savaş müziği çalıyor (Ayarlar\'dan kapatılabilir)<br>' +
-      '🗺️ <b>Yepyeni sefer haritası:</b> diyar manzaraları, kıvrımlı yol, açık alan ⚔️ ve kale 🏰 işaretleri<br>' +
-      '🌍 <b>30 yeni bölüm, 2 yeni diyar:</b> Altın Yaprak Ormanı 🍂 ve Yıldız Ovası 🌙 (toplam 105 bölüm)<br>' +
-      '📜 <b>Daha çok görev:</b> günde 4 görev, <b>haftalık görevler</b> ve 11 yeni başarım<br>' +
-      '👑 Açık alanda komutan artık yerinde durur: rakibi kovalamaz, asker basma bölgesinden çıkmaz</div>' +
+    UI.modal('<h1>🎉 Sefer Vakti 0.7</h1><p>Yeni ana menü ve öğretici geldi:</p><div class="new-list">' +
+      '🏠 <b>Ayrı ana menü:</b> arkada savaş sürüyor; harita artık <b>Sefer Haritası</b> düğmesinin arkasında<br>' +
+      '🎓 <b>Etkileşimli öğretici:</b> ilk kez oynayanlar 1. seferi adım adım öğrenerek oynar<br>' +
+      '🧹 Savaşta sol alttaki koridor düğmeleri kalktı: kartı doğrudan yola sürükle (ya da yola dokunup seç)</div>' +
       '<p class="small">İlerlemen korundu.</p>' +
       '<div class="actions"><button class="btn gold" data-act="ok">Sefere çıkalım!</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });
