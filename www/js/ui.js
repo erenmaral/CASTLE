@@ -1,4 +1,4 @@
-// Seferhan - arayuz: ana menu sekmeleri, modallar, savas HUD'u
+// Sefer Vakti - arayuz: ana menu sekmeleri, modallar, savas HUD'u
 (function (Z) {
   'use strict';
   var S = Z.Save, A = Z.Audio, $ = function (id) { return document.getElementById(id); };
@@ -14,7 +14,7 @@
     var d = S.data, sum = 0; d.deck.forEach(function (u) { sum += d.unitLvl[u]; });
     return d.deck.length ? sum / d.deck.length : 1;
   }
-  function recommendedLevel(n) { return 1 + Math.floor(n * 0.4); }
+  function recommendedLevel(n) { return Math.min(Z.MAX_UNIT_LVL - 2, 1 + Math.floor(n * 0.4)); }
 
   // ---------------------------------------------------------------- toast / modal
   var toastTimer = null;
@@ -54,7 +54,7 @@
   UI.showHub = function (tab) {
     if (tab) UI.tab = tab;
     $('hub').classList.remove('hidden'); $('hud').classList.add('hidden'); $('game').classList.add('hidden');
-    UI.renderHub();
+    UI.renderHub(); if (UI.game && UI.game.menuStart) UI.game.menuStart();
   };
   UI.hideHub = function () { $('hub').classList.add('hidden'); clearInterval(UI.vaultTimer); };
 
@@ -82,16 +82,26 @@
     out.vault = !d.daily.claimedToday || S.treasuryPending() >= 150 || S.wheelFree();
     out.map = S.anyStarClaimable() || (S.dailyAvailable() && !d.dailySefer.won);
     if (S.anyAchClaimable()) out.quests = true;
-    d.quests.list.forEach(function (q) { if (!q.claimed && q.prog >= S.questDef(q.id).target) out.quests = true; });
+    d.quests.list.concat(d.weekly.list).forEach(function (q) { if (!q.claimed && q.prog >= S.questDef(q.id).target) out.quests = true; });
     d.deck.forEach(function (u) { if (d.coins >= Z.unitUpgradeCost(d.unitLvl[u]) && d.unitLvl[u] < Z.MAX_UNIT_LVL) out.army = true; });
     return out;
   }
 
   // ---------------------------------------------------------------- SEFER
   function renderMap(c) {
-    var d = S.data, N = Z.MAX_LEVEL, stepY = 176, topPad = 120, h = topPad + (N - 1) * stepY + 150, i, html = '', pts = [];
-    for (i = 1; i <= N; i++) pts.push([360 + Math.sin(i * 0.85) * 205, topPad + (i - 1) * stepY]);
-    var path = pts.map(function (p, k) { return (k ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1]; }).join(' ');
+    var d = S.data, N = Z.MAX_LEVEL, stepY = 168, topPad = 190, h = topPad + (N - 1) * stepY + 170, i, html = '', pts = [];
+    for (i = 1; i <= N; i++) pts.push([360 + Math.sin(i * 0.78) * 200 + Math.sin(i * 0.31) * 38, topPad + (i - 1) * stepY]);
+    // Catmull-Rom -> kubik Bezier: yumusak kivrimli yol
+    function curve(list) {
+      if (list.length < 2) return '';
+      var out = 'M' + list[0][0].toFixed(1) + ' ' + list[0][1].toFixed(1), k, p0, p1, p2, p3;
+      for (k = 0; k < list.length - 1; k++) {
+        p0 = list[Math.max(0, k - 1)]; p1 = list[k]; p2 = list[k + 1]; p3 = list[Math.min(list.length - 1, k + 2)];
+        out += ' C' + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(1) + ' ' + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(1) + ' ' + (p2[0] - (p3[0] - p1[0]) / 6).toFixed(1) + ' ' + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(1) + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
+      }
+      return out;
+    }
+    var upto = Math.min(N, d.cleared + 1);
     html += '<div class="row" style="margin-bottom:8px"><h2 style="margin:0">Sefer Haritası</h2><div class="spacer"></div><span class="chip">⭐ ' + d.stats.totalStars + ' / ' + (N * 3) + '</span></div>';
     html += '<div class="starrow">';
     Z.STAR_MILESTONES.forEach(function (m) {
@@ -102,17 +112,35 @@
     html += '</div>' + dailyCard(d) + '<div class="mode-row">' +
       '<button class="panel mode-card" data-act-hub="endless"><span class="big">♾️</span><div><h3>Sonsuz Kuşatma</h3><small>Rekor: <b style="color:var(--gold)">' + d.endlessBest + '. dalga</b></small></div></button>' +
       '<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>Savaş Ordusu</h3><small>' + d.deck.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + ' ' + Z.HEROES[d.hero].icon + '</small></div></button></div>';
-    html += '<div class="maptrack" id="maptrack" style="height:' + h + 'px"><svg viewBox="0 0 720 ' + h + '" preserveAspectRatio="none" height="' + h + '"><path d="' + path + '" fill="none" stroke="#2f3b78" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 22"/></svg>';
+    var RI = ['🌲', '🏜️', '❄️', '🌋', '🐸', '🍂', '🌙'];
+    var DEC = [['🌲', '🌳', '🌿', '🪨', '🌲'], ['🌵', '🏜️', '🪨', '🐪', '🌵'], ['🌲', '❄️', '⛄', '🏔️', '🌲'], ['🌋', '🔥', '🪨', '💀', '🌋'], ['🍄', '🌿', '🐸', '🕸️', '🍄'], ['🍁', '🍂', '🌰', '🌳', '🍁'], ['🌙', '⭐', '✨', '🔮', '⭐']];
+    html += '<div class="maptrack" id="maptrack" style="height:' + h + 'px">';
+    var realms = Z.REALMS.length, r, k2;
+    for (r = 0; r < realms; r++) { // diyar arka planlari + suslemeler
+      var y0 = r === 0 ? 0 : topPad + (r * 15 - 1) * stepY - 70, y1 = r === realms - 1 ? h : topPad + ((r + 1) * 15 - 1) * stepY - 70 + 110, open = (r * 15 + 1) <= d.cleared + 1;
+      html += '<div class="rbg r' + r + (open ? '' : ' closed') + '" style="top:' + y0 + 'px;height:' + (y1 - y0) + 'px"></div>';
+      for (k2 = 0; k2 < 16; k2++) {
+        var sd = r * 97 + k2 * 31, side = k2 % 2 ? 1 : -1, dx = 360 + side * (275 + ((sd * 13) % 70)), dy = y0 + 90 + ((sd * 53) % Math.max(1, y1 - y0 - 160));
+        html += '<span class="dec' + (open ? '' : ' closed') + '" style="left:' + (dx / 7.2).toFixed(1) + '%;top:' + dy + 'px;font-size:' + (34 + (sd * 7) % 30) + 'px;transform:rotate(' + (((sd * 11) % 40) - 20) + 'deg)">' + DEC[r][k2 % 5] + '</span>';
+      }
+    }
+    html += '<svg viewBox="0 0 720 ' + h + '" preserveAspectRatio="none" height="' + h + '">' +
+      '<path d="' + curve(pts) + '" class="rd-edge"/><path d="' + curve(pts) + '" class="rd-base"/><path d="' + curve(pts) + '" class="rd-dash"/>' +
+      '<path d="' + curve(pts.slice(0, upto)) + '" class="rd-done"/></svg>';
     for (i = 1; i <= N; i++) {
-      var st = d.stars[i] || 0, boss = Z.isBoss(i), info = Z.levelInfo(i), cls = 'node r' + Z.realmOf(i) + (boss ? ' boss' : '') + (info.type === 'field' ? ' fld' : '');
+      var st = d.stars[i] || 0, boss = Z.isBoss(i), info = Z.levelInfo(i), isF = info.type === 'field', cls = 'node r' + Z.realmOf(i) + (boss ? ' boss' : '') + (isF ? ' fld' : ' cst');
       if (st > 0) cls += ' done'; else if (i === d.cleared + 1) cls += ' cur'; else if (i > d.cleared + 1) cls += ' locked';
-      if ((i - 1) % 15 === 0) html += '<div class="realm" style="top:' + (pts[i - 1][1] - 96) + 'px">Diyar ' + (Z.realmOf(i) + 1) + ' · ' + Z.REALMS[Z.realmOf(i)] + '</div>';
+      if ((i - 1) % 15 === 0) {
+        var rr = Z.realmOf(i), rs = 0, ri2; for (ri2 = rr * 15 + 1; ri2 <= Math.min(N, rr * 15 + 15); ri2++) rs += d.stars[ri2] || 0;
+        html += '<div class="realm r' + rr + '" style="top:' + (pts[i - 1][1] - 112) + 'px"><span class="ri">' + RI[rr] + '</span><div><b>Diyar ' + (rr + 1) + ' · ' + Z.REALMS[rr] + '</b><small>' + (i <= d.cleared + 1 ? '⭐ ' + rs + ' / 45' : '🔒 ' + (i - 1) + '. bölümü bitirince açılır') + '</small></div></div>';
+      }
       html += '<button class="' + cls + '" data-level="' + i + '" style="left:' + (pts[i - 1][0] / 7.2).toFixed(2) + '%;top:' + pts[i - 1][1] + 'px">' +
         (info.rule !== 'none' ? '<span class="rl">' + Z.RULES[info.rule].icon + '</span>' : '') +
-        (info.type === 'field' ? '<span class="ft">🏕️</span>' : '') + (boss ? '<span style="font-size:28px;line-height:1">👑</span>' : '') + i +
+        '<span class="ty">' + (boss ? '👑' : isF ? '⚔️' : '🏰') + '</span>' + '<span class="nn">' + i + '</span>' +
         '<span class="st">' + (st ? '★'.repeat(st) : (i > d.cleared + 1 ? '🔒' : '')) + (d.hardCleared[i] ? Z.DIFFS[d.hardCleared[i]].icon : '') + '</span>' +
         '<span class="nm">' + info.name + '</span></button>';
     }
+    if (d.cleared < N) html += '<div class="flagmark" style="left:' + (pts[upto - 1][0] / 7.2).toFixed(2) + '%;top:' + (pts[upto - 1][1] - 74) + 'px">🚩</div>';
     html += '</div>';
     c.innerHTML = html;
     var cur = c.querySelector('.node.cur') || c.querySelector('.node.done:last-of-type');
@@ -264,12 +292,15 @@
   // ---------------------------------------------------------------- GOREVLER
   function renderQuests(c) {
     var d = S.data, html = '<h2>Günlük Görevler</h2>';
-    d.quests.list.forEach(function (q, i) {
+    function qrow(q, i, kind) {
       var def = S.questDef(q.id), done = q.prog >= def.target;
-      html += '<div class="panel quest"><div class="grow" style="flex:1"><h3>' + def.text + '</h3>' +
+      return '<div class="panel quest ' + kind + '" data-kind="' + kind + '"><div class="grow" style="flex:1"><h3>' + def.text + '</h3>' +
         '<div class="bar' + (done ? ' green' : '') + '"><i style="width:' + (100 * q.prog / def.target) + '%"></i></div><small>' + q.prog + ' / ' + def.target + '  ·  Ödül: 🪙 ' + def.coins + ' 💎 ' + def.gems + '</small></div>' +
-        '<button class="btn ' + (q.claimed ? 'off' : done ? 'gold' : 'off') + '" data-quest="' + i + '">' + (q.claimed ? '✔ Alındı' : done ? 'Al' : '…') + '</button></div>';
-    });
+        '<button class="btn ' + (q.claimed ? 'off' : done ? 'gold' : 'off') + '" data-quest="' + i + '" data-weekly="' + (kind === 'weekly' ? 1 : 0) + '">' + (q.claimed ? '✔ Alındı' : done ? 'Al' : '…') + '</button></div>';
+    }
+    d.quests.list.forEach(function (q, i) { html += qrow(q, i, 'daily'); });
+    html += '<div class="sect">📅 Haftalık Görevler <small class="mut">(her pazartesi yenilenir)</small></div>';
+    d.weekly.list.forEach(function (q, i) { html += qrow(q, i, 'weekly'); });
     var achs = Z.ACHIEVEMENTS.slice().sort(function (a, b) {
       var ca = d.achClaimed[a.id] ? 2 : S.achClaimable(a) ? 0 : 1, cb = d.achClaimed[b.id] ? 2 : S.achClaimable(b) ? 0 : 1;
       return ca - cb || (S.achProgress(b) / b.target) - (S.achProgress(a) / a.target);
@@ -366,7 +397,7 @@
       A.win(); UI.toast('Günlük ödül: ' + (r.coins ? '🪙' + r.coins + ' ' : '') + (r.gems ? '💎' + r.gems : '')); return UI.renderHub();
     }
     if ((el = t.closest('[data-quest]'))) {
-      var def = S.claimQuest(+el.getAttribute('data-quest')); if (!def) return A.deny();
+      var def = S.claimQuest(+el.getAttribute('data-quest'), el.getAttribute('data-weekly') === '1'); if (!def) return A.deny();
       A.chest(); UI.toast('Görev ödülü: 🪙' + def.coins + ' 💎' + def.gems); return UI.renderHub();
     }
   }
@@ -390,9 +421,9 @@
     var st = S.data.settings;
     function row(k, label) { return '<div class="toggle" data-act="t_' + k + '"><span>' + label + '</span><span class="sw' + (st[k] ? ' on' : '') + '"></span></div>'; }
     var acts = { close: UI.closeModal };
-    ['sound', 'music', 'vibrate'].forEach(function (k) {
+    ['sound', 'music', 'vibrate', 'menuBattle'].forEach(function (k) {
       acts['t_' + k] = function () {
-        st[k] = !st[k]; S.save(); A.enabled = st.sound; A.musicOn = st.music; if (!st.sound || !st.music) A.musicStop();
+        st[k] = !st[k]; S.save(); A.enabled = st.sound; A.musicOn = st.music; if (!st.sound || !st.music) A.musicStop(); else if (!UI.game.battle) UI.game.menuStart(true);
         UI.settingsModal();
       };
     });
@@ -420,11 +451,11 @@
       UI.modal('<h1>Emin misin?</h1><p>Tüm ilerlemen silinecek. Bu işlem geri alınamaz.</p><div class="actions"><button class="btn" data-act="close">Vazgeç</button><button class="btn red" data-act="yes">Evet, sıfırla</button></div>',
         { close: UI.closeModal, yes: function () { S.reset(); UI.closeModal(); UI.showHub('map'); } });
     };
-    UI.modal('<h1>Ayarlar</h1>' + row('sound', '🔊 Ses efektleri') + row('music', '🥁 Savaş müziği') + row('vibrate', '📳 Titreşim') +
+    UI.modal('<h1>Ayarlar</h1>' + row('sound', '🔊 Ses efektleri') + row('music', '🥁 Savaş müziği') + row('vibrate', '📳 Titreşim') + row('menuBattle', '⚔️ Menüde canlı savaş (pil/performans için kapatılabilir)') +
       '<div class="actions"><button class="btn small" data-act="exp">📤 Kaydı dışa aktar</button><button class="btn small" data-act="imp">📥 İçe aktar</button></div>' +
       '<div class="actions"><button class="btn small red" data-act="reset">Kaydı sıfırla</button><button class="btn gold" data-act="close">Tamam</button></div>' +
       (UI.isBrowser() ? '<p class="small" style="margin-top:14px">💡 Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.</p>' : '') +
-      '<p class="small" style="margin-top:20px">Seferhan v' + Z.VERSION + ' (derleme ' + Z.BUILD + ')<br>Tüm grafik ve sesler kodla üretilmiştir.</p>', acts);
+      '<p class="small" style="margin-top:20px">Sefer Vakti v' + Z.VERSION + ' (derleme ' + Z.BUILD + ')<br>Tüm grafik ve sesler kodla üretilmiştir.</p>', acts);
   };
 
   // ---------------------------------------------------------------- Acilis akisi
@@ -768,13 +799,13 @@
 
   UI.whatsNew = function () {
     var d = S.data;
-    UI.modal('<h1>🎉 Seferhan 0.5</h1><p>Artık sadece kale kuşatmak yok — <b>açık alan savaşları</b> geldi!</p><div class="new-list">' +
-      '🏕️ <b>Açık alan seferleri:</b> 30 bölümde ordunu sahaya <b>istediğin yere yerleştir</b><br>' +
-      '👑 <b>Komutan</b> düşerse yenilirsin — onu koru! 🚩 Bayrakları ele geçir ya da ⏳ mevzii tut<br>' +
-      '🌊 <b>Arazi:</b> nehir geçitleri, 🌲 orman (siper), ⛰️ tepe (menzil), 🪨 kaya<br>' +
-      '🛡️ Saldırı / Savunma duruşu, 🎯 noktaya kahraman yeteneği, alt şeritten takviye<br>' +
-      '🏃 Askerler artık <b>birbirini geçebiliyor</b> · 🔊 yepyeni <b>savaş sesleri</b> (kılıç, ok, davul, boru)</div>' +
-      '<p class="small">Kale kuşatmaları aynen devam ediyor; bölümler sırayla iki türü de getirir.</p>' +
+    UI.modal('<h1>🎉 Sefer Vakti 0.6</h1><p>Oyunun adı artık <b>Sefer Vakti</b>! İşte yenilikler:</p><div class="new-list">' +
+      '⚔️ <b>Canlı ana menü:</b> arkada savaş sürüyor, savaş müziği çalıyor (Ayarlar\'dan kapatılabilir)<br>' +
+      '🗺️ <b>Yepyeni sefer haritası:</b> diyar manzaraları, kıvrımlı yol, açık alan ⚔️ ve kale 🏰 işaretleri<br>' +
+      '🌍 <b>30 yeni bölüm, 2 yeni diyar:</b> Altın Yaprak Ormanı 🍂 ve Yıldız Ovası 🌙 (toplam 105 bölüm)<br>' +
+      '📜 <b>Daha çok görev:</b> günde 4 görev, <b>haftalık görevler</b> ve 11 yeni başarım<br>' +
+      '👑 Açık alanda komutan artık yerinde durur: rakibi kovalamaz, asker basma bölgesinden çıkmaz</div>' +
+      '<p class="small">İlerlemen korundu.</p>' +
       '<div class="actions"><button class="btn gold" data-act="ok">Sefere çıkalım!</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });
   };

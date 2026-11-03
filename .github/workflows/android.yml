@@ -34,7 +34,9 @@ jobs:
         run: npm ci
 
       - name: Birim testleri
-        run: node tests/unit-features.js | tail -3
+        run: |
+          node tests/unit-features.js | tail -3
+          node tests/unit-v06.js | tail -3
 
       - name: Oyun mantigi duman testi (denge botu - kale ve acik alan)
         run: |
@@ -92,12 +94,12 @@ jobs:
       - name: APK adini duzenle
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk "dist/Seferhan-${{ steps.ver.outputs.name }}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/SeferVakti-${{ steps.ver.outputs.name }}.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Seferhan-${{ steps.ver.outputs.name }}
+          name: SeferVakti-${{ steps.ver.outputs.name }}
           path: dist/*.apk
 
       - name: GitHub Release olustur
@@ -106,7 +108,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           MSG=$(git log -1 --pretty=%s)
-          gh release create "build-${{ github.run_number }}" "dist/Seferhan-${{ steps.ver.outputs.name }}.apk" \
+          gh release create "build-${{ github.run_number }}" "dist/SeferVakti-${{ steps.ver.outputs.name }}.apk" \
             --target "${{ github.sha }}" --prerelease \
-            --title "Seferhan ${{ steps.ver.outputs.name }}" \
+            --title "Sefer Vakti ${{ steps.ver.outputs.name }}" \
             --notes "Otomatik derleme #${{ github.run_number }} — ${MSG}"

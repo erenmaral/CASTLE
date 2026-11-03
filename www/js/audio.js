@@ -1,4 +1,4 @@
-// Seferhan - SAVAS SESLERI: WebAudio ile sentezlenir (dosya yok, telifsiz).
+// Sefer Vakti - SAVAS SESLERI: WebAudio ile sentezlenir (dosya yok, telifsiz).
 // Kilic/kalkan carpismasi, ok vinlamasi, at nali, savas boruzu, taiko davullari, savas narasi, arka plan savas uğultusu.
 // Yogunluk (setIntensity) arttikca muzik hizlanir ve ortam sesi yukselir.
 (function (Z) {
@@ -51,8 +51,10 @@
   function hooves(n, v) { for (var i = 0; i < n; i++) { tone(130, 70, 0.07, 'sine', 0.28 * v, i * 0.085); noise(0.04, 0.16 * v, 'lowpass', 1200, 400, 1, i * 0.085); } }
   function tom(f, v, bus) { tone(f * 1.7, f, 0.2, 'sine', 0.55 * v, 0, bus); tone(f * 0.5, f * 0.4, 0.3, 'triangle', 0.25 * v, 0, bus); noise(0.05, 0.2 * v, 'lowpass', 2200, 500, 0.8, 0, bus); }
 
+  var sfxLvl = 1;
   var A = {
-    enabled: true, musicOn: true,
+    enabled: true, musicOn: true, noVibrate: false,
+    setSfxLevel: function (v) { sfxLvl = v; if (sfxBus && ctx) sfxBus.gain.setTargetAtTime(0.95 * v, now(), 0.1); },
     init: function () {
       if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
       var AC = globalThis.AudioContext || globalThis.webkitAudioContext;
@@ -61,7 +63,7 @@
         ctx = new AC();
         var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.16;
         master = ctx.createGain(); master.gain.value = 0.9; master.connect(comp); comp.connect(ctx.destination);
-        sfxBus = ctx.createGain(); sfxBus.gain.value = 0.95; sfxBus.connect(master);
+        sfxBus = ctx.createGain(); sfxBus.gain.value = 0.95 * sfxLvl; sfxBus.connect(master);
         musicBus = ctx.createGain(); musicBus.gain.value = 0.5; musicBus.connect(master);
         ambBus = ctx.createGain(); ambBus.gain.value = 0.0; ambBus.connect(master);
         var len = ctx.sampleRate * 2, i, d, b = 0;
@@ -161,7 +163,7 @@
       if (amb && ctx) { try { ambBus.gain.setTargetAtTime(0, now(), 0.25); var s = amb.s; setTimeout(function () { try { s.stop(); } catch (e) { /* bitti */ } }, 900); } catch (e2) { /* yok say */ } amb = null; }
     },
     vibrate: function (ms) {
-      if (Z.Save && Z.Save.data && !Z.Save.data.settings.vibrate) return;
+      if (A.noVibrate || (Z.Save && Z.Save.data && !Z.Save.data.settings.vibrate)) return;
       try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* yok say */ }
     },
     // test icin: tum sesleri bir kez cal (hatasiz calistigini dogrular)

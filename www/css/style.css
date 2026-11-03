@@ -1,4 +1,4 @@
-/* Seferhan - DIKEY (portre) arayuz. Mantiksal genislik 720 birim. */
+/* Sefer Vakti - DIKEY (portre) arayuz. Mantiksal genislik 720 birim. */
 :root{
   --bg:#0b1020; --panel:#151c38; --panel2:#1e2750; --line:#2f3b78; --txt:#f1f5ff; --mut:#9aa7d6;
   --gold:#fbbf24; --gold2:#f59e0b; --blue:#3b82f6; --red:#ef4444; --green:#22c55e; --purple:#a78bfa;
@@ -26,8 +26,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .btn[disabled],.btn.off{filter:grayscale(.85) brightness(.7);pointer-events:none}
 .round{width:64px;height:64px;border-radius:50%;background:var(--panel2);border:3px solid var(--line);font-size:32px;display:flex;align-items:center;justify-content:center;flex:none}
 .panel{background:linear-gradient(var(--panel2),var(--panel));border:3px solid var(--line);border-radius:22px;padding:16px 20px}
-.logo{font-weight:900;letter-spacing:5px;font-size:34px;color:var(--gold);text-shadow:0 3px 0 #7c4a00,0 0 20px rgba(251,191,36,.35)}
-.logo.big{font-size:72px;letter-spacing:10px}
+.logo{font-weight:900;letter-spacing:3px;font-size:30px;color:var(--gold);text-shadow:0 3px 0 #7c4a00,0 0 20px rgba(251,191,36,.35)}
+.logo.big{font-size:60px;letter-spacing:6px}
 .spacer{flex:1}
 .mut{color:var(--mut)}
 .stars{letter-spacing:4px}
@@ -246,4 +246,56 @@ textarea{width:100%;background:rgba(0,0,0,.45);border:3px solid var(--line);bord
 #hud.field #hint{bottom:272px}
 .badge.fld{background:linear-gradient(#3b82f6,#1d4ed8);color:#fff}
 .rule-box.field-box{border-color:#7aa7ff;background:rgba(40,70,140,.35)}
-.node .ft{position:absolute;left:-10px;top:-12px;font-size:24px;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.7))}
+
+
+/* ---- Sefer haritasi (v0.6): diyar manzaralari, kivrimli yol, madalyon dugumler ---- */
+.maptrack{overflow:hidden;border-radius:22px;background:#0b1020;margin-top:8px}
+.rbg{position:absolute;left:0;right:0;pointer-events:none;-webkit-mask-image:linear-gradient(transparent,#000 90px,#000 calc(100% - 90px),transparent);mask-image:linear-gradient(transparent,#000 90px,#000 calc(100% - 90px),transparent)}
+.rbg.r0{background:radial-gradient(circle at 20% 30%,rgba(120,200,110,.18),transparent 45%),linear-gradient(#173620,#2b5a32)}
+.rbg.r1{background:radial-gradient(circle at 80% 40%,rgba(255,220,140,.2),transparent 45%),linear-gradient(#5a4116,#94702c)}
+.rbg.r2{background:radial-gradient(circle at 30% 30%,rgba(200,235,255,.25),transparent 45%),linear-gradient(#173756,#4a80a8)}
+.rbg.r3{background:radial-gradient(circle at 70% 60%,rgba(255,120,40,.25),transparent 45%),linear-gradient(#2a0e0a,#68200f)}
+.rbg.r4{background:radial-gradient(circle at 30% 70%,rgba(130,255,200,.16),transparent 45%),linear-gradient(#0e2a22,#245442)}
+.rbg.r5{background:radial-gradient(circle at 75% 35%,rgba(255,190,90,.25),transparent 45%),linear-gradient(#55290f,#9a5a22)}
+.rbg.r6{background:radial-gradient(circle at 25% 25%,rgba(150,170,255,.25),transparent 45%),linear-gradient(#070c28,#22307a)}
+.rbg.closed{filter:grayscale(.85) brightness(.55)}
+.dec{position:absolute;margin:-20px 0 0 -20px;pointer-events:none;opacity:.85;filter:drop-shadow(0 4px 3px rgba(0,0,0,.45));line-height:1}
+.dec.closed{filter:grayscale(1) brightness(.55);opacity:.5}
+.maptrack svg{z-index:1}
+.rd-edge{fill:none;stroke:rgba(0,0,0,.55);stroke-width:46;stroke-linecap:round;stroke-linejoin:round}
+.rd-base{fill:none;stroke:#8a6d43;stroke-width:34;stroke-linecap:round;stroke-linejoin:round}
+.rd-dash{fill:none;stroke:rgba(255,236,190,.55);stroke-width:4;stroke-dasharray:3 16;stroke-linecap:round}
+.rd-done{fill:none;stroke:rgba(255,214,90,.9);stroke-width:12;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(255,200,60,.8))}
+.node{z-index:2;width:98px;height:98px;margin:-49px 0 0 -49px;border-width:6px;gap:0;font-size:34px;line-height:1;background:linear-gradient(#6a7be8,#2f3da8);border-color:#c3caff}
+.node .ty{font-size:21px;line-height:1;margin-top:-4px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+.node .nn{font-size:34px;line-height:1;text-shadow:0 3px 0 rgba(0,0,0,.35)}
+.node .st{font-size:17px;margin-top:0;line-height:1;position:absolute;bottom:-10px;background:rgba(0,0,0,.7);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.node .st:empty{display:none}
+.node.fld{border-radius:26px;transform:rotate(0)}
+.node.fld::before{content:"";position:absolute;inset:-10px;border:3px dashed rgba(255,255,255,.35);border-radius:34px;pointer-events:none}
+.node.cst::before{content:"";position:absolute;inset:-9px;border:3px solid rgba(255,255,255,.22);border-radius:50%;pointer-events:none}
+.node.boss{width:122px;height:122px;margin:-61px 0 0 -61px}
+.node.boss::before{inset:-12px;border-color:rgba(255,200,80,.7)}
+.node.r0:not(.done):not(.boss):not(.locked){background:linear-gradient(#7ed68a,#2c7d3c);border-color:#d3f7d8;box-shadow:0 6px 0 #124a20,0 10px 18px rgba(0,0,0,.45)}
+.node.r5:not(.done):not(.boss):not(.locked){background:linear-gradient(#f4a64a,#b2501a);border-color:#ffe0b0;box-shadow:0 6px 0 #5e2a08,0 10px 18px rgba(0,0,0,.45)}
+.node.r6:not(.done):not(.boss):not(.locked){background:linear-gradient(#8aa0ff,#33429e);border-color:#dfe5ff;box-shadow:0 6px 0 #141b52,0 10px 18px rgba(0,0,0,.45)}
+.node.cur::after{content:"";position:absolute;inset:-18px;border-radius:50%;border:4px solid rgba(255,214,90,.9);animation:ringp 1.3s ease-out infinite;pointer-events:none}
+.node.fld.cur::after{border-radius:38px}
+@keyframes ringp{from{transform:scale(.85);opacity:1}to{transform:scale(1.3);opacity:0}}
+.node .nm{z-index:3;margin-top:14px;font-size:18px;color:#fff;text-shadow:0 2px 4px #000,0 0 8px #000;font-weight:700}
+.node.boss .nm{margin-top:12px}
+.realm{z-index:3;display:flex;align-items:center;gap:14px;padding:10px 26px 10px 16px;border-radius:999px;background:linear-gradient(rgba(10,14,34,.92),rgba(10,14,34,.8));border:3px solid var(--gold2);box-shadow:0 8px 18px rgba(0,0,0,.5);white-space:nowrap;text-align:left}
+.realm .ri{font-size:46px;line-height:1}
+.realm b{display:block;font-size:26px;color:var(--gold)}
+.realm small{display:block;font-size:19px;color:var(--mut);font-weight:700}
+.flagmark{position:absolute;z-index:4;font-size:44px;margin-left:-14px;animation:flagb 1s ease-in-out infinite;pointer-events:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.6))}
+@keyframes flagb{50%{transform:translateY(-8px) rotate(6deg)}}
+
+/* ---- Ana menu: arkada canli savas ---- */
+#hub{background:linear-gradient(rgba(8,12,28,.62),rgba(8,12,28,.28) 38%,rgba(8,12,28,.55) 100%)}
+#hub.opaque{background:radial-gradient(ellipse at 50% 0%,#26346e 0%,#0e1530 55%,#080c1c 100%)}
+#hub-top{background:linear-gradient(rgba(6,9,22,.78),rgba(6,9,22,0));backdrop-filter:blur(2px)}
+#tabs{background:rgba(6,9,22,.72)}
+.maptrack{background:transparent}
+.rbg{opacity:.58}
+.rd-edge{stroke:rgba(0,0,0,.4)}

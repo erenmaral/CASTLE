@@ -1,4 +1,4 @@
-// Seferhan service worker: cevrimdisi calisma. Once ag, olmazsa onbellek (guncellemeler hemen gelir).
+// Sefer Vakti service worker: cevrimdisi calisma. Once ag, olmazsa onbellek (guncellemeler hemen gelir).
 // CI, 'seferhan-dev' degerini her derlemede calisma numarasiyla degistirir.
 const CACHE = 'seferhan-dev';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'css/style.css',

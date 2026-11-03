@@ -1,4 +1,4 @@
-// Seferhan - kayit sistemi (localStorage) + cevrimdisi hazine + gunluk sifirlama
+// Sefer Vakti - kayit sistemi (localStorage) + cevrimdisi hazine + gunluk sifirlama
 (function (Z) {
   'use strict';
   var KEY = 'zafarion.save.v1';
@@ -6,6 +6,9 @@
   function today() {
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function weekIndex(t) { // 'YYYY-MM-DD' -> pazartesi baslangicli hafta numarasi
+    var p = t.split('-'); return Math.floor((Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000 + 3) / 7);
   }
   function dayDiff(a, b) { // a,b: 'YYYY-MM-DD'
     var pa = a.split('-'), pb = b.split('-');
@@ -25,11 +28,11 @@
       castleLvl: 1, treasuryLvl: 1, treasuryLast: Date.now(),
       cleared: 0, stars: {}, endlessBest: 0,
       daily: { lastDay: '', streak: 0, claimedToday: false },
-      quests: { day: '', list: [] },
-      stats: { battles: 0, wins: 0, kills: 0, totalStars: 0, maxCombo: 0, perks: 0, spins: 0, hardWins: 0, legendWins: 0, dailyWins: 0, purchases: 0 },
+      quests: { day: '', list: [] }, weekly: { week: -1, list: [] },
+      stats: { battles: 0, wins: 0, kills: 0, totalStars: 0, maxCombo: 0, perks: 0, spins: 0, hardWins: 0, legendWins: 0, dailyWins: 0, purchases: 0, fieldWins: 0, castleWins: 0, bossWins: 0 },
       achClaimed: {}, starClaimed: {}, wheel: { day: '', used: false },
       hardCleared: {}, dailySefer: { day: '', won: false },
-      settings: { sound: true, music: true, vibrate: true },
+      settings: { sound: true, music: true, vibrate: true, menuBattle: true },
       seenUnlock: { spear: true, archer: true, cav: true },
       tutorialDone: false, seenVersion: ''
     };
@@ -73,12 +76,21 @@
       if (d.dailySefer.day !== t) d.dailySefer = { day: t, won: false };
       if (d.quests.day !== t) {
         var pool = Z.QUEST_POOL.slice(), h = hashStr(t), list = [];
-        for (var i = 0; i < 3 && pool.length; i++) {
+        for (var i = 0; i < Z.DAILY_QUEST_COUNT && pool.length; i++) {
           h = (Math.imul(h, 1103515245) + 12345) >>> 0;
           var q = pool.splice(h % pool.length, 1)[0];
           list.push({ id: q.id, prog: 0, claimed: false });
         }
         d.quests = { day: t, list: list };
+      }
+      var wk = weekIndex(t);
+      if (!d.weekly || d.weekly.week !== wk) { // her pazartesi yeni haftalik gorevler
+        var wp = Z.WEEKLY_POOL.slice(), wh = hashStr('w' + wk), wl = [];
+        for (var j = 0; j < Z.WEEKLY_QUEST_COUNT && wp.length; j++) {
+          wh = (Math.imul(wh, 1103515245) + 12345) >>> 0;
+          wl.push({ id: wp.splice(wh % wp.length, 1)[0].id, prog: 0, claimed: false });
+        }
+        d.weekly = { week: wk, list: wl };
       }
     },
     // Gunluk odul: kacinci gun (0-6)
@@ -96,14 +108,15 @@
     // Gorev ilerlemesi: stat adina gore arttir
     track: function (stat, n) {
       var d = this.data;
-      d.quests.list.forEach(function (q) {
-        var def = Z.QUEST_POOL.filter(function (x) { return x.id === q.id; })[0];
+      var self = this;
+      d.quests.list.concat(d.weekly ? d.weekly.list : []).forEach(function (q) {
+        var def = self.questDef(q.id);
         if (def && def.stat === stat && !q.claimed) q.prog = Math.min(def.target, q.prog + (n || 1));
       });
     },
-    questDef: function (id) { return Z.QUEST_POOL.filter(function (x) { return x.id === id; })[0]; },
-    claimQuest: function (i) {
-      var q = this.data.quests.list[i]; if (!q || q.claimed) return null;
+    questDef: function (id) { return Z.QUEST_POOL.concat(Z.WEEKLY_POOL).filter(function (x) { return x.id === id; })[0]; },
+    claimQuest: function (i, weekly) {
+      var q = (weekly ? this.data.weekly.list : this.data.quests.list)[i]; if (!q || q.claimed) return null;
       var def = this.questDef(q.id); if (q.prog < def.target) return null;
       q.claimed = true; this.data.coins += def.coins; this.data.gems += def.gems; this.save();
       return def;

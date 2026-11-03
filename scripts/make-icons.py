@@ -1,4 +1,4 @@
-"""Seferhan ikon ve acilis ekrani uretici (PIL). Calistir: python3 scripts/make-icons.py"""
+"""Sefer Vakti ikon ve acilis ekrani uretici (PIL). Calistir: python3 scripts/make-icons.py"""
 import os, glob
 from PIL import Image, ImageDraw, ImageFilter
 

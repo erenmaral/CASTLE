@@ -1,4 +1,4 @@
-# Seferhan — İçerik Ekleme Rehberi
+# Sefer Vakti — İçerik Ekleme Rehberi
 
 Oyun veri odaklıdır: çoğu içerik `www/js/data.js` içindeki tablolara satır eklemekle gelir.
 Her değişiklikten sonra **şu üç komutu** çalıştır; veri bozuksa ilk ikisi yakalar:
@@ -35,6 +35,13 @@ node tests/gallery.js              # görsel galeri (ekran görüntüsü) — ye
 - Yeni arazi türü eklemek: `fieldMap` içinde üret → `terrainAt`/`stepUnit`/`damage` içinde etkisini tanımla → `R.fieldBuildBg` içinde çiz → `tests/unit-features.js`'e test ekle.
 - Denge: `ENEMY_BUDGET`, `HPX` ve `late` çarpanı `field.js` başında; `node tests/field-balance.js 8` hedef ≈ %65–75 kazanma. Savaşlar ~45–70 sn sürmelidir.
 - Yeni birim eklerken ayrıca bir şey gerekmez: açık alan, `Z.UNITS` içindeki sınıfı (`cls`, `ranged`, `splash`, `flame`, `assassin` …) olduğu gibi kullanır; yalnızca `render.js` içinde sprite çizimi eklemen yeterli.
+
+## Görevler ve başarımlar
+- Günlük görevler `Z.QUEST_POOL`, haftalık görevler `Z.WEEKLY_POOL` (kimlikleri `w_` ile başlar). Her görev bir **sayaca** (`stat`) bağlıdır; sayaçlar `Z.settleBattle` ve `Save.track` içinde artar. Yeni sayaç eklemek için `settleBattle`'da `S.track('ad', n)` çağır ve `tests/unit-v06.js` içindeki geçerli sayaç listesine ekle.
+- Günlük sayı `Z.DAILY_QUEST_COUNT`, haftalık sayı `Z.WEEKLY_QUEST_COUNT`. Hafta pazartesi başlar (`weekIndex`).
+
+## Yeni diyar eklemek (özet)
+`Z.REALMS`'e ad, `Z.LEVEL_NAMES` ve `Z.STORIES`'e 15'er satır (her 5. bölüm PATRON), `Z.MAX_LEVEL`'i 15 artır, `render.js` içindeki `THEMES`'e tema (+ varsa `leaf` renkleri), `ui.js` haritadaki `RI` (simge) ve `DEC` (süs) dizilerine ve `style.css`'e `.rbg.rN` / `.node.rN` ekle. Ardından `sim-balance.js` ve `field-balance.js` ile dengeyi kontrol et.
 
 ## Yeni sefer kuralı
 `Z.RULES` (ad, simge, açıklama) → `sim.js` içinde `this.rl('kuralAdi')` ile etkisini yaz → `Z.ruleOf` döngüsüne (`RULE_CYCLE`) ve gerekirse `Z.dailySefer` havuzuna ekle. Çelişen kurallar (`rich`+`famine` gibi) günlük seferde birlikte gelmemeli.

@@ -1,4 +1,4 @@
-// Seferhan - oyun verileri (birlikler, kahramanlar, bolumler, gorevler)
+// Sefer Vakti - oyun verileri (birlikler, kahramanlar, bolumler, gorevler)
 (function (Z) {
   'use strict';
 
@@ -84,8 +84,8 @@
   Z.mineCap = function (lvl) { return 400 + 150 * lvl; };
 
   // ---- Bolumler --------------------------------------------------------
-  Z.MAX_LEVEL = 75;
-  Z.REALMS = ['Yeşil Vadi', 'Kızıl Çöl', 'Buz Diyarı', 'Volkan Diyarı', 'Gölge Bataklığı'];
+  Z.MAX_LEVEL = 105;
+  Z.REALMS = ['Yeşil Vadi', 'Kızıl Çöl', 'Buz Diyarı', 'Volkan Diyarı', 'Gölge Bataklığı', 'Altın Yaprak Ormanı', 'Yıldız Ovası'];
   Z.realmOf = function (n) { return Math.min(Z.REALMS.length - 1, Math.floor((n - 1) / 15)); };
   // Her diyarin adlari kendi temasina uygun (1-15 Yesil Vadi, 16-30 Kizil Col, 31-45 Buz Diyari)
   Z.LEVEL_NAMES = [
@@ -103,7 +103,13 @@
     'Ateş Boğazı', 'Cehennem Yolu', 'Kül Fırtınası', 'Lav Gölü', 'Volkan Tahtı',
     'Sis Bataklığı', 'Çürük Köprü', 'Ölü Orman', 'Mantar Vadisi', 'Karanlık Göl',
     'Zehirli Sazlık', 'Hayalet Patikası', 'Çamur Kalesi', 'Kurbağa Tepesi', 'Kasvet Ormanı',
-    'Ruhlar Çukuru', 'Uğultu Vadisi', 'Kara Su', 'Son Bataklık', 'Gölge Tahtı'
+    'Ruhlar Çukuru', 'Uğultu Vadisi', 'Kara Su', 'Son Bataklık', 'Gölge Tahtı',
+    'Yaprak Geçidi', 'Kehribar Vadisi', 'Palamut Tepesi', 'Bakır Köprü', 'Hasat Tahtı',
+    'Kızıl Meşelik', 'Mantar Çayırı', 'Değirmen Yolu', 'Kurt Pınarı', 'Bal Kalesi',
+    'Sisli Bağlar', 'Çınar Meydanı', 'Kuzgun Ambarı', 'Son Hasat', 'Sonbahar Tahtı',
+    'Ay Kapısı', 'Yıldız Patikası', 'Gece Nöbeti', 'Meteor Vadisi', 'Işık Kulesi',
+    'Gümüş Göl', 'Kuyruklu Yıldız', 'Karanlık Surlar', 'Ay Tapınağı', 'Gökyüzü Kalesi',
+    'Tan Sökümü', 'Yıldız Çukuru', 'Samanyolu Geçidi', 'Son Gece', 'Vakit Tahtı'
   ];
   // Her bolum ayri bir sefer: kisa hikaye
   Z.STORIES = [
@@ -181,7 +187,37 @@
     'Uğultu Vadisi\'nde sesler bile silah.',
     'Kara Su\'yu geçmek için hızlı ve kararlı ol.',
     'Son Bataklık\'ın ardında Gölge Tahtı var. Son çabaya hazır ol!',
-    'PATRON — Gölge Tahtı! Tüm seferlerin gerçek sonu. Gölge Han seni bekliyor.'
+    'PATRON — Gölge Tahtı! Gölge Han yenildi sanıldı; ama yapraklar sararıyor, yeni bir sefer vakti geliyor.',
+    'Altın yapraklı ormanın girişi: her yaprak bir gözcü gibi. Sessizce ilerle.',
+    'Kehribar Vadisi\'nde reçine kokusu var; düşman süvarileri sisin içinden çıkıyor.',
+    'Palamut Tepesi\'nde yüksek yerden atış yapan okçular seni bekliyor.',
+    'Bakır Köprü paslı ama dayanıklı; iki yanından da saldırı gelebilir.',
+    'PATRON — Hasat Tahtı\'nın bekçisi orak gibi kıvrık kılıcıyla yolunu kesti.',
+    'Kızıl Meşelik\'te yapraklar yerde halı gibi; ayak sesleri duyulmuyor.',
+    'Mantar Çayırı\'nda şaşırtıcı bir ordu toplanmış. Aldanma.',
+    'Değirmen Yolu\'nu tutan birlik erzak hattını kesiyor. Yolu aç!',
+    'Kurt Pınarı\'nda sürüler susuzluktan çılgın. Dikkatli ol.',
+    'PATRON — Bal Kalesi\'nin kraliçesi arı sürüsü gibi bir orduyla geliyor.',
+    'Sisli Bağlar\'da üzüm asmaları arasında pusu var.',
+    'Çınar Meydanı\'nda büyük bir meydan muharebesi seni bekliyor.',
+    'Kuzgun Ambarı\'ndaki erzak düşmanın can damarı. Ele geçir.',
+    'Son Hasat: bu ormanın son savunma hattı.',
+    'PATRON — Sonbahar Tahtı\'nın hükümdarı yaprak fırtınası kopardı!',
+    'Gece çöktü. Ay Kapısı\'ndan geçince yıldızlar ordunun yol göstericisi olacak.',
+    'Yıldız Patikası dar ve dik; düşman tepeden bakıyor.',
+    'Gece Nöbeti: uyuyan bir ordu uyandı, sessiz davran.',
+    'Meteor Vadisi\'nde göktaşları yeri çukurlara çevirmiş. Siper çok.',
+    'PATRON — Işık Kulesi\'nin bekçisi gecenin tek ışığını koruyor.',
+    'Gümüş Göl\'ün yansımasında düşman iki kat görünüyor. Hedefini seç.',
+    'Kuyruklu Yıldız gökyüzünü yararken düşman saldırıya geçti.',
+    'Karanlık Surlar\'ın ardında gölgelerin son ordusu var.',
+    'Ay Tapınağı\'nın rahipleri seni sınamak istiyor.',
+    'PATRON — Gökyüzü Kalesi\'nin komutanı yıldızların arasından iniyor.',
+    'Tan Sökümü\'ne az kaldı; düşman son hamlesini yapıyor.',
+    'Yıldız Çukuru\'nun başında kadim bir güç uyanıyor.',
+    'Samanyolu Geçidi: tek geçit, tek şans.',
+    'Son Gece: sabaha kadar dayanırsan sefer biter.',
+    'PATRON — Vakit Tahtı! Tüm seferlerin sonu... ya da başı. Sefer vakti!'
   ];
   // Sefer kurallari: her sefere ozgu bir savas kosulu
   Z.RULES = {
@@ -254,16 +290,42 @@
   ];
 
   // ---- Gorevler --------------------------------------------------------
+  Z.DAILY_QUEST_COUNT = 4; Z.WEEKLY_QUEST_COUNT = 3;
   Z.QUEST_POOL = [
-    { id: 'win2',   text: '2 savaş kazan',            stat: 'wins',   target: 2,  coins: 120, gems: 3 },
-    { id: 'win4',   text: '4 savaş kazan',            stat: 'wins',   target: 4,  coins: 250, gems: 6 },
-    { id: 'kill40', text: '40 düşman yen',            stat: 'kills',  target: 40, coins: 100, gems: 2 },
-    { id: 'kill100',text: '100 düşman yen',           stat: 'kills',  target: 100,coins: 240, gems: 5 },
-    { id: 'spawn30',text: '30 birlik çağır',          stat: 'spawns', target: 30, coins: 100, gems: 2 },
-    { id: 'skill3', text: 'Kahraman yeteneğini 3 kez kullan', stat: 'skills', target: 3, coins: 120, gems: 3 },
-    { id: 'star3',  text: 'Bir savaşı 3 yıldızla bitir', stat: 'threeStars', target: 1, coins: 200, gems: 5 },
-    { id: 'mine3',  text: 'Savaşta madeni 3 kez yükselt', stat: 'mines', target: 3, coins: 100, gems: 2 },
-    { id: 'perk3',  text: '3 savaş ganimeti seç', stat: 'perks', target: 3, coins: 110, gems: 3 }
+    { id: 'win2',    text: '2 savaş kazan',                    stat: 'wins',       target: 2,   coins: 120, gems: 3 },
+    { id: 'win4',    text: '4 savaş kazan',                    stat: 'wins',       target: 4,   coins: 250, gems: 6 },
+    { id: 'win6',    text: '6 savaş kazan',                    stat: 'wins',       target: 6,   coins: 400, gems: 9 },
+    { id: 'play3',   text: '3 savaş oyna (kazan ya da kaybet)', stat: 'plays',     target: 3,   coins: 100, gems: 2 },
+    { id: 'kill40',  text: '40 düşman yen',                    stat: 'kills',      target: 40,  coins: 100, gems: 2 },
+    { id: 'kill100', text: '100 düşman yen',                   stat: 'kills',      target: 100, coins: 240, gems: 5 },
+    { id: 'kill250', text: '250 düşman yen',                   stat: 'kills',      target: 250, coins: 480, gems: 9 },
+    { id: 'spawn30', text: '30 birlik çağır',                  stat: 'spawns',     target: 30,  coins: 100, gems: 2 },
+    { id: 'spawn80', text: '80 birlik çağır',                  stat: 'spawns',     target: 80,  coins: 260, gems: 5 },
+    { id: 'skill3',  text: 'Kahraman yeteneğini 3 kez kullan', stat: 'skills',     target: 3,   coins: 120, gems: 3 },
+    { id: 'skill8',  text: 'Kahraman yeteneğini 8 kez kullan', stat: 'skills',     target: 8,   coins: 280, gems: 6 },
+    { id: 'star3',   text: 'Bir savaşı 3 yıldızla bitir',      stat: 'threeStars', target: 1,   coins: 200, gems: 5 },
+    { id: 'star3x2', text: 'İki savaşı 3 yıldızla bitir',      stat: 'threeStars', target: 2,   coins: 420, gems: 9 },
+    { id: 'mine3',   text: 'Savaşta madeni 3 kez yükselt',     stat: 'mines',      target: 3,   coins: 100, gems: 2 },
+    { id: 'mine8',   text: 'Savaşta madeni 8 kez yükselt',     stat: 'mines',      target: 8,   coins: 260, gems: 5 },
+    { id: 'perk3',   text: '3 savaş ganimeti seç',             stat: 'perks',      target: 3,   coins: 110, gems: 3 },
+    { id: 'perk8',   text: '8 savaş ganimeti seç',             stat: 'perks',      target: 8,   coins: 300, gems: 6 },
+    { id: 'field1',  text: 'Bir açık alan savaşı kazan 🏕️',     stat: 'fieldWins',  target: 1,   coins: 220, gems: 5 },
+    { id: 'field2',  text: '2 açık alan savaşı kazan 🏕️',       stat: 'fieldWins',  target: 2,   coins: 460, gems: 9 },
+    { id: 'castle1', text: 'Bir kale kuşatması kazan 🏰',       stat: 'castleWins', target: 1,   coins: 200, gems: 4 },
+    { id: 'castle2', text: '2 kale kuşatması kazan 🏰',         stat: 'castleWins', target: 2,   coins: 420, gems: 8 }
+  ];
+  // Haftalik gorevler (her pazartesi yenilenir): daha uzun hedefler, daha buyuk oduller
+  Z.WEEKLY_POOL = [
+    { id: 'w_wins15',   text: 'Bu hafta 15 savaş kazan',            stat: 'wins',       target: 15,  coins: 1500, gems: 25 },
+    { id: 'w_kills600', text: 'Bu hafta 600 düşman yen',            stat: 'kills',      target: 600, coins: 1400, gems: 22 },
+    { id: 'w_field6',   text: 'Bu hafta 6 açık alan savaşı kazan',  stat: 'fieldWins',  target: 6,   coins: 1600, gems: 28 },
+    { id: 'w_castle6',  text: 'Bu hafta 6 kale kuşatması kazan',    stat: 'castleWins', target: 6,   coins: 1500, gems: 25 },
+    { id: 'w_boss2',    text: 'Bu hafta 2 patron seferi kazan',     stat: 'bossWins',   target: 2,   coins: 1800, gems: 32 },
+    { id: 'w_star3x5',  text: 'Bu hafta 5 savaşı 3 yıldızla bitir', stat: 'threeStars', target: 5,   coins: 1700, gems: 30 },
+    { id: 'w_hard3',    text: 'Bu hafta Zor/Efsane kademede 3 sefer kazan', stat: 'hardWins', target: 3, coins: 2000, gems: 35 },
+    { id: 'w_skill30',  text: 'Bu hafta kahraman yeteneğini 30 kez kullan', stat: 'skills', target: 30, coins: 1300, gems: 20 },
+    { id: 'w_spawn400', text: 'Bu hafta 400 birlik çağır',          stat: 'spawns',     target: 400, coins: 1300, gems: 20 },
+    { id: 'w_perk20',   text: 'Bu hafta 20 savaş ganimeti seç',     stat: 'perks',      target: 20,  coins: 1200, gems: 18 }
   ];
 
   // ---- Savas ganimeti (savas ici secilen guc) --------------------------
@@ -290,7 +352,8 @@
   // ---- Yildiz odulleri ve basarimlar --------------------------------------
   Z.STAR_MILESTONES = [
     { n: 10, coins: 300, gems: 5 }, { n: 25, coins: 600, gems: 10 }, { n: 45, coins: 1000, gems: 15 },
-    { n: 70, coins: 1800, gems: 25 }, { n: 100, coins: 3000, gems: 40 }, { n: 130, coins: 5000, gems: 60 }
+    { n: 70, coins: 1800, gems: 25 }, { n: 100, coins: 3000, gems: 40 }, { n: 130, coins: 5000, gems: 60 },
+    { n: 160, coins: 6500, gems: 80 }, { n: 200, coins: 9000, gems: 110 }, { n: 250, coins: 14000, gems: 160 }, { n: 300, coins: 20000, gems: 250 }
   ];
   function maxUnit(d) { var m = 0; for (var k in d.unitLvl) if (d.unitLvl[k] > m) m = d.unitLvl[k]; return m; }
   Z.ACHIEVEMENTS = [
@@ -314,6 +377,17 @@
     { id: 'spins10',  text: 'Şans Çarkı\'nı 10 kez çevir', target: 10, gems: 8,  get: function (d) { return d.stats.spins || 0; } },
     { id: 'lvl60',    text: 'Volkan Tahtı\'nı ele geçir (60)', target: 60, gems: 40, get: function (d) { return d.cleared; } },
     { id: 'lvl75',    text: 'Gölge Tahtı\'nı ele geçir (75)', target: 75, gems: 80, get: function (d) { return d.cleared; } },
+    { id: 'lvl90',    text: 'Sonbahar Tahtı\'nı ele geçir (90)', target: 90, gems: 90, get: function (d) { return d.cleared; } },
+    { id: 'lvl105',   text: 'Vakit Tahtı\'nı ele geçir (105)', target: 105, gems: 150, get: function (d) { return d.cleared; } },
+    { id: 'stars200', text: '200 yıldız topla',          target: 200,  gems: 40, get: function (d) { return d.stats.totalStars; } },
+    { id: 'stars300', text: '300 yıldız topla',          target: 300,  gems: 80, get: function (d) { return d.stats.totalStars; } },
+    { id: 'field10',  text: '10 açık alan savaşı kazan', target: 10,   gems: 15, get: function (d) { return d.stats.fieldWins || 0; } },
+    { id: 'field50',  text: '50 açık alan savaşı kazan', target: 50,   gems: 50, get: function (d) { return d.stats.fieldWins || 0; } },
+    { id: 'castle10', text: '10 kale kuşatması kazan',   target: 10,   gems: 15, get: function (d) { return d.stats.castleWins || 0; } },
+    { id: 'castle50', text: '50 kale kuşatması kazan',   target: 50,   gems: 50, get: function (d) { return d.stats.castleWins || 0; } },
+    { id: 'boss10',   text: '10 patron seferi kazan',    target: 10,   gems: 30, get: function (d) { return d.stats.bossWins || 0; } },
+    { id: 'wins200',  text: '200 savaş kazan',           target: 200,  gems: 60, get: function (d) { return d.stats.wins; } },
+    { id: 'kills10k', text: '10000 düşman yen',          target: 10000, gems: 50, get: function (d) { return d.stats.kills; } },
     { id: 'hard10',   text: 'Zor kademede 10 sefer kazan', target: 10, gems: 15, get: function (d) { return d.stats.hardWins || 0; } },
     { id: 'legend5',  text: 'Efsane kademede 5 sefer kazan', target: 5, gems: 25, get: function (d) { return d.stats.legendWins || 0; } },
     { id: 'daily7',   text: '7 Günlük Sefer kazan',      target: 7,    gems: 15, get: function (d) { return d.stats.dailyWins || 0; } },

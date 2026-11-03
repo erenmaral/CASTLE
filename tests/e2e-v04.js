@@ -16,10 +16,10 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(700);
 
   // Yenilikler penceresi (0.3 kaydi ile)
-  check(/Seferhan 0\.5/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.5 penceresi gösterildi');
+  check(/Sefer Vakti 0\.6/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.6 penceresi gösterildi');
   await shot('v04-01-whatsnew'); await p.click('[data-act="ok"]'); await p.waitForTimeout(400);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); }); await p.waitForTimeout(300);
-  check(await p.evaluate(() => document.querySelectorAll('.node').length === 75), 'Harita 75 bölümü gösteriyor');
+  check(await p.evaluate(() => document.querySelectorAll('.node').length === 105), 'Harita 105 bölümü gösteriyor');
   check(await p.locator('.daily-card[data-act-hub="daily"]').count() === 1, 'Günlük Sefer kartı haritada');
   await p.evaluate(() => { document.getElementById('tab-content').scrollTop = 0; }); await p.waitForTimeout(200); await shot('v04-02-map-daily');
 

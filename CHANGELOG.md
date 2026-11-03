@@ -1,6 +1,15 @@
-# Seferhan — Sürüm Notları
+# Sefer Vakti — Sürüm Notları
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
+
+## 0.6.0 — Sefer Vakti
+- 🏷️ **Oyunun adı artık Sefer Vakti** (uygulama adı, tarayıcı sekmesi, açılış ekranı). Paket kimliği aynı kaldı: yeni APK eskisinin üzerine kurulur, kaydın korunur.
+- ⚔️ **Canlı ana menü:** arkada gerçek bir savaş (bot oynuyor, her seferinde farklı diyar) ve savaş müziği/ortam sesi çalıyor. Ayarlar'dan *Menüde canlı savaş* kapatılabilir (pil/performans). Menüde 30 kare/sn çizilir.
+- 🗺️ **Yeni sefer haritası:** diyar manzaraları (orman, çöl, buz, volkan, bataklık, sonbahar, gece) ve süsleri, yumuşak kıvrımlı yol (tamamlanan kısım altın parlar), madalyon düğümler (⚔️ açık alan = yuvarlak köşeli, 🏰 kale = daire, 👑 patron), diyar başlıkları ve ⭐ ilerlemesi, kilitli diyarlar soluk, konum bayrağı 🚩.
+- 🌍 **30 yeni bölüm, 2 yeni diyar (toplam 105 bölüm):** 🍂 *Altın Yaprak Ormanı* (76-90) ve 🌙 *Yıldız Ovası* (91-105) — yeni temalar, bölüm adları ve hikâyeler; son patron **Vakit Tahtı**. Zorluk eğrileri 105. bölüme kadar uzatıldı.
+- 📜 **Daha çok görev:** günlük görev sayısı 3→4, havuz 9→21 (açık alan/kale galibiyeti, 2×3 yıldız, daha uzun hedefler); **haftalık görevler** (her pazartesi yenilenir, 3 adet, büyük ödüller; havuz 10); 11 yeni başarım (açık alan/kale/patron galibiyetleri, 90/105. bölüm, 200/300 yıldız…); yıldız ödülleri 160/200/250/300'e kadar uzadı.
+- 👑 **Komutan artık yerinde durur:** açık alanda her iki komutan da rakibi kovalamaz, asker basma bölgesinin dışına çıkamaz (yalnızca yakınına gelene karşılık verir).
+- 🧰 `tests/unit-v06.js` (görevler, haftalık yenileme, eski kayıt yükseltme, sayaçlar, içerik tutarlılığı), `tests/e2e-v06.js` (canlı menü, harita, görevler, yeni diyarlar), açık alan komutan testi.
 
 ## 0.5.0 — Açık Alan Savaşları
 - 🏕️ **Açık alan seferleri:** 75 bölümün 30'u (3-4, 8-9, 13-14 …) artık kale kuşatması değil **serbest meydan savaşı**. Savaştan önce *komuta puanı* ile ordunu sahada **istediğin yere yerleştirirsin** (kartı sürükle ya da kartı seç + dokun; birliği sürükleyerek taşı, dokunarak geri al, 🎲 Otomatik ile hızlı diz). Sonra ⚔ SAVAŞ!

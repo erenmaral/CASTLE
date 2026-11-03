@@ -1,4 +1,4 @@
-// Seferhan - ACIK ALAN cizimi: serbest 2D sahne (nehir/gecit, orman, tepe, kaya, bayrak), komutanlar, yerlestirme onizlemesi.
+// Sefer Vakti - ACIK ALAN cizimi: serbest 2D sahne (nehir/gecit, orman, tepe, kaya, bayrak), komutanlar, yerlestirme onizlemesi.
 // render.js uzerine eklenir: savas 'field' turundeyse start/frame/resize bu dosyadaki surumlere yonlenir.
 (function (Z) {
   'use strict';
@@ -309,7 +309,7 @@
       else if (amode === 'dust') { c.fillStyle = 'rgba(240,200,130,.3)'; am.x += am.v * 4 * dt; am.y += Math.sin(this.time * 0.7 + am.ph) * 6 * dt; c.fillRect(am.x, am.y, 14 + am.r * 8, 1.6); }
       else if (amode === 'ember') { am.y -= am.v * 0.9 * dt; am.x += Math.sin(this.time * 2 + am.ph) * 12 * dt; c.fillStyle = 'rgba(255,' + Math.floor(110 + am.c * 110) + ',40,' + (0.45 + 0.4 * Math.sin(this.time * 8 + am.ph)) + ')'; circ(c, am.x, am.y, 1 + am.r * 0.55); if (am.y < -6) { am.y = H + 6; am.x = Math.random() * W; } }
       else if (amode === 'fog') {
-        if (i < 12) { c.fillStyle = 'rgba(200,255,225,.045)'; am.x += am.v * 0.3 * dt; circ(c, am.x, am.y, 70 + am.r * 28); }
+        if (i < 12) { c.fillStyle = 'rgba(200,255,225,.028)'; am.x += am.v * 0.3 * dt; circ(c, am.x, am.y, 70 + am.r * 28); }
         else { am.x += Math.sin(this.time * 0.8 + am.ph) * 16 * dt; am.y += Math.cos(this.time * 0.6 + am.ph) * 10 * dt; var fl = 0.4 + 0.6 * Math.abs(Math.sin(this.time * 2 + am.ph)); c.fillStyle = 'rgba(220,255,140,' + (fl * 0.22) + ')'; circ(c, am.x, am.y, 7); c.fillStyle = 'rgba(240,255,170,' + fl + ')'; circ(c, am.x, am.y, 1.8); }
       } else { am.y += am.v * 0.5 * dt; am.x += Math.sin(this.time * 0.9 + am.ph) * 18 * dt + 8 * dt; c.save(); c.translate(am.x, am.y); c.rotate(this.time * 1.2 + am.ph); c.fillStyle = am.c < 0.5 ? 'rgba(120,190,90,.8)' : 'rgba(224,150,60,.8)'; ell(c, 0, 0, 5 + am.r, 2.4); c.restore(); }
       if (am.y > H) { am.y = -6; am.x = Math.random() * W; }

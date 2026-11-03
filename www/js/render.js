@@ -1,4 +1,4 @@
-// Seferhan - canvas cizimi (DIKEY): 3 orman yolu yan yana, oyuncu kalesi altta, dusman ustte.
+// Sefer Vakti - canvas cizimi (DIKEY): 3 orman yolu yan yana, oyuncu kalesi altta, dusman ustte.
 // Simulasyondaki 'x' (koridor boyunca konum) ekranda yukari dogru y ekseni olur. Tum grafikler kodla cizilir.
 (function (Z) {
   'use strict';
@@ -22,7 +22,13 @@
     { sky: ['#140808', '#5a1a12', '#e8631c'], sun: [255, 170, 60], m1: '#3a1a18', m2: '#241012', g: ['#2b2123', '#241c1e', '#171112'],
       road: ['#6a5a58', '#4d403f', '#241a1a'], tree: ['#1a1213', '#2a1d1c', '#e8631c'], lane: '255,170,100', amb: 'ember', kind: 'volcano', shaft: '255,150,70' },
     { sky: ['#0d1a1a', '#27493f', '#8fb59a'], sun: [200, 255, 210], m1: '#274038', m2: '#355a4c', g: ['#2e4a3b', '#274132', '#1b2e22'],
-      road: ['#7a6844', '#5d4f33', '#33291a'], tree: ['#173a30', '#1f5a46', '#6fd1a3'], lane: '210,255,220', amb: 'fog', kind: 'swamp', shaft: '190,255,210' }
+      road: ['#7a6844', '#5d4f33', '#33291a'], tree: ['#173a30', '#1f5a46', '#6fd1a3'], lane: '210,255,220', amb: 'fog', kind: 'swamp', shaft: '190,255,210' },
+    // 5 Altin Yaprak Ormani (sonbahar)
+    { sky: ['#2a1a3a', '#c0562a', '#f6b45a'], sun: [255, 210, 140], m1: '#7a4a2e', m2: '#5a3524', g: ['#9a6a2c', '#85592a', '#5e3d1e'],
+      road: ['#c9a36a', '#a8824d', '#6d5230'], tree: ['#7a3a14', '#c4621f', '#e9a23a'], leaf: ['#a8481a', '#d9701f', '#f2b13c'], lane: '255,224,170', amb: 'leaf', kind: 'forest', shaft: '255,214,150' },
+    // 6 Yildiz Ovasi (gece)
+    { sky: ['#050a1e', '#1b2a5e', '#4a5fa8'], sun: [200, 215, 255], m1: '#1e2a55', m2: '#141d40', g: ['#1f3a3a', '#1a3232', '#12242a'],
+      road: ['#6a6f86', '#4d5268', '#2a2e40'], tree: ['#0f2a3a', '#1c4a5c', '#6fc4d8'], leaf: ['#1c2f55', '#2a4378', '#4f73b8'], lane: '170,190,255', amb: 'fog', kind: 'forest', shaft: '170,190,255' }
   ];
 
   // ---- yardimcilar ------------------------------------------------------
@@ -349,7 +355,7 @@
           g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r * 0.2, y - r * 0.1); g.lineTo(x - r * 0.3, y - r * 0.15); g.closePath(); g.fill();
           return;
         }
-        var gcol = ['#2c6f3a', '#3b8c4b', '#56ad5f'];
+        var gcol = T.leaf || ['#2c6f3a', '#3b8c4b', '#56ad5f'];
         for (i = 0; i < 5; i++) { a = t.rot + i * TAU / 5; g.fillStyle = gcol[0]; circ(g, x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.55); }
         for (i = 0; i < 4; i++) { a = t.rot + 0.6 + i * TAU / 4; g.fillStyle = gcol[1]; circ(g, x + Math.cos(a) * r * 0.32, y + Math.sin(a) * r * 0.32 - 1, r * 0.46); }
         g.fillStyle = gcol[2]; circ(g, x - r * 0.18, y - r * 0.22, r * 0.34);

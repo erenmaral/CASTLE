@@ -1,8 +1,8 @@
 {
   "name": "seferhan",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
-  "description": "Seferhan - 2D strateji ve savas oyunu (mobil)",
+  "description": "Sefer Vakti - 2D strateji ve savas oyunu (mobil)",
   "scripts": {
     "sim": "node tests/sim-balance.js",
     "sync": "cap sync android"

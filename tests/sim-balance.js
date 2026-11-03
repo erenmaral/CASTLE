@@ -10,7 +10,7 @@ const SEEDS = +process.argv[2] || 12;
 const LVL_BONUS = +(process.argv[3] || 0);
 
 function makeSave(L) {
-  const lvl = Math.max(1, 1 + Math.floor(L * 0.4) + LVL_BONUS);
+  const lvl = Math.min(Z.MAX_UNIT_LVL, Math.max(1, 1 + Math.floor(L * 0.4) + LVL_BONUS));
   const unitLvl = {}; Z.UNIT_ORDER.forEach(u => (unitLvl[u] = lvl));
   const heroLvl = { aslan: 1 + Math.floor(L / 5), yildiz: 1, demir: 1 };
   return { unitLvl, heroLvl, castleLvl: 1 + Math.floor(L / 6) };

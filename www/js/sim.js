@@ -1,4 +1,4 @@
-// Seferhan - savas simulasyonu (DOM'dan bagimsiz; Node'da bot ile test edilebilir)
+// Sefer Vakti - savas simulasyonu (DOM'dan bagimsiz; Node'da bot ile test edilebilir)
 (function (Z) {
   'use strict';
 
@@ -537,6 +537,7 @@
   Z.settleBattle = function (b, S) {
     var d = S.data, r = b.result, out = { coins: 0, gems: 0, chest: null, firstClear: false, newUnits: [], newBest: false, stars: r.stars, win: r.win };
     d.stats.battles++;
+    S.track('plays', 1);
     d.stats.kills += b.stats.kills;
     S.track('kills', b.stats.kills); S.track('spawns', b.stats.spawns); S.track('skills', b.stats.skills); S.track('mines', b.stats.mines); S.track('perks', b.stats.perks);
     d.stats.perks += b.stats.perks; if (b.bestCombo > d.stats.maxCombo) d.stats.maxCombo = b.bestCombo;
@@ -577,6 +578,11 @@
       } else {
         out.coins = Math.round(info.rewardCoins * 0.15) + b.stats.kills;
       }
+    }
+    if (r.win && b.mode !== 'endless') { // sefer turune gore sayaclar (gorev/basarim)
+      var wk = b.kind === 'field' ? 'fieldWins' : 'castleWins'; d.stats[wk] = (d.stats[wk] || 0) + 1; S.track(wk, 1);
+      if (b.info.boss) { d.stats.bossWins = (d.stats.bossWins || 0) + 1; S.track('bossWins', 1); }
+      if (b.diff > 0) S.track('hardWins', 1);
     }
     d.coins += out.coins; d.gems += out.gems;
     S.save();

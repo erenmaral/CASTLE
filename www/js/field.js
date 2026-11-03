@@ -1,4 +1,4 @@
-// Seferhan - ACIK ALAN SAVASI (2D). Serbest yerlestirme, arazi (nehir/gecit, orman, tepe, kaya), komutan, bayrak ele gecirme.
+// Sefer Vakti - ACIK ALAN SAVASI (2D). Serbest yerlestirme, arazi (nehir/gecit, orman, tepe, kaya), komutan, bayrak ele gecirme.
 // DOM'dan bagimsizdir (Node'da test edilir). Dunya: 720 x 840; oyuncu altta (y buyuk), dusman ustte.
 (function (Z) {
   'use strict';
@@ -88,7 +88,7 @@
   P.spawn = function (team, type, x, y, boss) {
     var def = type === 'commander' ? CMD : Z.UNITS[type], hpM, dmgM;
     if (team === 0) { var lvl = this.sv.unitLvl[type] || 1; hpM = Z.unitHpMult(lvl); dmgM = Z.unitDmgMult(lvl); if (this.perks.hp) hpM *= 1.15; }
-    else { var s = this.enemyScale(), late = 1 + 0.011 * Math.max(0, this.level - 20); hpM = s * late * (this.rl('heavy') ? 1.2 : 1) * (this.rl('fortress') ? 1.25 : 1) * this.D.hp; dmgM = (1 + (s - 1) * 0.8) * (1 + (late - 1) * 0.6) * this.D.dmg; }
+    else { var s = this.enemyScale(), late = 1 + 0.011 * Math.max(0, Math.min(this.level, 75) - 20) + 0.04 * Math.max(0, this.level - 75); hpM = s * late * (this.rl('heavy') ? 1.2 : 1) * (this.rl('fortress') ? 1.25 : 1) * this.D.hp; dmgM = (1 + (s - 1) * 0.8) * (1 + (late - 1) * 0.6) * this.D.dmg; }
     hpM *= HPX; // acik alanda savaslar daha uzun ve taktiksel sursun
     if (boss) { hpM *= 3; dmgM *= 1.15; }
     var u = {
@@ -415,7 +415,12 @@
       var c0 = cen[u.team]; goal = { x: c0.x + (u.team === 0 ? 30 : -30), y: c0.y + (u.team === 0 ? 40 : -40), r: 0 };
       if (Math.hypot(goal.x - u.x, goal.y - u.y) < 30) goal = null;
     } else if (best && !(u.team === 0 && this.stance === 'defend') && !u.commander) goal = best;
-    if (!goal) { u.moving = false; if (sx || sy) { u.x += sx * 22 * dt; u.y += sy * 22 * dt; } return; }
+    if (u.commander) goal = null; // komutan yerinde durur: rakibi kovalamaz, asker basma bolgesinden cikmaz
+    if (!goal) {
+      u.moving = false; if (sx || sy) { u.x += sx * 22 * dt; u.y += sy * 22 * dt; }
+      if (u.commander) { u.y = u.team === 0 ? Math.max(FH - ZONE_PREP + u.r, u.y) : Math.min(ZONE_PREP - u.r, u.y); u.x = Math.max(u.r, Math.min(FW - u.r, u.x)); }
+      return;
+    }
 
     var gx = goal.x, gy = goal.y, rv = this.map.river;
     if (rv && (u.y < rv.y) !== (gy < rv.y) && Math.abs(u.y - rv.y) < 230) { // karsi yakadaki hedef: en yakin gecide

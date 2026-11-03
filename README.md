@@ -1,4 +1,4 @@
-# ⚔️ Seferhan
+# ⚔️ Sefer Vakti
 
 **Dikey (portre)** 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
 Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
@@ -7,7 +7,7 @@ Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (t
 
 ## APK nasıl alınır?
 Her `push` sonrası GitHub Actions otomatik APK derler:
-**GitHub → bu depo → Releases** → en yeni `Seferhan x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
+**GitHub → bu depo → Releases** → en yeni `Sefer Vakti x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
 (Ayarlar'dan "bilinmeyen kaynaklardan yüklemeye" izin vermek gerekir).
 Tüm sürümler aynı anahtarla imzalandığı için yeni APK eskisinin **üzerine kurulur, kayıtlarınız silinmez**.
 
