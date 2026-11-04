@@ -2,6 +2,7 @@
 // render.js uzerine eklenir: savas 'field' turundeyse start/frame/resize bu dosyadaki surumlere yonlenir.
 (function (Z) {
   'use strict';
+  var $t = Z.t || function (s) { return s; };
   var R = Z.Render, U = R.util, TAU = U.TAU, ell = U.ell, circ = U.circ, rrect = U.rrect, line = U.line, seeded = U.seeded, hash = U.hash;
   var E = U.E, O = U.O, RR = U.RR, poly = U.poly, outline = U.outline, mgrad = U.mgrad;
   var PAL = R.PAL, THEMES = R.THEMES, SPR = R.SPR, OUT = R.OUT, FW = Z.FW, FH = Z.FH;
@@ -27,7 +28,7 @@
   R.start = function (b) {
     if (b.kind !== 'field') { this.field = false; return base.start.call(this, b); }
     this.field = true; this.battle = b; this.parts = []; this.texts = []; this.fx = []; this.shake = 0; this.active = true; this.fhover = null;
-    this.theme = b.theme || 0; this.seed = b.level * 13 + 7; this.fieldLayout(); this.fieldBuildBg();
+    this.theme = b.theme || 0; if (Z.Audio && Z.Audio.setRealm) Z.Audio.setRealm(this.theme); this.seed = b.level * 13 + 7; this.fieldLayout(); this.fieldBuildBg();
     this.warmQ = [];
     var self = this, add = function (cls, team) { ['i', 'm', 'a'].forEach(function (st) { for (var q = 0; q < self.SN[st]; q++) self.warmQ.push([cls, team, st, q]); }); };
     add('commander', 0); add('commander', 1);
@@ -36,7 +37,7 @@
     this.amb = [];
     for (var i = 0; i < n; i++) this.amb.push({ x: Math.random() * this.W, y: Math.random() * this.H, v: 20 + Math.random() * 50, r: 1 + Math.random() * 2.2, ph: Math.random() * 6, c: Math.random() });
     var oi = Z.FIELD_OBJECTIVES[b.objective];
-    this.banner = { text: 'AÇIK ALAN · ' + oi.name.toUpperCase(), col: '#ffd166', t: 2.4 };
+    this.banner = { text: ($t('AÇIK ALAN') + ' · ') + oi.name.toUpperCase(), col: '#ffd166', t: 2.4 };
   };
 
   // ---- sabit arka plan ---------------------------------------------------
@@ -215,16 +216,16 @@
         case 'charge': this.fx.push({ k: 'ring', x: p.x, y: p.y, r: 40, t: 0.3, max: 0.3, col: '#ffe08a' }); A.charge(); break;
         case 'skill': {
           var sr = (e.r || 130) * this.fs;
-          if (e.kind === 'roar') { this.fx.push({ k: 'wave', x: this.fx0(), y: this.foy + FH - 30, t: 0.9, max: 0.9, col: '#ffd166' }); this.banner = { text: 'ZAFER NARAASI!', col: '#ffd166', t: 1.4 }; }
+          if (e.kind === 'roar') { this.fx.push({ k: 'wave', x: this.fx0(), y: this.foy + FH - 30, t: 0.9, max: 0.9, col: '#ffd166' }); this.banner = { text: $t('ZAFER NARAASI!'), col: '#ffd166', t: 1.4 }; }
           else if (e.kind === 'ward') this.fx.push({ k: 'ring', x: p.x, y: p.y, r: sr * 1.1, t: 0.9, max: 0.9, col: '#6ee7b7' });
           else if (e.kind === 'bolt') { this.fx.push({ k: 'ring', x: p.x, y: p.y, r: sr * 1.1, t: 0.5, max: 0.5, col: '#a5d8ff' }); this.shake = Math.max(this.shake, 6); }
-          else if (e.kind === 'dragon') { this.fx.push({ k: 'ring', x: p.x, y: p.y, r: sr * 1.15, t: 1.0, max: 1.0, col: '#ff8a3a' }); this.banner = { text: 'EJDER NEFESİ!', col: '#ffb347', t: 1.3 }; this.shake = Math.max(this.shake, 6); }
-          else if (e.kind === 'freeze') { this.fx.push({ k: 'ring', x: p.x, y: p.y, r: sr * 1.1, t: 1.0, max: 1.0, col: '#9bd7ff' }); this.banner = { text: 'DON FIRTINASI!', col: '#9bd7ff', t: 1.2 }; }
+          else if (e.kind === 'dragon') { this.fx.push({ k: 'ring', x: p.x, y: p.y, r: sr * 1.15, t: 1.0, max: 1.0, col: '#ff8a3a' }); this.banner = { text: $t('EJDER NEFESİ!'), col: '#ffb347', t: 1.3 }; this.shake = Math.max(this.shake, 6); }
+          else if (e.kind === 'freeze') { this.fx.push({ k: 'ring', x: p.x, y: p.y, r: sr * 1.1, t: 1.0, max: 1.0, col: '#9bd7ff' }); this.banner = { text: $t('DON FIRTINASI!'), col: '#9bd7ff', t: 1.2 }; }
           A.skill(e.kind); A.vibrate(25); break; }
         case 'bolt': this.fx.push({ k: 'bolt', x: p.x, y: p.y, t: 0.4, max: 0.4, seed: Math.random() * 99 }); this.sparks(p.x, p.y, 9, '#a5d8ff'); break;
-        case 'ambush': this.banner = { text: 'PUSU! YANLARDAN BASKIN', col: '#ffb347', t: 1.6 }; this.shake = 6; A.boom(); break;
-        case 'mine': this.text(this.fx0(), this.foy + FH - 120, 'Maden Sv.' + e.level + '!', '#ffd23f', 30); A.click(); break;
-        case 'start': this.banner = { text: 'SAVAŞ BAŞLASIN!', col: '#ff6b6b', t: 1.5 }; this.shake = 8; A.battleStart(); break;
+        case 'ambush': this.banner = { text: $t('PUSU! YANLARDAN BASKIN'), col: '#ffb347', t: 1.6 }; this.shake = 6; A.boom(); break;
+        case 'mine': this.text(this.fx0(), this.foy + FH - 120, $t('Maden Sv.') + e.level + '!', '#ffd23f', 30); A.click(); break;
+        case 'start': this.banner = { text: $t('SAVAŞ BAŞLASIN!'), col: '#ff6b6b', t: 1.5 }; this.shake = 8; A.battleStart(); break;
         case 'win': A.win(); break;
         case 'lose': A.lose(); break;
       }
@@ -351,8 +352,8 @@
     if (prep) {
       var eg = c.createLinearGradient(0, 0, 0, Z.FZONE.prep); eg.addColorStop(0, 'rgba(255,70,70,.24)'); eg.addColorStop(1, 'rgba(255,70,70,0)'); c.fillStyle = eg; c.fillRect(0, 0, FW, Z.FZONE.prep);
       c.font = '900 22px system-ui'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.55)';
-      c.globalAlpha = 0.6; c.strokeText('YERLEŞTİRME ALANI', FW / 2, zt + 22); c.fillStyle = 'rgba(210,230,255,.95)'; c.fillText('YERLEŞTİRME ALANI', FW / 2, zt + 22);
-      c.strokeText('DÜŞMAN ORDUSU', FW / 2, 22); c.fillStyle = 'rgba(255,200,200,.95)'; c.fillText('DÜŞMAN ORDUSU', FW / 2, 22); c.globalAlpha = 1;
+      c.globalAlpha = 0.6; c.strokeText($t('YERLEŞTİRME ALANI'), FW / 2, zt + 22); c.fillStyle = 'rgba(210,230,255,.95)'; c.fillText($t('YERLEŞTİRME ALANI'), FW / 2, zt + 22);
+      c.strokeText($t('DÜŞMAN ORDUSU'), FW / 2, 22); c.fillStyle = 'rgba(255,200,200,.95)'; c.fillText($t('DÜŞMAN ORDUSU'), FW / 2, 22); c.globalAlpha = 1;
     }
     // bayraklar
     for (i = 0; i < b.flags.length; i++) this.fieldFlag(c, b.flags[i]);

@@ -22,6 +22,7 @@
     <div id="hud-top">
       <button id="btn-pause" class="hbtn" aria-label="Duraklat">⏸</button>
       <button id="btn-speed" class="hbtn">x1</button>
+      <button id="btn-auto" class="hbtn" data-i18n-title="Oto savaş" aria-label="Oto savaş">🤖</button>
       <div id="gold-chip"><span class="ico">🪙</span><b id="gold-val">0</b><small id="gold-cap">/400</small><em id="gold-rate">+10/sn</em></div>
       <button id="btn-mine"><span class="ico">⛏</span><span id="mine-txt">Maden</span></button>
     </div>
@@ -31,10 +32,10 @@
     <div id="hud-bottom">
       <div id="hud-row1">
         <div id="field-bar" class="hidden">
-          <button id="fb-auto" class="fbtn">🎲<small>Otomatik</small></button>
-          <button id="fb-clear" class="fbtn">🗑<small>Temizle</small></button>
-          <button id="fb-go" class="fbtn go">⚔<small>SAVAŞ</small></button>
-          <button id="fb-stance" class="fbtn stance hidden">⚔<small>Saldır</small></button>
+          <button id="fb-auto" class="fbtn">🎲<small data-i18n>Otomatik</small></button>
+          <button id="fb-clear" class="fbtn">🗑<small data-i18n>Temizle</small></button>
+          <button id="fb-go" class="fbtn go">⚔<small data-i18n>SAVAŞ</small></button>
+          <button id="fb-stance" class="fbtn stance hidden">⚔<small data-i18n>Saldır</small></button>
         </div>
         <button id="btn-skill" class="card skill"><div class="cd"></div><div class="c-ico" id="skill-ico"></div><div class="s-txt"><div class="c-name" id="skill-name"></div><div class="c-cost" id="skill-state"></div></div></button>
       </div>
@@ -44,13 +45,13 @@
 
   <!-- ANA MENU (canli savas arkada) -->
   <div id="home" class="hidden"><div id="home-col">
-    <div id="home-cur"><div class="curr"><span class="ico">🪙</span><b id="home-coins">0</b></div><div class="curr"><span class="ico">💎</span><b id="home-gems">0</b></div></div>
-    <div id="home-logo"><div class="hl-top">⚔️</div><div class="hl-name">SEFER<br>VAKTİ</div><div class="hl-tag">Ordunu kur. Seferi kazan.</div></div>
+    <div id="home-cur"><button id="home-settings" class="round" data-home="settings" aria-label="Ayarlar">⚙</button><div class="spacer"></div><div class="curr"><span class="ico">🪙</span><b id="home-coins">0</b></div><button class="curr plus" data-home="shop"><span class="ico">💎</span><b id="home-gems">0</b><i>+</i></button></div>
+    <div id="home-logo"><div class="hl-top">⚔️</div><div class="hl-name">SEFER<br>VAKTİ</div><div class="hl-tag" data-i18n>Ordunu kur. Seferi kazan.</div></div>
     <div id="home-btns">
       <button class="hbig" data-home="play"><span id="hb-main">▶ SEFERE ÇIK</span><small id="hb-sub"></small></button>
-      <div class="hrow"><button data-home="map">🗺️<span>Sefer Haritası</span></button><button data-home="army">🛡️<span>Ordu</span></button></div>
-      <div class="hrow"><button data-home="daily">📅<span>Günlük Sefer</span></button><button data-home="endless">♾️<span>Sonsuz Kuşatma</span></button></div>
-      <div class="hrow three"><button data-home="vault">💰<span>Hazine</span></button><button data-home="quests">📜<span>Görevler</span></button><button data-home="settings">⚙️<span>Ayarlar</span></button></div>
+      <div class="hrow"><button data-home="map">🗺️<span data-i18n>Sefer Haritası</span></button><button data-home="army">🛡️<span data-i18n>Ordu</span></button></div>
+      <div class="hrow"><button data-home="daily">📅<span data-i18n>Günlük Sefer</span></button><button data-home="endless">♾️<span data-i18n>Sonsuz Kuşatma</span></button></div>
+      <div class="hrow three"><button data-home="vault">💰<span data-i18n>Hazine</span></button><button data-home="shop" class="shopbtn">🛒<span data-i18n>Mağaza</span></button><button data-home="quests">📜<span data-i18n>Görevler</span></button></div>
     </div>
     <div id="home-ver"></div>
   </div></div>
@@ -66,23 +67,29 @@
       <button id="btn-settings" class="round">⚙</button>
     </div>
     <main id="tab-content"></main>
+    <div id="ad-banner" class="hidden"></div>
     <nav id="tabs">
-      <button data-tab="map" class="tab"><span>⚔️</span>Sefer</button>
-      <button data-tab="army" class="tab"><span>🛡️</span>Ordu</button>
-      <button data-tab="vault" class="tab"><span>💰</span>Hazine</button>
-      <button data-tab="quests" class="tab"><span>📜</span>Görev</button>
+      <button data-tab="map" class="tab"><span>⚔️</span><em data-i18n>Sefer</em></button>
+      <button data-tab="army" class="tab"><span>🛡️</span><em data-i18n>Ordu</em></button>
+      <button data-tab="shop" class="tab"><span>🛒</span><em data-i18n>Mağaza</em></button>
+      <button data-tab="vault" class="tab"><span>💰</span><em data-i18n>Hazine</em></button>
+      <button data-tab="quests" class="tab"><span>📜</span><em data-i18n>Görev</em></button>
     </nav>
   </div></div>
 
   <div id="tut" class="hidden"><div id="tut-ring"></div><div id="tut-hand">👆</div>
-    <div id="tut-bubble"><div id="tut-step"></div><div id="tut-text"></div><div id="tut-row"><button id="tut-skip" class="btn small">Öğreticiyi geç</button><button id="tut-ok" class="btn gold small">Tamam</button></div></div></div>
+    <div id="tut-bubble"><div id="tut-step"></div><div id="tut-text"></div><div id="tut-row"><button id="tut-skip" class="btn small" data-i18n>Öğreticiyi geç</button><button id="tut-ok" class="btn gold small">Tamam</button></div></div></div>
   <div id="modal-layer" class="hidden"></div>
   <div id="toast" class="hidden"></div>
-  <div id="boot"><div class="logo big">SEFER VAKTİ</div><div class="sub">Yükleniyor…</div></div>
+  <div id="boot"><div class="logo big">SEFER VAKTİ</div><div class="sub" data-i18n>Yükleniyor…</div></div>
 </div>
 <script src="js/version.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/data.js"></script>
 <script src="js/save.js"></script>
+<script src="js/monetize-config.js"></script>
+<script src="js/monetize.js"></script>
+<script src="js/monetize-providers.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/field.js"></script>

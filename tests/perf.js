@@ -2,7 +2,7 @@
 const { chromium } = require('playwright'); const path = require('path');
 const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
-  const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const b = await chromium.launch(); const ctx = await b.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await ctx.addInitScript(() => { try { localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.3', cleared: 44, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} });
   const p = await ctx.newPage(); await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(500);
   const res = await p.evaluate(() => {

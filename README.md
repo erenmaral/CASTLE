@@ -3,6 +3,8 @@
 **Dikey (portre)** 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
 Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
 
+**6 dil** (Türkçe, English, Español, Português-BR, Русский, 简体中文), **mağaza ve reklam altyapısı** (bkz. `docs/MONETIZATION.md`).
+
 **İki savaş türü:** 🏰 3 koridorlu **kale kuşatması** ve 🏕️ ordunu sahaya serbestçe yerleştirdiğin **açık alan savaşı** (komutan, bayrak, nehir geçitleri, orman, tepe). Bölümler sırayla ikisini de getirir.
 
 ## APK nasıl alınır?
@@ -45,6 +47,8 @@ python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 | `www/js/field.js` | **Açık alan** savaş simülasyonu (2D, arazi, komutan; Node'da test edilir) |
 | `www/js/render.js` | Canvas çizimi: birlikler, kaleler, efektler |
 | `www/js/fieldrender.js` | Açık alan çizimi: arazi, bayraklar, komutan, yerleştirme önizlemesi |
+| `www/js/i18n.js`, `www/js/lang/*.js` | Çok dilli destek (`Z.t`), dil paketleri; araç: `scripts/i18n.js` |
+| `www/js/monetize*.js` | Mağaza/reklam mantığı ve ayarları (`monetize-config.js` sizin ayar dosyanız) |
 | `www/js/ui.js` | Ana menü, sefer merkezi (harita/ordu/hazine/görev), modallar, savaş HUD'u, etkileşimli öğretici |
 | `www/js/save.js` | Kayıt (localStorage), hazine, günlük ödül/görev |
 | `android/` | Capacitor Android projesi |

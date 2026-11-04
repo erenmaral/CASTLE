@@ -6,7 +6,7 @@ const out = process.argv[2] || path.join(__dirname, '..', 'shots'); require('fs'
 const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
   const browser = await chromium.launch(); const errors = [];
-  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 3, hasTouch: true, isMobile: true });
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   await ctx.addInitScript(() => { try { localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.3', cleared: 74, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} });

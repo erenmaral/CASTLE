@@ -1,0 +1,99 @@
+# Sefer Vakti — Reklam ve Elmas Satın Alma Rehberi
+
+Bu belge, oyundaki **mağaza / reklam / uygulama içi satın alma** altyapısını gerçek hesaplarınıza nasıl bağlayacağınızı anlatır.
+
+## Şu an ne hazır, ne hazır değil?
+
+| Hazır (kodda) | Sizin yapmanız gereken |
+|---|---|
+| **Mağaza sekmesi:** 5 elmas paketi, başlangıç paketi (tek seferlik), reklamları kaldır, ücretsiz ödüllü reklam düğmeleri | Google Play Console'da ürünleri oluşturmak |
+| **Ödüllü reklam** akışları: mağazadan 💎/🪙, zafer sonunda "ödülü ×2 yap", yenilgide 🪙 | AdMob hesabı + reklam birimleri |
+| **Geçiş reklamı** kuralları (her 3 savaşta bir, 6. bölümden sonra, en az 3 dk arayla, reklamsız paket alanlara yok) | — |
+| **Banner yuvası** (sefer merkezinde; reklamsız pakette kalkar) | — |
+| **Güvenli varsayılan:** reklam/ödeme SDK'sı yoksa mağazada "Yakında" yazar, **kimse bedava elmas alamaz** | — |
+| **Test modu** (sahte reklam + sahte ödeme penceresi) | — |
+| Yerli adaptörler: `@capacitor-community/admob` ve `cordova-plugin-purchase` bulunursa otomatik devreye girer | **Gerçek cihazda test etmek** (bu adaptörleri burada cihazsız yazdım, doğrulanmadı) |
+
+> ⚠️ Bu depoda gerçek AdMob/Play Billing SDK'sı **kurulu değildir**. Aşağıdaki adımlar yapılmadan yayında reklam/ödeme çalışmaz.
+
+## 1) Önce test modunda deneyin (tarayıcıda)
+
+Tarayıcı sürümünde (GitHub Pages) adres sonuna `?monetize=test` ekleyin ya da konsolda:
+
+```js
+localStorage.setItem('sv.monetize', 'test'); location.reload();
+```
+
+Mağazada sahte reklam (3 sn sayaç) ve sahte ödeme onayı çıkar; elmaslar gerçekten eklenir. Kapatmak: `localStorage.removeItem('sv.monetize')`.
+**Yayınladığınız APK/Pages sürümünde bu bayrak oyuncuda kapalıdır**; bir oyuncu konsoldan açarsa yalnızca kendi cihazındaki kaydına elmas ekler (sunucu doğrulaması olmadığından zaten yapabilir; bkz. "Güvenlik").
+
+## 2) Reklamlar (Google AdMob)
+
+1. https://admob.google.com → hesap aç → **Uygulama ekle** (Android).
+2. Üç **reklam birimi** oluşturun: *Ödüllü*, *Geçiş (Interstitial)*, *Banner*.
+3. Eklentiyi kurun (bilgisayarınızda):
+   ```bash
+   npm i @capacitor-community/admob
+   npx cap sync android
+   ```
+   (`package.json` ve `package-lock.json` değişir; GitHub Actions'taki derleme `npm ci` + `npx cap sync` yaptığı için sonraki APK'lara otomatik girer.)
+4. `android/app/src/main/AndroidManifest.xml` içindeki `<application>` etiketine **AdMob uygulama kimliğinizi** ekleyin:
+   ```xml
+   <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"/>
+   ```
+5. `www/js/monetize-config.js` içinde `rewardedId`, `interstitialId`, `bannerId` alanlarını doldurun. Denerken `testMode: true` kalsın (Google'ın test reklamları gelir); **yayından önce `false` yapın**.
+6. **Onay (GDPR/UMP):** AB/İngiltere kullanıcıları için AdMob "Gizlilik ve mesajlaşma" bölümünden onay formu oluşturun. Mağazadaki *Reklam gizlilik tercihleri* düğmesi bu formu açar (eklenti destekliyorsa).
+7. Kendi test cihazınızı AdMob'a ekleyin; **kendi reklamınıza kendiniz tıklamayın** (hesap kapatılabilir).
+
+Reklam sıklığı ve ödül miktarları aynı dosyada: `rewardedPerDay`, `rewardedGems`, `rewardedCoins`, `interstitialEvery`, `interstitialMinLevel`, `interstitialMinGapSec`, `doubleWinReward`.
+
+## 3) Elmas paketleri (Google Play Faturalandırma)
+
+1. Google Play Console'da uygulamayı oluşturun (ücretli geliştirici hesabı gerekir) ve **Para kazanma → Ürünler → Uygulama içi ürünler** altında şu kimliklerle ürün açın (kimlikleri `monetize-config.js` içinde değiştirebilirsiniz, ikisi aynı olmalı):
+
+   | Kimlik | Tür | Önerilen fiyat |
+   |---|---|---|
+   | `sefervakti_gems_80` | Tüketilebilir | $0.99 |
+   | `sefervakti_gems_450` | Tüketilebilir | $4.99 |
+   | `sefervakti_gems_1000` | Tüketilebilir | $9.99 |
+   | `sefervakti_gems_2200` | Tüketilebilir | $19.99 |
+   | `sefervakti_gems_6000` | Tüketilebilir | $49.99 |
+   | `sefervakti_starter` | Tüketilemez (tek seferlik) | $1.99 |
+   | `sefervakti_noads` | Tüketilemez (tek seferlik) | $3.99 |
+2. Eklentiyi kurun: `npm i cordova-plugin-purchase` → `npx cap sync android`.
+3. Uygulamayı **imzalı** (anahtar deposu secret'ları zaten Actions'ta) sürümle Play Console'a *iç test* kanalına yükleyin; test hesabı ekleyip satın almayı deneyin (gerçek para çekilmez).
+4. Mağazadaki fiyat metinleri Play'den gelen yerel fiyatla otomatik güncellenir; gelmezse `monetize-config.js` içindeki `price` yedeği gösterilir.
+
+### Güvenlik (önemli)
+Oyun şu an **istemci tarafında** çalışır: kayıt cihazda saklanır ve makbuz sunucuda doğrulanmaz. Yani kararlı bir kullanıcı kayıt dosyasını düzenleyip elmas ekleyebilir (tek oyunculu oyunlarda yaygın bir durum). Gerçek gelir güvenliği için ileride bir **sunucu** (Google Play Developer API ile makbuz doğrulama) ve hesap sistemi gerekir. Aynı makbuz iki kez işlenmez (`iap.tokens`).
+
+## 4) Yayın öncesi kontrol listesi
+- [ ] `monetize-config.js`: gerçek reklam birimi kimlikleri, `testMode: false`
+- [ ] `AndroidManifest.xml`: AdMob uygulama kimliği
+- [ ] Play Console ürünleri açıldı, iç testte satın alma denendi, **satın alımları geri yükle** denendi
+- [ ] **Gizlilik politikası** adresi hazır → `links.privacy` (Play Store için zorunlu; reklam ve satın alma kullanan uygulamalarda şart); *Veri güvenliği* formu dolduruldu
+- [ ] Çocuklara yönelik değilse hedef kitle ayarı doğru (Aile Politikası)
+- [ ] Mağaza açıklamasında "Reklam içerir" / "Uygulama içi satın alma" işaretlendi
+
+## 5) Başka bir SDK kullanmak (Unity Ads, AppLovin, ...)
+`Z.Monetize.registerProvider({...})` ile kendi sağlayıcınızı verin. Arayüz:
+
+```js
+{ ads: true, iap: true,
+  init(config) {},
+  showRewarded(placement) -> Promise<boolean>   // true = ödül hak edildi
+  showInterstitial()      -> Promise<void>
+  banner(show)            // bool
+  products(ids)           -> Promise<[{id, price}]>
+  purchase(id)            -> Promise<{ok: bool, token: string}>
+  restore()               -> Promise<[ürünKimliği]>
+  privacyOptions()        -> Promise<void> }
+```
+Örnek: `www/js/monetize-providers.js` (test ve yerli sağlayıcı).
+
+## 6) Dosyalar
+- `www/js/monetize-config.js` — **sizin ayarlarınız** (kimlikler, fiyatlar, sıklıklar, bağlantılar)
+- `www/js/monetize.js` — mantık (sınırlar, ödül verme, makbuz tekrar koruması)
+- `www/js/monetize-providers.js` — test ve yerli sağlayıcılar
+- `www/js/ui.js` — Mağaza sekmesi (`renderShop`), sonuç ekranı reklam düğmeleri
+- Testler: `tests/unit-v08.js`, `tests/e2e-v08.js`

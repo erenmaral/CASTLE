@@ -5,7 +5,7 @@ const out = process.argv[2] || path.join(__dirname, '..', 'shots'); require('fs'
 const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
   const browser = await chromium.launch(); const errors = [];
-  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -16,7 +16,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(700);
 
   // Yenilikler penceresi (0.3 kaydi ile)
-  check(/Sefer Vakti 0\.7/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.7 penceresi gösterildi');
+  check(/Sefer Vakti 0\.8/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.8 penceresi gösterildi');
   await shot('v04-01-whatsnew'); await p.click('[data-act="ok"]'); await p.waitForTimeout(400);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); }); await p.waitForTimeout(300);
   check(await p.evaluate(() => document.querySelectorAll('.node').length === 105), 'Harita 105 bölümü gösteriyor');

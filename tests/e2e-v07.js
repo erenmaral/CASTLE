@@ -5,7 +5,7 @@ const out = process.argv[2] || path.join(__dirname, '..', 'shots'); require('fs'
 const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
   const browser = await chromium.launch(); const errors = [];
-  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1.5, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1.5, hasTouch: true, isMobile: true });
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   const shot = (n) => p.screenshot({ path: path.join(out, n + '.png') });
@@ -13,7 +13,8 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   // --- ilk kez oynayan: kayit yok ---
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(1500);
   check(await p.evaluate(() => !document.getElementById('home').classList.contains('hidden') && document.getElementById('hub').classList.contains('hidden')), 'Açılışta ayrı ana menü görünür, harita/sefer merkezi gizli');
-  check(/Hoş geldin/.test(await p.locator('.modal h1').first().innerText()), 'İlk kez girene karşılama penceresi'); await shot('v07-01-welcome');
+  await p.click('[data-act="l_tr"]'); await p.waitForTimeout(300);
+  check(/Hoş geldin/.test(await p.locator('.modal h1').first().innerText()), 'İlk kez girene dil seçimi sonrası karşılama penceresi'); await shot('v07-01-welcome');
   await p.click('[data-act="go"]'); await p.waitForTimeout(1500);
   check(await p.evaluate(() => Z.Game.battle && Z.Game.battle.level === 1 && !document.getElementById('lane-pick') && !document.getElementById('tut').classList.contains('hidden') && Z.Game.tutHold === true), 'Öğretici 1. seferde başladı; savaş bekletiliyor; koridor düğmeleri yok');
   await shot('v07-02-tut1');
@@ -39,7 +40,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.evaluate(() => { Z.Game.toMenu(); }); await p.waitForTimeout(500);
   check(await p.evaluate(() => !document.getElementById('hub').classList.contains('hidden')), 'Savaştan çıkınca sefer merkezi açılır');
   await p.click('#btn-home'); await p.waitForTimeout(800); await shot('v07-06-home');
-  check(await p.evaluate(() => !document.getElementById('home').classList.contains('hidden') && !!Z.Game.demo && document.querySelectorAll('#home [data-home]').length === 8), 'Geri düğmesi ana menüye döner (8 düğme, canlı savaş)');
+  check(await p.evaluate(() => !document.getElementById('home').classList.contains('hidden') && !!Z.Game.demo && document.querySelectorAll('#home [data-home]').length === 10), 'Geri düğmesi ana menüye döner (10 düğme, canlı savaş)');
   await p.click('[data-home="map"]'); await p.waitForTimeout(400);
   check(await p.evaluate(() => !document.getElementById('hub').classList.contains('hidden') && Z.UI.tab === 'map' && document.querySelectorAll('.node').length === 105), 'Sefer Haritası düğmesi haritayı açar');
   await p.evaluate(() => Z.Game.onBack()); await p.waitForTimeout(300);

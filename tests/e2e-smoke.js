@@ -10,7 +10,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const browser = await chromium.launch();
   const errors = [];
   async function newPage(w, h) {
-    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+    const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
     const page = await ctx.newPage();
     page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
     page.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -24,6 +24,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await page.waitForTimeout(800);
   await shot(page, '01-welcome');
 
+  await page.click('[data-act="l_tr"]'); await page.waitForTimeout(300);
   await page.click('[data-act="go"]');
   await page.waitForTimeout(500);
   await page.click('#tut-skip'); await page.waitForTimeout(200);

@@ -11,7 +11,7 @@ const OLD_SAVE = { v: 1, coins: 842, gems: 31, unitLvl: { spear: 4, archer: 3, c
   const browser = await chromium.launch(); const errors = [];
   const shot = (p, n) => p.screenshot({ path: path.join(out, n + '.png') });
   const mk = async (init) => {
-    const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+    const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
     if (init) await ctx.addInitScript(init);
     const p = await ctx.newPage();
     p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -22,7 +22,7 @@ const OLD_SAVE = { v: 1, coins: 842, gems: 31, unitLvl: { spear: 4, archer: 3, c
   // 1) Eski v0.1 kaydi ile acilis
   let p = await mk(`if(!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', ${JSON.stringify(JSON.stringify(OLD_SAVE))});`);
   await shot(p, 'v02-01-whatsnew');
-  check(await p.locator('.modal h1').first().innerText().then(t => /Sefer Vakti 0\.7/.test(t)), 'Yenilikler penceresi gösterildi');
+  check(await p.locator('.modal h1').first().innerText().then(t => /Sefer Vakti 0\.8/.test(t)), 'Yenilikler penceresi gösterildi');
   check(await p.evaluate(() => Z.Save.data.coins === 842 && Z.Save.data.cleared === 7 && Z.Save.data.unitLvl.healer === 1), 'Eski ilerleme korundu (altın 842, 7. bölüm)');
   await p.click('[data-act="ok"]'); await p.waitForTimeout(500);
   check(await p.locator('.modal h1').first().innerText().then(t => /Günlük Ödül/.test(t)), 'Ardından günlük ödül penceresi geldi');

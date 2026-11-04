@@ -5,13 +5,13 @@ const out = process.argv[2] || path.join(__dirname, '..', 'shots'); require('fs'
 const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
   const browser = await chromium.launch(); const errors = [];
-  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1.5, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1.5, hasTouch: true, isMobile: true });
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   const shot = (n) => p.screenshot({ path: path.join(out, n + '.png') });
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
   const stars = {}; for (let i = 1; i <= 80; i++) stars[i] = (i % 3) + 1;
-  await ctx.addInitScript((st) => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.7', cleared: 80, coins: 5000, gems: 100, stars: st, stats: { totalStars: 160, wins: 80 }, fieldTutDone: true, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
+  await ctx.addInitScript((st) => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.8', cleared: 80, coins: 5000, gems: 100, stars: st, stats: { totalStars: 160, wins: 80 }, fieldTutDone: true, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.mouse.click(200, 300); await p.waitForTimeout(3500);
   check(await p.title() === 'Sefer Vakti' && /SEFER VAKTİ/.test(await p.locator('#hub-top .logo').innerText()), 'Oyun adı: Sefer Vakti');
   check(await p.evaluate(() => !!Z.Game.demo && !document.getElementById('game').classList.contains('hidden') && !document.getElementById('home').classList.contains('hidden') && !document.getElementById('home').classList.contains('opaque')), 'Ana menüde arkada canlı savaş çalışıyor');

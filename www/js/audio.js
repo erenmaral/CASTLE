@@ -5,6 +5,7 @@
   'use strict';
   var ctx = null, master = null, sfxBus = null, musicBus = null, ambBus = null, noiseBuf = null, brownBuf = null;
   var musicTimer = null, nextT = 0, stepI = 0, last = {}, active = 0, intensity = 0, amb = null;
+  var envBus = null, envTimer = null, realm = 0, mode = 'battle', volM = 0.7, volS = 1;
   var rnd = Math.random;
 
   function now() { return ctx.currentTime; }
@@ -54,7 +55,17 @@
   var sfxLvl = 1;
   var A = {
     enabled: true, musicOn: true, noVibrate: false,
-    setSfxLevel: function (v) { sfxLvl = v; if (sfxBus && ctx) sfxBus.gain.setTargetAtTime(0.95 * v, now(), 0.1); },
+    // Ses duzeyleri (0..1): muzik ve efekt ayri
+    setVolumes: function (m, sfx) {
+      volM = Math.max(0, Math.min(1, m)); volS = Math.max(0, Math.min(1, sfx));
+      if (ctx) { musicBus.gain.setTargetAtTime(0.5 * volM, now(), 0.05); sfxBus.gain.setTargetAtTime(0.95 * sfxLvl * volS, now(), 0.05); envBus.gain.setTargetAtTime(0.9 * volS, now(), 0.05); }
+    },
+    setRealm: function (r) { realm = Math.max(0, Math.min(REALMS.length - 1, r | 0)); },   // diyara ozel ortam sesi + muzik tonu
+    setMode: function (m) { mode = m === 'menu' ? 'menu' : 'battle'; },                       // menu: sakin destansi, savas: tam tempo
+    gem: function () { if (A.ok('gem', 0.08) && voice(500)) { [1568, 2093, 2637].forEach(function (f, i) { tone(f, 0, 0.35, 'triangle', 0.07, i * 0.07); }); tone(3136, 0, 0.5, 'sine', 0.04, 0.2); noise(0.08, 0.06, 'highpass', 7000, 7000, 1, 0.05); } },
+    reward: function () { if (!ctx || !A.enabled) return; [523, 659, 784, 1047, 1319].forEach(function (f, i) { tone(f, 0, 0.32, 'triangle', 0.09, i * 0.08); }); noise(0.4, 0.1, 'highpass', 6000, 8000, 1, 0.3); },
+    tab: function () { if (A.ok('tab', 0.05)) { tone(520, 700, 0.07, 'triangle', 0.07); noise(0.03, 0.08, 'bandpass', 2200, 2200, 2); } },
+    setSfxLevel: function (v) { sfxLvl = v; if (sfxBus && ctx) sfxBus.gain.setTargetAtTime(0.95 * v * volS, now(), 0.1); },
     init: function () {
       if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
       var AC = globalThis.AudioContext || globalThis.webkitAudioContext;
@@ -66,6 +77,8 @@
         sfxBus = ctx.createGain(); sfxBus.gain.value = 0.95 * sfxLvl; sfxBus.connect(master);
         musicBus = ctx.createGain(); musicBus.gain.value = 0.5; musicBus.connect(master);
         ambBus = ctx.createGain(); ambBus.gain.value = 0.0; ambBus.connect(master);
+        envBus = ctx.createGain(); envBus.gain.value = 0.9; envBus.connect(master);
+        sfxBus.gain.value = 0.95 * sfxLvl * volS; musicBus.gain.value = 0.5 * volM;
         var len = ctx.sampleRate * 2, i, d, b = 0;
         noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate); d = noiseBuf.getChannelData(0); for (i = 0; i < len; i++) d[i] = rnd() * 2 - 1;
         brownBuf = ctx.createBuffer(1, len, ctx.sampleRate); d = brownBuf.getChannelData(0); for (i = 0; i < len; i++) { b = (b + 0.02 * (rnd() * 2 - 1)) / 1.02; d[i] = b * 3.5; }
@@ -144,22 +157,26 @@
         var s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noiseBuf; s.loop = true; f.type = 'bandpass'; f.frequency.value = 480; f.Q.value = 0.6; g.gain.value = 0.02;
         s.connect(f); f.connect(g); g.connect(ambBus); s.start(); ambBus.gain.setTargetAtTime(0.45, now(), 0.3); amb = { s: s, g: g };
       } catch (e) { amb = null; }
+      envTimer = setInterval(envTick, 1100);
       musicTimer = setInterval(function () {
         if (!ctx || !A.enabled || !A.musicOn) return;
         while (nextT < now() + 0.25) {
-          var bpm = 92 + 44 * intensity, eighth = 30 / bpm, st = stepI % 8, bar = Math.floor(stepI / 8), d = nextT - now(), v = 0.7 + 0.5 * intensity;
+          var bpm = mode === 'menu' ? 78 : 92 + 44 * intensity, eighth = 30 / bpm, st = stepI % 8, bar = Math.floor(stepI / 8), d = nextT - now(), v = 0.7 + 0.5 * intensity;
+          if (st === 0) padBar(bar, d, eighth);
+          if (mode === 'menu') v *= 0.8;
           if (st === 0) tomAt(62, 1 * v, d); if (st === 2) tomAt(78, 0.7 * v, d); if (st === 3) tomAt(62, 0.8 * v, d);
           if (st === 4) tomAt(62, 1 * v, d); if (st === 6) tomAt(78, 0.7 * v, d);
           if (st === 7 && (intensity > 0.45 || bar % 4 === 3)) tomAt(98, 0.6 * v, d);
           if (intensity > 0.3 && (st === 2 || st === 6)) noiseAt(0.04, 0.12 * v, d);
           if (st === 0 && bar % 4 === 0 && intensity > 0.2) { var tt = now() + d; hornAt(98, 1.4, 0.05 + 0.04 * intensity, tt - now()); }
-          if (rnd() < 0.22 * intensity && voice(300)) { var vv = 0.2 + 0.15 * rnd(); if (rnd() < 0.6) clash(vv); else thud(vv); } // uzaktan carpisma sesleri
+          if (rnd() < (mode === 'menu' ? 0.12 : 0.22 * intensity) && voice(300)) { var vv = 0.2 + 0.15 * rnd(); if (rnd() < 0.6) clash(vv); else thud(vv); } // uzaktan carpisma sesleri
           nextT += eighth; stepI++;
         }
       }, 90);
     },
     musicStop: function () {
       if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+      if (envTimer) { clearInterval(envTimer); envTimer = null; }
       if (amb && ctx) { try { ambBus.gain.setTargetAtTime(0, now(), 0.25); var s = amb.s; setTimeout(function () { try { s.stop(); } catch (e) { /* bitti */ } }, 900); } catch (e2) { /* yok say */ } amb = null; }
     },
     vibrate: function (ms) {
@@ -167,8 +184,52 @@
       try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* yok say */ }
     },
     // test icin: tum sesleri bir kez cal (hatasiz calistigini dogrular)
-    _all: function () { ['click', 'back', 'deny', 'coin', 'chest', 'perk', 'heal', 'hit', 'shoot', 'boom', 'death', 'baseHit', 'charge', 'fire', 'freeze', 'battleStart', 'win', 'lose'].forEach(function (k) { last = {}; A[k](); }); ['cav', 'golem', 'cata', 'spear'].forEach(function (c) { last = {}; A.spawn(c); }); ['roar', 'bolt', 'ward', 'freeze', 'dragon'].forEach(function (k) { A.skill(k); }); A.star(1); }
+    _all: function () { ['click', 'back', 'deny', 'coin', 'chest', 'perk', 'heal', 'hit', 'shoot', 'boom', 'death', 'baseHit', 'charge', 'fire', 'freeze', 'battleStart', 'win', 'lose', 'gem', 'reward', 'tab'].forEach(function (k) { last = {}; A[k](); }); ['cav', 'golem', 'cata', 'spear'].forEach(function (c) { last = {}; A.spawn(c); }); ['roar', 'bolt', 'ward', 'freeze', 'dragon'].forEach(function (k) { A.skill(k); }); A.star(1); }
   };
+  // ---- diyara gore muzik tonu: kok nota + dizi + akor ilerlemesi ----
+  var REALMS = [
+    { root: 50, mode: [0, 2, 3, 5, 7, 9, 10], prog: [0, 5, 3, 4] },   // 0 Yesil Vadi: Re dorian
+    { root: 52, mode: [0, 1, 4, 5, 7, 8, 10], prog: [0, 1, 0, 6] },   // 1 Kizil Col: frigien baskin
+    { root: 57, mode: [0, 2, 3, 5, 7, 8, 10], prog: [0, 5, 2, 6] },   // 2 Buz Diyari: la minor (parlak)
+    { root: 45, mode: [0, 1, 3, 5, 7, 8, 10], prog: [0, 0, 1, 6] },   // 3 Volkan: frigien (agir)
+    { root: 48, mode: [0, 2, 3, 6, 7, 8, 11], prog: [0, 3, 5, 3] },   // 4 Bataklik: gizemli
+    { root: 55, mode: [0, 2, 3, 5, 7, 9, 10], prog: [0, 3, 6, 4] },   // 5 Sonbahar: sicak dorian
+    { root: 53, mode: [0, 2, 3, 5, 7, 8, 10], prog: [0, 6, 5, 4] }    // 6 Yildiz Ovasi: gece (cani cani)
+  ];
+  function mf(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function degNote(R, deg) { var o = Math.floor(deg / 7), i = ((deg % 7) + 7) % 7; return R.root + R.mode[i] + 12 * o; }
+  function padNote(f, dur, vol, d) { // yumusak "yay" sesi: iki hafif detune ucgen dalga + alcak gecirgen filtre
+    var t = now() + d, flt = ctx.createBiquadFilter(), g = ctx.createGain();
+    flt.type = 'lowpass'; flt.frequency.value = 900; flt.Q.value = 0.7;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(1.2, dur * 0.35)); g.gain.setValueAtTime(vol, t + dur * 0.65); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    flt.connect(g); g.connect(musicBus);
+    [0, 6].forEach(function (cents) { var o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f; o.detune.value = cents - 3; o.connect(flt); o.start(t); o.stop(t + dur + 0.05); });
+  }
+  function padBar(bar, d, eighth) {
+    var R = REALMS[realm] || REALMS[0], deg = R.prog[bar % R.prog.length], dur = eighth * 8 * 1.02, vol = mode === 'menu' ? 0.075 : 0.04 + 0.02 * intensity;
+    [0, 2, 4].forEach(function (k) { padNote(mf(degNote(R, deg + k) + 12), dur, vol, d); });         // akor
+    padNote(mf(degNote(R, deg) - 12), dur, vol * 1.6, d);                                           // bas
+    if (mode === 'menu' || intensity < 0.5) { // yumusak melodi: akor sesleri uzerinde 2 vurus
+      var n1 = degNote(R, deg + [4, 2, 6, 4][bar % 4]) + 24, n2 = degNote(R, deg + [2, 4, 4, 6][bar % 4]) + 24;
+      tone(mf(n1), 0, eighth * 3, R.bell ? 'sine' : 'triangle', 0.05, d + eighth * 2, musicBus, 0.02); tone(mf(n2), 0, eighth * 3, 'sine', 0.04, d + eighth * 5, musicBus, 0.02);
+    }
+  }
+  // ---- diyara ozel ortam sesleri (kus, ruzgar, cekirge, kurbaga, volkan gurultusu...) ----
+  function chirp(f, d) { tone(f, f * 1.3, 0.08, 'sine', 0.035, d, envBus); tone(f * 1.2, f * 0.9, 0.07, 'sine', 0.03, d + 0.1, envBus); }
+  function envTick() {
+    if (!ctx || !A.enabled || !A.musicOn || !envBus) return;
+    var duck = 1 - 0.55 * intensity; envBus.gain.setTargetAtTime(0.9 * volS * duck, now(), 0.3);
+    var r = rnd(), i;
+    switch (realm) {
+      case 0: if (r < 0.55) { var f = 2400 + rnd() * 1400; for (i = 0; i < 2 + (rnd() * 3 | 0); i++) chirp(f + i * 120, i * 0.15); } else if (r < 0.7) noise(2.2, 0.05, 'bandpass', 500, 900, 0.8, 0, envBus, 0.8); break;
+      case 1: if (r < 0.6) noise(3.0, 0.07, 'bandpass', 350, 850, 0.7, 0, envBus, 1.2); if (r > 0.93) tone(1500, 900, 0.7, 'sawtooth', 0.02, 0, envBus, 0.1); break;
+      case 2: if (r < 0.6) noise(3.4, 0.085, 'bandpass', 650, 1500, 1.1, 0, envBus, 1.3); if (r > 0.8) { tone(3200 + rnd() * 1200, 0, 0.5, 'sine', 0.03, 0, envBus); tone(4800, 0, 0.4, 'sine', 0.02, 0.12, envBus); } break;
+      case 3: noise(1.4, 0.16, 'lowpass', 140, 90, 0.8, 0, envBus, 0.4, true); if (r < 0.7) for (i = 0; i < 5; i++) noise(0.03, 0.09, 'highpass', 3000 + rnd() * 3000, 3000, 1, rnd() * 0.9, envBus); if (r > 0.9) { tone(70, 40, 0.8, 'sine', 0.25, 0, envBus); noise(0.8, 0.12, 'lowpass', 500, 120, 0.7, 0, envBus, 0.05); } break;
+      case 4: if (r < 0.45) { tone(150, 210, 0.09, 'square', 0.025, 0, envBus); tone(170, 230, 0.09, 'square', 0.025, 0.14, envBus); } if (r > 0.5 && r < 0.8) for (i = 0; i < 6; i++) tone(4300, 0, 0.05, 'sine', 0.015, i * 0.09, envBus); break;
+      case 5: noise(2.4, 0.06, 'bandpass', 500, 1000, 0.7, 0, envBus, 0.9); if (r < 0.5) for (i = 0; i < 4; i++) noise(0.06, 0.04, 'highpass', 4000, 3500, 1, rnd() * 1.2, envBus); if (r > 0.92) { tone(620, 380, 0.3, 'sawtooth', 0.03, 0, envBus); tone(600, 360, 0.3, 'sawtooth', 0.03, 0.35, envBus); } break;
+      case 6: if (r < 0.7) for (i = 0; i < 8; i++) tone(4100 + (i % 2) * 90, 0, 0.045, 'sine', 0.014, i * 0.07, envBus); if (r > 0.88) { tone(420, 380, 0.45, 'sine', 0.05, 0, envBus, 0.05); tone(400, 360, 0.5, 'sine', 0.045, 0.6, envBus, 0.05); } break;
+    }
+  }
   // zamanlanmis davul/boru/gurultu (muzik yoluna)
   function tomAt(f, v, d) { var save = now; tone(f * 1.7, f, 0.2, 'sine', 0.55 * v, d, musicBus); tone(f * 0.5, f * 0.4, 0.3, 'triangle', 0.25 * v, d, musicBus); noise(0.05, 0.2 * v, 'lowpass', 2200, 500, 0.8, d, musicBus); void save; }
   function noiseAt(dur, vol, d) { noise(dur, vol, 'bandpass', 3200, 2500, 2, d, musicBus); }

@@ -1,7 +1,8 @@
 // Sefer Vakti - arayuz: ana menu sekmeleri, modallar, savas HUD'u
 (function (Z) {
   'use strict';
-  var S = Z.Save, A = Z.Audio, $ = function (id) { return document.getElementById(id); };
+  var $t = Z.t || function (s) { return s; };
+  var M = Z.Monetize, S = Z.Save, A = Z.Audio, $ = function (id) { return document.getElementById(id); };
   var UI = Z.UI = { tab: 'map', game: null, vaultTimer: null };
   var handlers = {};
 
@@ -48,42 +49,48 @@
     });
     $('tab-content').addEventListener('click', onTabClick);
     $('btn-settings').addEventListener('click', function () { A.click(); UI.settingsModal(); });
+    $('modal-layer').addEventListener('input', function (e) {
+      var el = e.target.closest ? e.target.closest('[data-vol]') : null; if (!el) return;
+      S.data.settings[el.getAttribute('data-vol')] = +el.value; var lab = el.parentNode.querySelector('b'); if (lab) lab.textContent = el.value; UI.applyVolumes();
+    });
+    $('modal-layer').addEventListener('change', function (e) { if (e.target.closest && e.target.closest('[data-vol]')) { S.save(); A.click(); } });
     $('btn-home').addEventListener('click', function () { A.click(); UI.showHome(); });
     $('home').addEventListener('click', onHomeClick);
     bindHud();
   };
 
   // Sefer merkezi: harita / ordu / hazine / gorev (ana menuden ayri ekran)
+  UI.applyVolumes = function () { var st = S.data.settings; A.setVolumes((st.musicVol === undefined ? 70 : st.musicVol) / 100, (st.sfxVol === undefined ? 100 : st.sfxVol) / 100); };
   UI.showHub = function (tab) {
     if (tab) UI.tab = tab;
-    $('home').classList.add('hidden'); $('hub').classList.remove('hidden'); $('hub').classList.add('opaque'); $('hud').classList.add('hidden'); $('game').classList.add('hidden');
+    $('home').classList.add('hidden'); $('hub').classList.remove('hidden'); $('hub').classList.add('opaque'); M.setBanner(true); $('hud').classList.add('hidden'); $('game').classList.add('hidden');
     UI.renderHub(); if (UI.game && UI.game.menuHub) UI.game.menuHub();
   };
-  UI.hideHub = function () { $('hub').classList.add('hidden'); $('home').classList.add('hidden'); clearInterval(UI.vaultTimer); };
+  UI.hideHub = function () { $('hub').classList.add('hidden'); $('home').classList.add('hidden'); clearInterval(UI.vaultTimer); M.setBanner(false); };
 
   // Ana menu: arkada canli savas, buyuk dugmeler (harita burada gorunmez)
   UI.showHome = function () {
-    $('hub').classList.add('hidden'); $('hud').classList.add('hidden'); $('home').classList.remove('hidden'); clearInterval(UI.vaultTimer);
+    $('hub').classList.add('hidden'); $('hud').classList.add('hidden'); $('home').classList.remove('hidden'); clearInterval(UI.vaultTimer); M.setBanner(false);
     UI.renderHome(); if (UI.game && UI.game.menuStart) UI.game.menuStart();
   };
   UI.homeLevel = function () { return Math.min(Z.MAX_LEVEL, S.data.cleared + 1); };
   UI.renderHome = function () {
     var d = S.data, n = UI.homeLevel(), info = Z.levelInfo(n), dots = computeDots();
     $('home-coins').textContent = Z.fmt(d.coins); $('home-gems').textContent = Z.fmt(d.gems);
-    $('hb-main').textContent = d.cleared === 0 ? '▶ İLK SEFERE ÇIK' : d.cleared >= Z.MAX_LEVEL ? '▶ SEFERİ TEKRARLA' : '▶ SEFERE DEVAM';
-    $('hb-sub').textContent = (info.type === 'field' ? '🏕️ Açık alan' : '🏰 Kale kuşatması') + ' · Sefer ' + n + ' · ' + info.name;
+    $('hb-main').textContent = d.cleared === 0 ? ('▶ ' + $t('İLK SEFERE ÇIK')) : d.cleared >= Z.MAX_LEVEL ? ('▶ ' + $t('SEFERİ TEKRARLA')) : ('▶ ' + $t('SEFERE DEVAM'));
+    $('hb-sub').textContent = (info.type === 'field' ? ('🏕️ ' + $t('Açık alan')) : ('🏰 ' + $t('Kale kuşatması'))) + (' · ' + $t('Sefer') + ' ') + n + ' · ' + info.name;
     Array.prototype.forEach.call(document.querySelectorAll('#home [data-home]'), function (b) {
       var k = b.getAttribute('data-home'), old = b.querySelector('.dot'); if (old) old.remove();
-      var map = { map: 'map', army: 'army', vault: 'vault', quests: 'quests' };
+      var map = { map: 'map', army: 'army', vault: 'vault', quests: 'quests', shop: 'shop' };
       if (map[k] && dots[map[k]]) { var i = document.createElement('i'); i.className = 'dot'; b.appendChild(i); }
     });
-    $('home-ver').textContent = 'v' + Z.VERSION + (Z.BUILD !== 'dev' ? ' · derleme ' + Z.BUILD : '');
+    $('home-ver').textContent = 'v' + Z.VERSION + (Z.BUILD !== 'dev' ? (' · ' + $t('derleme') + ' ') + Z.BUILD : '');
   };
   function onHomeClick(e) {
     var el = e.target.closest('[data-home]'); if (!el) return;
     A.init(); A.click(); var k = el.getAttribute('data-home');
     if (k === 'play') return levelModal(UI.homeLevel());
-    if (k === 'daily') { if (S.dailyAvailable()) return UI.dailyModal(); A.deny(); return UI.toast(Z.DAILY_UNLOCK + '. bölümü kazanınca açılır'); }
+    if (k === 'daily') { if (S.dailyAvailable()) return UI.dailyModal(); A.deny(); return UI.toast($t('{n}. bölümü kazanınca açılır', { n: Z.DAILY_UNLOCK })); }
     if (k === 'endless') return UI.endlessModal();
     if (k === 'settings') return UI.settingsModal();
     UI.showHub(k);
@@ -104,12 +111,14 @@
     if (UI.tab === 'map') renderMap(c);
     else if (UI.tab === 'army') renderArmy(c);
     else if (UI.tab === 'vault') renderVault(c);
+    else if (UI.tab === 'shop') renderShop(c);
     else renderQuests(c);
     if (UI.tab !== 'map') c.scrollTop = keep;
   };
 
   function computeDots() {
-    var d = S.data, out = { map: false, army: false, vault: false, quests: false };
+    var d = S.data, out = { map: false, army: false, vault: false, quests: false, shop: false };
+    out.shop = M.canRewarded() && M.rewardedLeft() === Z.MONEY.ads.rewardedPerDay;
     out.vault = !d.daily.claimedToday || S.treasuryPending() >= 150 || S.wheelFree();
     out.map = S.anyStarClaimable() || (S.dailyAvailable() && !d.dailySefer.won);
     if (S.anyAchClaimable()) out.quests = true;
@@ -133,16 +142,16 @@
       return out;
     }
     var upto = Math.min(N, d.cleared + 1);
-    html += '<div class="row" style="margin-bottom:8px"><h2 style="margin:0">Sefer Haritası</h2><div class="spacer"></div><span class="chip">⭐ ' + d.stats.totalStars + ' / ' + (N * 3) + '</span></div>';
+    html += ('<div class="row" style="margin-bottom:8px"><h2 style="margin:0">' + $t('Sefer Haritası') + '</h2><div class="spacer"></div><span class="chip">⭐ ') + d.stats.totalStars + ' / ' + (N * 3) + '</span></div>';
     html += '<div class="starrow">';
     Z.STAR_MILESTONES.forEach(function (m) {
       var can = S.starClaimable(m), got = d.starClaimed[m.n];
       html += '<div class="smile' + (can ? ' can' : '') + (got ? ' got' : '') + '">⭐ ' + m.n + '<span>🪙' + m.coins + ' 💎' + m.gems + '</span>' +
-        (got ? '<span>✔</span>' : can ? '<button class="btn gold" data-star="' + m.n + '">Al</button>' : '<span class="mut">🔒</span>') + '</div>';
+        (got ? '<span>✔</span>' : can ? '<button class="btn gold" data-star="' + m.n + ('">' + $t('Al') + '</button>') : '<span class="mut">🔒</span>') + '</div>';
     });
     html += '</div>' + dailyCard(d) + '<div class="mode-row">' +
-      '<button class="panel mode-card" data-act-hub="endless"><span class="big">♾️</span><div><h3>Sonsuz Kuşatma</h3><small>Rekor: <b style="color:var(--gold)">' + d.endlessBest + '. dalga</b></small></div></button>' +
-      '<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>Savaş Ordusu</h3><small>' + d.deck.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + ' ' + Z.HEROES[d.hero].icon + '</small></div></button></div>';
+      ('<button class="panel mode-card" data-act-hub="endless"><span class="big">♾️</span><div><h3>' + $t('Sonsuz Kuşatma') + '</h3><small>' + $t('Rekor') + ': <b style="color:var(--gold)">') + $t('{n}. dalga', { n: d.endlessBest }) + '</b></small></div></button>' +
+      ('<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>' + $t('Savaş Ordusu') + '</h3><small>') + d.deck.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + ' ' + Z.HEROES[d.hero].icon + '</small></div></button></div>';
     var RI = ['🌲', '🏜️', '❄️', '🌋', '🐸', '🍂', '🌙'];
     var DEC = [['🌲', '🌳', '🌿', '🪨', '🌲'], ['🌵', '🏜️', '🪨', '🐪', '🌵'], ['🌲', '❄️', '⛄', '🏔️', '🌲'], ['🌋', '🔥', '🪨', '💀', '🌋'], ['🍄', '🌿', '🐸', '🕸️', '🍄'], ['🍁', '🍂', '🌰', '🌳', '🍁'], ['🌙', '⭐', '✨', '🔮', '⭐']];
     html += '<div class="maptrack" id="maptrack" style="height:' + h + 'px">';
@@ -163,7 +172,7 @@
       if (st > 0) cls += ' done'; else if (i === d.cleared + 1) cls += ' cur'; else if (i > d.cleared + 1) cls += ' locked';
       if ((i - 1) % 15 === 0) {
         var rr = Z.realmOf(i), rs = 0, ri2; for (ri2 = rr * 15 + 1; ri2 <= Math.min(N, rr * 15 + 15); ri2++) rs += d.stars[ri2] || 0;
-        html += '<div class="realm r' + rr + '" style="top:' + (pts[i - 1][1] - 112) + 'px"><span class="ri">' + RI[rr] + '</span><div><b>Diyar ' + (rr + 1) + ' · ' + Z.REALMS[rr] + '</b><small>' + (i <= d.cleared + 1 ? '⭐ ' + rs + ' / 45' : '🔒 ' + (i - 1) + '. bölümü bitirince açılır') + '</small></div></div>';
+        html += '<div class="realm r' + rr + '" style="top:' + (pts[i - 1][1] - 112) + 'px"><span class="ri">' + RI[rr] + '</span><div><b>' + $t('Diyar {n} · {name}', { n: rr + 1, name: Z.REALMS[rr] }) + '</b><small>' + (i <= d.cleared + 1 ? '⭐ ' + rs + ' / 45' : '🔒 ' + $t('{n}. bölümü bitirince açılır', { n: i - 1 })) + '</small></div></div>';
       }
       html += '<button class="' + cls + '" data-level="' + i + '" style="left:' + (pts[i - 1][0] / 7.2).toFixed(2) + '%;top:' + pts[i - 1][1] + 'px">' +
         (info.rule !== 'none' ? '<span class="rl">' + Z.RULES[info.rule].icon + '</span>' : '') +
@@ -182,9 +191,9 @@
   }
 
   function dailyCard(d) {
-    if (!S.dailyAvailable()) return '<div class="panel daily-card off"><span class="big">📅</span><div><h3>Günlük Sefer</h3><small>' + Z.DAILY_UNLOCK + '. bölümü kazanınca açılır</small></div></div>';
+    if (!S.dailyAvailable()) return ('<div class="panel daily-card off"><span class="big">📅</span><div><h3>' + $t('Günlük Sefer') + '</h3><small>' + $t('{n}. bölümü kazanınca açılır', { n: Z.DAILY_UNLOCK }) + '</small></div></div>');
     var di = S.dailyInfo(), won = d.dailySefer.won;
-    return '<button class="panel daily-card' + (won ? ' done' : '') + '" data-act-hub="daily"><span class="big">📅</span><div class="grow"><h3>Günlük Sefer ' + (won ? '<span class="chip">✔ Tamam</span>' : '<span class="chip gold">🎁 Ödül hazır</span>') + '</h3>' +
+    return '<button class="panel daily-card' + (won ? ' done' : '') + ('" data-act-hub="daily"><span class="big">📅</span><div class="grow"><h3>' + $t('Günlük Sefer') + ' ') + (won ? ('<span class="chip">✔ ' + $t('Tamam') + '</span>') : ('<span class="chip gold">🎁 ' + $t('Ödül hazır') + '</span>')) + '</h3>' +
       '<small>' + Z.REALMS[di.theme] + ' · ' + di.rules.map(function (r) { return Z.RULES[r].icon + ' ' + Z.RULES[r].name; }).join(' + ') + '</small></div></button>';
   }
 
@@ -193,9 +202,9 @@
     var info = Z.levelInfo(n);
     if (info.type === 'field') {
       var ob = Z.FIELD_OBJECTIVES[Z.fieldObjective(n, rules)];
-      return '<div class="rule-box field-box"><b>🏕️ Açık Alan Savaşı · ' + ob.icon + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + ' Önce <b>' + Z.fieldBudget(n) + ' komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.</span></div>';
+      return ('<div class="rule-box field-box">' + $t('<b>🏕️ Açık Alan Savaşı') + ' · ') + ob.icon + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + (' ' + $t('Önce') + ' <b>') + Z.fieldBudget(n) + (' ' + $t('komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.') + '</span></div>');
     }
-    return '<p style="margin:6px 0">🎯 Hedef: ' + (rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + '</b> boyunca kaleni savun' : 'düşman kalesini yık') + '</p>';
+    return ('<p style="margin:6px 0">🎯 ' + $t('Hedef') + ': ') + (rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + ('</b> ' + $t('boyunca kaleni savun')) : $t('düşman kalesini yık')) + '</p>';
   }
 
   function levelModal(n, diff) {
@@ -207,29 +216,29 @@
         var un = Z.diffUnlocked(d, n, i);
         return '<button class="diff' + (i === diff ? ' on' : '') + (un ? '' : ' lock') + '" data-act="diff' + i + '"><span class="di">' + (un ? x.icon : '🔒') + '</span>' + x.name + '</button>';
       }).join('') + '</div>';
-      drow += diff > 0 ? '<p class="small" style="margin:2px 0 8px">Düşman %' + Math.round(D.hp * 100) + ' can · ödül ×' + D.coin + ' · bu kademede ilk galibiyette +💎' + D.gem + '</p>'
-        : !Z.diffUnlocked(d, n, 1) ? '<p class="small" style="margin:2px 0 8px">🔒 Zor kademe: bu seferi bir kez kazanınca açılır.</p>'
-        : !Z.diffUnlocked(d, n, 2) ? '<p class="small" style="margin:2px 0 8px">🔒 Efsane: bu seferi Zor kademede kazanınca açılır.</p>' : '';
+      drow += diff > 0 ? '<p class="small" style="margin:2px 0 8px">' + $t('Düşman %{hp} can · ödül ×{coin} · bu kademede ilk galibiyette +💎{gem}', { hp: Math.round(D.hp * 100), coin: D.coin, gem: D.gem }) + '</p>'
+        : !Z.diffUnlocked(d, n, 1) ? ('<p class="small" style="margin:2px 0 8px">🔒 ' + $t('Zor kademe: bu seferi bir kez kazanınca açılır.') + '</p>')
+        : !Z.diffUnlocked(d, n, 2) ? ('<p class="small" style="margin:2px 0 8px">🔒 ' + $t('Efsane: bu seferi Zor kademede kazanınca açılır.') + '</p>') : '';
     }
     UI.modal(
-      '<h1>Sefer ' + n + (info.boss ? ' <span class="badge">PATRON</span>' : '') + (info.type === 'field' ? ' <span class="badge fld">AÇIK ALAN</span>' : '') + '</h1>' +
+      ('<h1>' + $t('Sefer') + ' ') + n + (info.boss ? (' <span class="badge">' + $t('PATRON') + '</span>') : '') + (info.type === 'field' ? (' <span class="badge fld">' + $t('AÇIK ALAN') + '</span>') : '') + '</h1>' +
       '<p class="mut" style="margin:0">' + Z.REALMS[info.realm] + ' · ' + info.name + (d.hardCleared[n] ? ' · ' + Z.DIFFS[d.hardCleared[n]].icon : '') + '</p>' +
       '<p class="story">“' + info.story + '”</p>' + drow +
-      (info.rule !== 'none' ? '<div class="rule-box"><b>' + rl.icon + ' Sefer kuralı: ' + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
+      (info.rule !== 'none' ? '<div class="rule-box"><b>' + rl.icon + (' ' + $t('Sefer kuralı') + ': ') + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
       goalHtml(n, [info.rule]) +
       '<div class="big-stars" style="font-size:54px;margin:0">' + star3(st) + '</div>' +
-      '<div class="row-lines"><span>Düşman: ' + info.tiers.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '</span>' +
-      '<span>Ödül: 🪙 ' + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
-      '<p style="margin:10px 0 2px;font-size:22px">Önerilen birlik seviyesi: <b>' + rec + '</b> · Senin ortalaman: <b style="color:' + (ok ? 'var(--green)' : 'var(--red)') + '">' + avg.toFixed(1) + '</b></p>' +
-      (ok ? '' : '<p class="small" style="color:#ffb4b4;margin:0">Ordu sekmesinden birliklerini yükseltmek işini kolaylaştırır.</p>') +
+      ('<div class="row-lines"><span>' + $t('Düşman') + ': ') + info.tiers.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '</span>' +
+      ('<span>' + $t('Ödül') + ': 🪙 ') + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
+      ('<p style="margin:10px 0 2px;font-size:22px">' + $t('Önerilen birlik seviyesi') + ': <b>') + rec + ('</b> · ' + $t('Senin ortalaman') + ': <b style="color:') + (ok ? 'var(--green)' : 'var(--red)') + '">' + avg.toFixed(1) + '</b></p>' +
+      (ok ? '' : ('<p class="small" style="color:#ffb4b4;margin:0">' + $t('Ordu sekmesinden birliklerini yükseltmek işini kolaylaştırır.') + '</p>')) +
       '<p style="margin:6px 0">' + d.deck.map(function (u) { return '<span style="font-size:38px">' + Z.UNITS[u].icon + '</span>'; }).join(' ') + '</p>' +
-      '<div class="actions"><button class="btn small" data-act="close">Geri</button><button class="btn small" data-act="army">🛡️ Ordu</button><button class="btn gold" data-act="fight">⚔ SEFERE ÇIK</button></div>',
+      ('<div class="actions"><button class="btn small" data-act="close">' + $t('Geri') + '</button><button class="btn small" data-act="army">🛡️ ' + $t('Ordu') + '</button><button class="btn gold" data-act="fight">⚔ ' + $t('SEFERE ÇIK') + '</button></div>'),
       {
         close: UI.closeModal,
         army: function () { UI.closeModal(); UI.tab = 'army'; UI.renderHub(); },
         diff0: function () { levelModal(n, 0); },
-        diff1: function () { if (Z.diffUnlocked(d, n, 1)) levelModal(n, 1); else { A.deny(); UI.toast('Önce bu seferi Normal kademede kazan'); } },
-        diff2: function () { if (Z.diffUnlocked(d, n, 2)) levelModal(n, 2); else { A.deny(); UI.toast('Önce bu seferi Zor kademede kazan'); } },
+        diff1: function () { if (Z.diffUnlocked(d, n, 1)) levelModal(n, 1); else { A.deny(); UI.toast($t('Önce bu seferi Normal kademede kazan')); } },
+        diff2: function () { if (Z.diffUnlocked(d, n, 2)) levelModal(n, 2); else { A.deny(); UI.toast($t('Önce bu seferi Zor kademede kazan')); } },
         fight: function () { UI.closeModal(); UI.game.startBattle('campaign', n, { diff: diff }); }
       });
   }
@@ -238,46 +247,46 @@
   UI.dailyModal = function () {
     var d = S.data, di = S.dailyInfo(), won = d.dailySefer.won, info = Z.levelInfo(di.level);
     var rb = di.rules.map(function (r) { var R = Z.RULES[r]; return '<div class="rule-box"><b>' + R.icon + ' ' + R.name + '</b><br><span class="small">' + R.desc + '</span></div>'; }).join('');
-    UI.modal('<h1>📅 Günlük Sefer</h1><p class="mut" style="margin:0">' + Z.REALMS[di.theme] + ' · Sefer ' + di.level + ' seviyesinde</p>' + rb +
+    UI.modal(('<h1>📅 ' + $t('Günlük Sefer') + '</h1><p class="mut" style="margin:0">') + Z.REALMS[di.theme] + ' · ' + $t('Sefer {n} seviyesinde', { n: di.level }) + '</p>' + rb +
       goalHtml(di.level, di.rules) +
       '<div class="rewards"><span class="coin">🪙 ' + di.rewardCoins + '</span><span class="gem">💎 ' + di.rewardGems + '</span></div>' +
-      '<p class="small">' + (won ? '✔ Bugünkü ödülü aldın. İstersen ödülsüz tekrar oynayabilirsin.' : 'Ödül günde bir kez, ilk galibiyette verilir. Her gün yeni bir sefer!') + '</p>' +
-      '<div class="actions"><button class="btn small" data-act="close">Geri</button><button class="btn gold" data-act="go">⚔ SEFERE ÇIK</button></div>',
+      '<p class="small">' + (won ? ('✔ ' + $t('Bugünkü ödülü aldın. İstersen ödülsüz tekrar oynayabilirsin.')) : $t('Ödül günde bir kez, ilk galibiyette verilir. Her gün yeni bir sefer!')) + '</p>' +
+      ('<div class="actions"><button class="btn small" data-act="close">' + $t('Geri') + '</button><button class="btn gold" data-act="go">⚔ ' + $t('SEFERE ÇIK') + '</button></div>'),
       { close: UI.closeModal, go: function () { UI.closeModal(); UI.game.startBattle('daily', di.level, { daily: di }); } });
   };
 
   // ---------------------------------------------------------------- ORDU
   function renderArmy(c) {
     var d = S.data, un = S.unlockedUnits(), html = '', i;
-    html += '<div class="row"><h2 style="margin:0">Ordu</h2><div class="spacer"></div><span class="chip">Savaş kadrosu: ' + d.deck.length + ' / 5</span></div>';
-    html += '<div class="sect">Birlikler</div><div class="grid2">';
+    html += ('<div class="row"><h2 style="margin:0">' + $t('Ordu') + '</h2><div class="spacer"></div><span class="chip">' + $t('Savaş kadrosu') + ': ') + d.deck.length + ' / 5</span></div>';
+    html += ('<div class="sect">' + $t('Birlikler') + '</div><div class="grid2">');
     Z.UNIT_ORDER.forEach(function (id) {
       var u = Z.UNITS[id], lvl = d.unitLvl[id], locked = un.indexOf(id) < 0, inDeck = d.deck.indexOf(id) >= 0, s = unitStats(id, lvl);
       var cost = Z.unitUpgradeCost(lvl), maxed = lvl >= Z.MAX_UNIT_LVL;
       html += '<div class="panel ucard' + (locked ? ' locked' : '') + (inDeck ? ' indeck' : '') + '"><div class="big">' + u.icon + '</div><div class="info">' +
-        '<h3>' + u.name + ' <span class="lvl">Sv.' + lvl + '</span></h3>' +
-        (locked ? '<small>🔒 Bölüm ' + Z.UNLOCK_AT[id] + ' tamamlanınca açılır</small>' :
+        '<h3>' + u.name + (' <span class="lvl">' + $t('Sv.')) + lvl + '</span></h3>' +
+        (locked ? '<small>🔒 ' + $t('Bölüm {n} tamamlanınca açılır', { n: Z.UNLOCK_AT[id] }) + '</small>' :
           '<small>❤ ' + s.hp + ' · ⚔ ' + s.dmg + ' · 🪙 ' + u.cost + '</small><div class="small" style="margin-top:4px;line-height:1.2">' + u.desc + '</div>' +
           '<div class="row" style="margin-top:10px;gap:10px">' +
-          '<button class="btn small ' + (d.coins >= cost && !maxed ? 'gold' : 'off') + '" data-upg="' + id + '">' + (maxed ? 'MAKS' : '⬆ 🪙 ' + Z.fmt(cost)) + '</button>' +
-          '<button class="btn small ' + (inDeck ? 'green' : '') + '" data-deck="' + id + '">' + (inDeck ? '✔ Kadroda' : 'Kadroya ekle') + '</button></div>') +
+          '<button class="btn small ' + (d.coins >= cost && !maxed ? 'gold' : 'off') + '" data-upg="' + id + '">' + (maxed ? $t('MAKS') : '⬆ 🪙 ' + Z.fmt(cost)) + '</button>' +
+          '<button class="btn small ' + (inDeck ? 'green' : '') + '" data-deck="' + id + '">' + (inDeck ? ('✔ ' + $t('Kadroda')) : $t('Kadroya ekle')) + '</button></div>') +
         '</div></div>';
     });
-    html += '</div><div class="sect">Kahramanlar</div><div class="grid2">';
+    html += ('</div><div class="sect">' + $t('Kahramanlar') + '</div><div class="grid2">');
     Z.HERO_ORDER.forEach(function (id) {
       var h = Z.HEROES[id], owned = d.heroOwned[id], lvl = d.heroLvl[id], sel = d.hero === id, cost = Z.heroUpgradeCost(lvl);
-      html += '<div class="panel ucard' + (sel ? ' indeck' : '') + '"><div class="big">' + h.icon + '</div><div class="info"><h3>' + h.name + (owned ? ' <span class="lvl">Sv.' + lvl + '</span>' : '') + '</h3>' +
-        '<small><b style="color:var(--gold)">' + h.skill + '</b> · ' + h.cd + ' sn</small><div class="small" style="line-height:1.2;margin-top:4px">' + h.desc + '</div>' +
+      html += '<div class="panel ucard' + (sel ? ' indeck' : '') + '"><div class="big">' + h.icon + '</div><div class="info"><h3>' + h.name + (owned ? (' <span class="lvl">' + $t('Sv.')) + lvl + '</span>' : '') + '</h3>' +
+        '<small><b style="color:var(--gold)">' + h.skill + '</b> · ' + h.cd + (' ' + $t('sn') + '</small><div class="small" style="line-height:1.2;margin-top:4px">') + h.desc + '</div>' +
         '<div class="row" style="margin-top:10px;gap:10px">' +
-        (owned ? (lvl >= Z.MAX_HERO_LVL ? '<button class="btn small off">MAKS</button>' : '<button class="btn small ' + (d.coins >= cost ? 'gold' : 'off') + '" data-hup="' + id + '">⬆ 🪙 ' + Z.fmt(cost) + '</button>') +
-          '<button class="btn small ' + (sel ? 'green' : '') + '" data-hsel="' + id + '">' + (sel ? '✔ Seçili' : 'Seç') + '</button>'
-          : '<button class="btn small ' + (d.gems >= h.gems ? 'gold' : 'off') + '" data-hbuy="' + id + '">💎 ' + h.gems + ' ile aç</button>') +
+        (owned ? (lvl >= Z.MAX_HERO_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + (d.coins >= cost ? 'gold' : 'off') + '" data-hup="' + id + '">⬆ 🪙 ' + Z.fmt(cost) + '</button>') +
+          '<button class="btn small ' + (sel ? 'green' : '') + '" data-hsel="' + id + '">' + (sel ? ('✔ ' + $t('Seçili')) : $t('Seç')) + '</button>'
+          : '<button class="btn small ' + (d.gems >= h.gems ? 'gold' : 'off') + '" data-hbuy="' + id + '">💎 ' + h.gems + (' ' + $t('ile aç') + '</button>')) +
         '</div></div></div>';
     });
     var cc = Z.castleUpgradeCost(d.castleLvl);
-    html += '</div><div class="sect">Kale</div><div class="panel ucard"><div class="big">🏰</div><div class="info"><h3>Kale Surları <span class="lvl">Sv.' + d.castleLvl + '</span></h3>' +
-      '<small>Kale canı: ❤ ' + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1) + '</small></div>' +
-      (d.castleLvl >= Z.MAX_CASTLE_LVL ? '<button class="btn off">MAKS</button>' : '<button class="btn ' + (d.coins >= cc ? 'gold' : 'off') + '" data-castle="1">⬆ 🪙 ' + Z.fmt(cc) + '</button>') + '</div>';
+    html += ('</div><div class="sect">' + $t('Kale') + '</div><div class="panel ucard"><div class="big">🏰</div><div class="info"><h3>' + $t('Kale Surları') + ' <span class="lvl">' + $t('Sv.')) + d.castleLvl + '</span></h3>' +
+      ('<small>' + $t('Kale canı') + ': ❤ ') + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1) + '</small></div>' +
+      (d.castleLvl >= Z.MAX_CASTLE_LVL ? ('<button class="btn off">' + $t('MAKS') + '</button>') : '<button class="btn ' + (d.coins >= cc ? 'gold' : 'off') + '" data-castle="1">⬆ 🪙 ' + Z.fmt(cc) + '</button>') + '</div>';
     c.innerHTML = html;
   }
 
@@ -285,34 +294,34 @@
   function renderVault(c) {
     var d = S.data, html = '', pend = S.treasuryPending(), cap = Z.treasuryRate(d.treasuryLvl, d.cleared) * Z.TREASURY_CAP_H;
     var uc = Z.treasuryUpgradeCost(d.treasuryLvl);
-    html += '<h2>Hazine</h2><div class="panel"><div class="row"><span style="font-size:80px">💰</span><div class="grow" style="flex:1">' +
+    html += ('<h2>' + $t('Hazine') + '</h2><div class="panel"><div class="row"><span style="font-size:80px">💰</span><div class="grow" style="flex:1">') +
       '<div class="bignum" id="vault-amt">🪙 ' + Z.fmt(pend) + '</div>' +
       '<div class="bar green"><i id="vault-bar" style="width:' + Math.min(100, 100 * pend / cap) + '%"></i></div>' +
-      '<small id="vault-sub">Saatte ' + Z.fmt(Z.treasuryRate(d.treasuryLvl, d.cleared)) + ' altın · en çok ' + Z.TREASURY_CAP_H + ' saat birikir' + (S.treasuryFull() ? ' · <b style="color:var(--red)">DOLU!</b>' : '') + '</small></div>' +
-      '<div style="display:flex;flex-direction:column;gap:10px"><button class="btn gold" data-collect="1" id="vault-btn">Topla</button>' +
-      (d.treasuryLvl >= Z.MAX_TREASURY_LVL ? '<button class="btn small off">MAKS</button>' : '<button class="btn small ' + (d.coins >= uc ? '' : 'off') + '" data-tup="1">⬆ Sv.' + d.treasuryLvl + ' · 🪙 ' + Z.fmt(uc) + '</button>') + '</div></div></div>';
+      '<small id="vault-sub">' + $t('Saatte {rate} altın · en çok {h} saat birikir', { rate: Z.fmt(Z.treasuryRate(d.treasuryLvl, d.cleared)), h: Z.TREASURY_CAP_H }) + (S.treasuryFull() ? (' · <b style="color:var(--red)">' + $t('DOLU!</b>')) : '') + '</small></div>' +
+      ('<div style="display:flex;flex-direction:column;gap:10px"><button class="btn gold" data-collect="1" id="vault-btn">' + $t('Topla') + '</button>') +
+      (d.treasuryLvl >= Z.MAX_TREASURY_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + (d.coins >= uc ? '' : 'off') + ('" data-tup="1">⬆ ' + $t('Sv.')) + d.treasuryLvl + ' · 🪙 ' + Z.fmt(uc) + '</button>') + '</div></div></div>';
     var free = S.wheelFree(), WCOL = ['#7c3aed', '#2563eb', '#0d9488', '#d97706', '#be185d', '#4f46e5', '#15803d', '#b91c1c'], grad = [], wl = '';
     Z.WHEEL.forEach(function (sg, i) {
       grad.push(WCOL[i % WCOL.length] + ' ' + (i * 45) + 'deg ' + ((i + 1) * 45) + 'deg');
       wl += '<span style="transform:rotate(' + (i * 45 + 22.5) + 'deg) translateY(-104px)">' + (sg.gems ? '💎' + sg.gems : '🪙' + sg.coins) + '</span>';
     });
-    html += '<div class="sect">Şans Çarkı</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">▼</div>' +
+    html += ('<div class="sect">' + $t('Şans Çarkı') + '</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">▼</div>') +
       '<div class="wheel" id="wheel" style="background:conic-gradient(' + grad.join(',') + ')">' + wl + '</div><div class="wheel-hub"></div></div>' +
-      '<div style="flex:1"><h3>' + (free ? 'Bugünkü bedava hakkın hazır!' : 'Bedava hakkını kullandın') + '</h3><p class="small" style="margin:6px 0 16px">Her gün 1 bedava çevirme. Sonrası ' + Z.WHEEL_COST + ' 💎. En büyük ödül: 💎 40!</p>' +
-      '<button class="btn gold" data-spin="1" id="spin-btn">' + (free ? '🎡 Bedava Çevir' : '🎡 Çevir · ' + Z.WHEEL_COST + ' 💎') + '</button></div></div></div>';
-    html += '<div class="sect">Pazar</div>';
+      '<div style="flex:1"><h3>' + (free ? $t('Bugünkü bedava hakkın hazır!') : $t('Bedava hakkını kullandın')) + '</h3><p class="small" style="margin:6px 0 16px">' + $t('Her gün 1 bedava çevirme. Sonrası {n} 💎. En büyük ödül: 💎 40!', { n: Z.WHEEL_COST }) + '</p>' +
+      '<button class="btn gold" data-spin="1" id="spin-btn">' + (free ? ('🎡 ' + $t('Bedava Çevir')) : ('🎡 ' + $t('Çevir') + ' · ') + Z.WHEEL_COST + ' 💎') + '</button></div></div></div>';
+    html += ('<div class="sect">' + $t('Pazar') + '</div>');
     Z.MARKET.forEach(function (m) {
       html += '<div class="panel mrow"><span class="big">' + m.icon + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? 'gold' : 'off') + '" data-buy="' + m.id + '">💎 ' + m.gems + '</button></div>';
     });
-    html += '<div class="sect">Günlük Giriş Ödülü</div><div class="panel"><div class="daily">';
+    html += ('<div class="sect">' + $t('Günlük Giriş Ödülü') + '</div><div class="panel"><div class="daily">');
     var idx = S.dailyIndex();
     Z.DAILY_REWARDS.forEach(function (r, i) {
       var cls = 'day' + (i === idx && !d.daily.claimedToday ? ' today' : '') + ((i < idx) || (i === idx && d.daily.claimedToday) ? ' got' : '');
       if (d.daily.claimedToday && i === (idx + 6) % 7) cls = 'day got';
-      html += '<div class="' + cls + '">Gün ' + (i + 1) + '<span class="ico">' + (r.gems ? '💎' : '🪙') + '</span>' + (r.coins ? r.coins : '') + (r.coins && r.gems ? '<br>' : '') + (r.gems ? '💎' + r.gems : '') + '</div>';
+      html += '<div class="' + cls + ('">' + $t('Gün') + ' ') + (i + 1) + '<span class="ico">' + (r.gems ? '💎' : '🪙') + '</span>' + (r.coins ? r.coins : '') + (r.coins && r.gems ? '<br>' : '') + (r.gems ? '💎' + r.gems : '') + '</div>';
     });
     html += '</div><div class="actions" style="text-align:center;margin-top:16px"><button class="btn ' + (d.daily.claimedToday ? 'off' : 'gold') + '" data-daily="1">' +
-      (d.daily.claimedToday ? 'Yarın tekrar gel!' : '🎁 Ödülü Al') + '</button></div></div>';
+      (d.daily.claimedToday ? $t('Yarın tekrar gel!') : ('🎁 ' + $t('Ödülü Al'))) + '</button></div></div>';
     c.innerHTML = html;
     UI.vaultTimer = setInterval(function () {
       var amt = $('vault-amt'); if (!amt) { clearInterval(UI.vaultTimer); return; }
@@ -321,32 +330,69 @@
     }, 1000);
   }
 
+  // ---------------------------------------------------------------- MAGAZA (elmas paketleri + odullu reklam)
+  function renderShop(c) {
+    var d = S.data, cfgA = Z.MONEY.ads, html = '<div class="row"><h2 style="margin:0">' + $t('Mağaza') + '</h2><div class="spacer"></div>' +
+      (M.mode === 'test' ? '<span class="chip gold">TEST</span>' : '') + '</div>';
+    // ucretsiz oduller
+    html += '<div class="sect">🎁 ' + $t('Ücretsiz Ödüller') + '</div><div class="panel shop-free">';
+    var can = M.canRewarded(), left = M.rewardedLeft();
+    html += '<div class="free-row"><button class="btn gold shopbtn' + (can ? '' : ' soft') + '" data-ad="gems"><span>🎬</span> +' + cfgA.rewardedGems + ' 💎</button>' +
+      '<button class="btn shopbtn' + (can ? '' : ' soft') + '" data-ad="coins"><span>🎬</span> +' + cfgA.rewardedCoins + ' 🪙</button></div>' +
+      '<p class="small" style="margin:8px 0 0">' + (M.adsOn() ? ($t('Bugün kalan') + ': <b>' + left + ' / ' + cfgA.rewardedPerDay + '</b> · ' + $t('Kısa bir reklam izle, ödülü kap.')) : $t('Reklam ödülleri yakında.')) + '</p></div>';
+    // elmas paketleri
+    html += '<div class="sect">💎 ' + $t('Elmas Paketleri') + '</div><div class="shop-grid">';
+    var ICON = ['💎', '💎', '💰', '🎁', '👑'], gi = 0;
+    Z.MONEY.products.forEach(function (p) {
+      if (p.type !== 'gems') return;
+      html += '<div class="panel pack"><span class="pk-ico">' + ICON[gi++ % 5] + '</span><b class="pk-gems">' + Z.fmt(p.gems) + ' 💎</b>' +
+        (p.badge ? '<span class="pk-badge">' + p.badge + '</span>' : '') +
+        '<button class="btn small gold' + (M.iapOn() ? '' : ' soft') + '" data-iap="' + p.id + '">' + (M.iapOn() ? M.price(p) : $t('Yakında')) + '</button></div>';
+    });
+    html += '</div>';
+    // ozel teklifler
+    html += '<div class="sect">⭐ ' + $t('Özel Teklifler') + '</div>';
+    Z.MONEY.products.forEach(function (p) {
+      if (p.type === 'gems') return;
+      var owned = M.owned(p), title = p.type === 'starter' ? ('🎖️ ' + $t('Başlangıç Paketi')) : ('🚫 ' + $t('Reklamları Kaldır'));
+      var desc = p.type === 'starter' ? (p.gems + ' 💎 + ' + Z.fmt(p.coins) + ' 🪙 · ' + $t('tek seferlik')) : $t('Geçiş reklamları ve banner kalkar. Ödüllü reklamlar isteğe bağlı kalır.');
+      html += '<div class="panel offer"><div class="grow"><h3>' + title + '</h3><small>' + desc + '</small></div><button class="btn small ' + (owned ? 'off' : 'gold') + (!owned && !M.iapOn() ? ' soft' : '') + '" data-iap="' + p.id + '">' + (owned ? '✔ ' + $t('Alındı') : (M.iapOn() ? M.price(p) : $t('Yakında'))) + '</button></div>';
+    });
+    // diger
+    var L = Z.MONEY.links;
+    html += '<div class="sect">' + $t('Diğer') + '</div><div class="panel shop-misc"><button class="btn small" data-shop="restore">♻️ ' + $t('Satın alımları geri yükle') + '</button>' +
+      '<button class="btn small" data-shop="privacy">🔒 ' + $t('Reklam gizlilik tercihleri') + '</button>' +
+      '<div class="links"><a data-url="privacy">' + $t('Gizlilik Politikası') + '</a> · <a data-url="terms">' + $t('Kullanım Şartları') + '</a> · <a data-url="support">' + $t('Destek') + '</a></div></div>' +
+      '<p class="small" style="margin-top:10px">' + $t('Satın alımlar Google Play hesabına bağlıdır; cihaz değiştirsen de geri yükleyebilirsin.') + '</p>';
+    void L; c.innerHTML = html;
+  }
+
   // ---------------------------------------------------------------- GOREVLER
   function renderQuests(c) {
-    var d = S.data, html = '<h2>Günlük Görevler</h2>';
+    var d = S.data, html = ('<h2>' + $t('Günlük Görevler') + '</h2>');
     function qrow(q, i, kind) {
       var def = S.questDef(q.id), done = q.prog >= def.target;
       return '<div class="panel quest ' + kind + '" data-kind="' + kind + '"><div class="grow" style="flex:1"><h3>' + def.text + '</h3>' +
-        '<div class="bar' + (done ? ' green' : '') + '"><i style="width:' + (100 * q.prog / def.target) + '%"></i></div><small>' + q.prog + ' / ' + def.target + '  ·  Ödül: 🪙 ' + def.coins + ' 💎 ' + def.gems + '</small></div>' +
-        '<button class="btn ' + (q.claimed ? 'off' : done ? 'gold' : 'off') + '" data-quest="' + i + '" data-weekly="' + (kind === 'weekly' ? 1 : 0) + '">' + (q.claimed ? '✔ Alındı' : done ? 'Al' : '…') + '</button></div>';
+        '<div class="bar' + (done ? ' green' : '') + '"><i style="width:' + (100 * q.prog / def.target) + '%"></i></div><small>' + q.prog + ' / ' + def.target + ('  ·  ' + $t('Ödül') + ': 🪙 ') + def.coins + ' 💎 ' + def.gems + '</small></div>' +
+        '<button class="btn ' + (q.claimed ? 'off' : done ? 'gold' : 'off') + '" data-quest="' + i + '" data-weekly="' + (kind === 'weekly' ? 1 : 0) + '">' + (q.claimed ? ('✔ ' + $t('Alındı')) : done ? $t('Al') : '…') + '</button></div>';
     }
     d.quests.list.forEach(function (q, i) { html += qrow(q, i, 'daily'); });
-    html += '<div class="sect">📅 Haftalık Görevler <small class="mut">(her pazartesi yenilenir)</small></div>';
+    html += ('<div class="sect">📅 ' + $t('Haftalık Görevler') + ' <small class="mut">' + $t('(her pazartesi yenilenir)') + '</small></div>');
     d.weekly.list.forEach(function (q, i) { html += qrow(q, i, 'weekly'); });
     var achs = Z.ACHIEVEMENTS.slice().sort(function (a, b) {
       var ca = d.achClaimed[a.id] ? 2 : S.achClaimable(a) ? 0 : 1, cb = d.achClaimed[b.id] ? 2 : S.achClaimable(b) ? 0 : 1;
       return ca - cb || (S.achProgress(b) / b.target) - (S.achProgress(a) / a.target);
     });
-    html += '<div class="sect">Başarımlar</div>';
+    html += ('<div class="sect">' + $t('Başarımlar') + '</div>');
     achs.forEach(function (a) {
       var got = d.achClaimed[a.id], can = S.achClaimable(a), pr = S.achProgress(a);
-      html += '<div class="panel ach' + (got ? ' claimed' : '') + '"><div class="grow"><h3>' + a.text + '</h3><div class="bar' + (can || got ? ' green' : '') + '"><i style="width:' + (100 * pr / a.target) + '%"></i></div><small>' + Z.fmt(pr) + ' / ' + Z.fmt(a.target) + '  ·  Ödül: 💎 ' + a.gems + '</small></div>' +
-        '<button class="btn ' + (got ? 'off' : can ? 'gold' : 'off') + '" data-ach="' + a.id + '">' + (got ? '✔' : can ? 'Al' : '…') + '</button></div>';
+      html += '<div class="panel ach' + (got ? ' claimed' : '') + '"><div class="grow"><h3>' + a.text + '</h3><div class="bar' + (can || got ? ' green' : '') + '"><i style="width:' + (100 * pr / a.target) + '%"></i></div><small>' + Z.fmt(pr) + ' / ' + Z.fmt(a.target) + ('  ·  ' + $t('Ödül') + ': 💎 ') + a.gems + '</small></div>' +
+        '<button class="btn ' + (got ? 'off' : can ? 'gold' : 'off') + '" data-ach="' + a.id + '">' + (got ? '✔' : can ? $t('Al') : '…') + '</button></div>';
     });
-    html += '<div class="sect">İstatistikler</div><div class="panel"><table class="tbl">' +
-      '<tr><td>Oynanan savaş</td><td>' + d.stats.battles + '</td><td>Kazanılan</td><td>' + d.stats.wins + '</td></tr>' +
-      '<tr><td>Yenilen düşman</td><td>' + d.stats.kills + '</td><td>Toplam yıldız</td><td>⭐ ' + d.stats.totalStars + '</td></tr>' +
-      '<tr><td>Sonsuz kuşatma rekoru</td><td>' + d.endlessBest + '. dalga</td><td>İlerleme</td><td>Bölüm ' + d.cleared + ' / ' + Z.MAX_LEVEL + '</td></tr></table></div>';
+    html += ('<div class="sect">' + $t('İstatistikler') + '</div><div class="panel"><table class="tbl">') +
+      ('<tr><td>' + $t('Oynanan savaş') + '</td><td>') + d.stats.battles + ('</td><td>' + $t('Kazanılan') + '</td><td>') + d.stats.wins + '</td></tr>' +
+      ('<tr><td>' + $t('Yenilen düşman') + '</td><td>') + d.stats.kills + ('</td><td>' + $t('Toplam yıldız') + '</td><td>⭐ ') + d.stats.totalStars + '</td></tr>' +
+      ('<tr><td>' + $t('Sonsuz kuşatma rekoru') + '</td><td>') + $t('{n}. dalga', { n: d.endlessBest }) + ('</td><td>' + $t('İlerleme') + '</td><td>') + $t('Bölüm {n}', { n: d.cleared + ' / ' + Z.MAX_LEVEL }) + '</td></tr></table></div>';
     c.innerHTML = html;
   }
 
@@ -355,28 +401,28 @@
     var t = e.target, el, d = S.data;
     if ((el = t.closest('[data-buy]'))) {
       var res = S.buyMarket(el.getAttribute('data-buy'));
-      if (!res) { A.deny(); return UI.toast('Yeterli elmas yok'); }
-      if (res.full) { A.deny(); return UI.toast('Hazine zaten dolu'); }
-      if (res.unused) { A.deny(); return UI.toast('Önce bedava çarkı çevir'); }
-      A.chest(); A.coin(); UI.toast(res.name + ' alındı!'); return UI.renderHub();
+      if (!res) { A.deny(); return UI.toast($t('Yeterli elmas yok')); }
+      if (res.full) { A.deny(); return UI.toast($t('Hazine zaten dolu')); }
+      if (res.unused) { A.deny(); return UI.toast($t('Önce bedava çarkı çevir')); }
+      A.chest(); A.coin(); UI.toast(res.name + (' ' + $t('alındı!'))); return UI.renderHub();
     }
     if ((el = t.closest('[data-star]'))) {
       var sm = S.claimStar(+el.getAttribute('data-star')); if (!sm) return A.deny();
-      A.chest(); UI.toast('Yıldız ödülü: 🪙' + sm.coins + ' 💎' + sm.gems); return UI.renderHub();
+      A.chest(); UI.toast(($t('Yıldız ödülü') + ': 🪙') + sm.coins + ' 💎' + sm.gems); return UI.renderHub();
     }
     if ((el = t.closest('[data-ach]'))) {
       var ac = S.claimAch(el.getAttribute('data-ach')); if (!ac) return A.deny();
-      A.win(); UI.toast('Başarım ödülü: 💎' + ac.gems); return UI.renderHub();
+      A.win(); UI.toast(($t('Başarım ödülü') + ': 💎') + ac.gems); return UI.renderHub();
     }
     if ((el = t.closest('[data-spin]'))) {
       if (UI.spinning) return;
-      var res = S.spin(); if (!res) { A.deny(); return UI.toast('Yeterli elmas yok'); }
+      var res = S.spin(); if (!res) { A.deny(); return UI.toast($t('Yeterli elmas yok')); }
       UI.spinning = true; A.chest();
       var wheel = $('wheel'), turn = 360 * 6 + (360 - (res.idx * 45 + 22.5));
       wheel.style.transition = 'transform 3.4s cubic-bezier(.12,.7,.15,1)'; wheel.style.transform = 'rotate(' + turn + 'deg)';
       setTimeout(function () {
         UI.spinning = false; A.win();
-        UI.toast('Çarktan: ' + (res.seg.coins ? '🪙' + res.seg.coins : '💎' + res.seg.gems) + '!');
+        UI.toast(($t('Çarktan') + ': ') + (res.seg.coins ? '🪙' + res.seg.coins : '💎' + res.seg.gems) + '!');
         if (UI.tab === 'vault') UI.renderHub(); else { $('cur-coins').textContent = Z.fmt(S.data.coins); $('cur-gems').textContent = Z.fmt(S.data.gems); }
       }, 3600);
       return;
@@ -395,8 +441,8 @@
     }
     if ((el = t.closest('[data-deck]'))) {
       var u = el.getAttribute('data-deck'), i = d.deck.indexOf(u);
-      if (i >= 0) { if (d.deck.length <= 1) return UI.toast('En az 1 birlik gerekli'); d.deck.splice(i, 1); }
-      else { if (d.deck.length >= 5) return UI.toast('Kadro en fazla 5 birlik'); d.deck.push(u); }
+      if (i >= 0) { if (d.deck.length <= 1) return UI.toast($t('En az 1 birlik gerekli')); d.deck.splice(i, 1); }
+      else { if (d.deck.length >= 5) return UI.toast($t('Kadro en fazla 5 birlik')); d.deck.push(u); }
       S.save(); A.click(); return UI.renderHub();
     }
     if ((el = t.closest('[data-hsel]'))) { d.hero = el.getAttribute('data-hsel'); S.save(); A.click(); return UI.renderHub(); }
@@ -408,7 +454,7 @@
     if ((el = t.closest('[data-hbuy]'))) {
       var bid = el.getAttribute('data-hbuy'), h = Z.HEROES[bid];
       if (d.gems < h.gems) return A.deny();
-      d.gems -= h.gems; d.heroOwned[bid] = true; d.hero = bid; S.save(); A.win(); UI.toast(h.name + ' ordunda!'); return UI.renderHub();
+      d.gems -= h.gems; d.heroOwned[bid] = true; d.hero = bid; S.save(); A.win(); UI.toast(h.name + (' ' + $t('ordunda!'))); return UI.renderHub();
     }
     if ((el = t.closest('[data-castle]'))) {
       var cc = Z.castleUpgradeCost(d.castleLvl);
@@ -417,7 +463,7 @@
     }
     if ((el = t.closest('[data-collect]'))) {
       var n = S.collectTreasury(); if (n <= 0) return A.deny();
-      A.coin(); A.chest(); UI.toast('+' + n + ' altın toplandı!'); return UI.renderHub();
+      A.coin(); A.chest(); UI.toast('+' + n + (' ' + $t('altın toplandı!'))); return UI.renderHub();
     }
     if ((el = t.closest('[data-tup]'))) {
       var tc = Z.treasuryUpgradeCost(d.treasuryLvl);
@@ -426,19 +472,48 @@
     }
     if ((el = t.closest('[data-daily]'))) {
       var r = S.claimDaily(); if (!r) return A.deny();
-      A.win(); UI.toast('Günlük ödül: ' + (r.coins ? '🪙' + r.coins + ' ' : '') + (r.gems ? '💎' + r.gems : '')); return UI.renderHub();
+      A.win(); UI.toast(($t('Günlük ödül') + ': ') + (r.coins ? '🪙' + r.coins + ' ' : '') + (r.gems ? '💎' + r.gems : '')); return UI.renderHub();
+    }
+    if ((el = t.closest('[data-ad]'))) {
+      if (!M.adsOn()) { A.deny(); return UI.toast($t('Reklamlar şu an kullanılamıyor')); }
+      if (!M.canRewarded()) { A.deny(); return UI.toast($t('Bugünlük reklam ödülü hakkın bitti')); }
+      var kind = el.getAttribute('data-ad');
+      return M.showRewarded('shop_' + kind, function (ok) {
+        if (!ok) return UI.toast($t('Ödül için reklamı sonuna kadar izlemelisin'));
+        var g = M.grantFreeReward(kind); S.save(); A.chest(); UI.toast($t('Ödül') + ': ' + (g.gems ? '+' + g.gems + ' 💎' : '+' + g.coins + ' 🪙')); UI.renderHub();
+      });
+    }
+    if ((el = t.closest('[data-iap]'))) {
+      var pid = el.getAttribute('data-iap'), prod = M.product(pid);
+      if (!prod || M.owned(prod)) return A.deny();
+      if (!M.iapOn()) { A.deny(); return UI.toast($t('Satın alma henüz etkin değil')); }
+      return M.purchase(pid, function (res) {
+        if (!res) return UI.toast($t('Satın alma tamamlanmadı'));
+        if (res.dup) return UI.toast($t('Bu ürün zaten alınmış'));
+        A.chest(); UI.toast($t('Teşekkürler!') + (res.gems ? ' +' + res.gems + ' 💎' : '') + (res.coins ? ' +' + Z.fmt(res.coins) + ' 🪙' : '') + (res.noAds ? ' 🚫' : '')); UI.renderHub();
+      });
+    }
+    if ((el = t.closest('[data-shop]'))) {
+      var sk = el.getAttribute('data-shop');
+      if (sk === 'restore') { if (!M.iapOn()) { A.deny(); return UI.toast($t('Satın alma henüz etkin değil')); } return M.restore(function (n) { UI.toast(n ? $t('Geri yüklendi') + ': ' + n : $t('Geri yüklenecek ürün bulunamadı')); UI.renderHub(); }); }
+      if (sk === 'privacy') return M.privacyOptions(function (ok) { if (!ok) UI.toast($t('Reklam gizlilik ayarı bu cihazda gerekli değil')); });
+    }
+    if ((el = t.closest('[data-url]'))) {
+      var url = Z.MONEY.links[el.getAttribute('data-url')];
+      if (!url) { A.deny(); return UI.toast($t('Bağlantı henüz ayarlanmadı')); }
+      try { globalThis.open(url, '_blank'); } catch (e) { /* engelli */ } return;
     }
     if ((el = t.closest('[data-quest]'))) {
       var def = S.claimQuest(+el.getAttribute('data-quest'), el.getAttribute('data-weekly') === '1'); if (!def) return A.deny();
-      A.chest(); UI.toast('Görev ödülü: 🪙' + def.coins + ' 💎' + def.gems); return UI.renderHub();
+      A.chest(); UI.toast(($t('Görev ödülü') + ': 🪙') + def.coins + ' 💎' + def.gems); return UI.renderHub();
     }
   }
 
   UI.endlessModal = function () {
     var d = S.data;
-    UI.modal('<h1>♾️ Sonsuz Kuşatma</h1><p>Düşman dalgalar hâlinde gelir ve her dalga güçlenir. Kaleni koru, ne kadar dayanabilirsin?</p>' +
-      '<p>En iyi: <b style="color:var(--gold)">' + d.endlessBest + '. dalga</b></p><p class="small">Her 5 dalgada 💎 kazanırsın. Düşman kalesi yıkılamaz.</p>' +
-      '<div class="actions"><button class="btn" data-act="close">Geri</button><button class="btn gold" data-act="go">⚔ BAŞLA</button></div>',
+    UI.modal(('<h1>♾️ ' + $t('Sonsuz Kuşatma') + '</h1><p>' + $t('Düşman dalgalar hâlinde gelir ve her dalga güçlenir. Kaleni koru, ne kadar dayanabilirsin?') + '</p>') +
+      ('<p>' + $t('En iyi') + ': <b style="color:var(--gold)">') + $t('{n}. dalga', { n: d.endlessBest }) + ('</b></p><p class="small">' + $t('Her 5 dalgada 💎 kazanırsın. Düşman kalesi yıkılamaz.') + '</p>') +
+      ('<div class="actions"><button class="btn" data-act="close">' + $t('Geri') + '</button><button class="btn gold" data-act="go">⚔ ' + $t('BAŞLA') + '</button></div>'),
       { close: UI.closeModal, go: function () { UI.closeModal(); UI.game.startBattle('endless', 1); } });
   };
 
@@ -461,95 +536,125 @@
     });
     acts.exp = function () {
       var code = S.exportSave();
-      UI.modal('<h1>📤 Kayıt Kodu</h1><p>Kodu kopyala; başka cihazda “Kaydı içe aktar”a yapıştır.</p><textarea id="save-code" readonly rows="6">' + code + '</textarea><div class="actions"><button class="btn small" data-act="back">Geri</button><button class="btn gold" data-act="copy">📋 Kopyala</button></div>', {
+      UI.modal(('<h1>📤 ' + $t('Kayıt Kodu') + '</h1><p>' + $t('Kodu kopyala; başka cihazda “Kaydı içe aktar”a yapıştır.') + '</p><textarea id="save-code" readonly rows="6">') + code + ('</textarea><div class="actions"><button class="btn small" data-act="back">' + $t('Geri') + '</button><button class="btn gold" data-act="copy">📋 ' + $t('Kopyala') + '</button></div>'), {
         back: UI.settingsModal,
         copy: function () {
           var ta = $('save-code'); ta.focus(); ta.select(); var okc = false;
           try { okc = document.execCommand('copy'); } catch (e) { /* eski WebView */ }
-          if (okc) UI.toast('Kopyalandı!'); else if (navigator.clipboard) navigator.clipboard.writeText(code).then(function () { UI.toast('Kopyalandı!'); }, function () { UI.toast('Kodu elle seçip kopyala'); });
+          if (okc) UI.toast($t('Kopyalandı!')); else if (navigator.clipboard) navigator.clipboard.writeText(code).then(function () { UI.toast($t('Kopyalandı!')); }, function () { UI.toast($t('Kodu elle seçip kopyala')); });
         }
       });
     };
     acts.imp = function () {
-      UI.modal('<h1>📥 Kaydı İçe Aktar</h1><p>Başka cihazdan aldığın kodu yapıştır. <b>Mevcut ilerlemen bu kodla değiştirilir.</b></p><textarea id="save-code" rows="6" placeholder="Kodu buraya yapıştır"></textarea><div class="actions"><button class="btn small" data-act="back">Geri</button><button class="btn gold" data-act="load">Yükle</button></div>', {
+      UI.modal(('<h1>📥 ' + $t('Kaydı İçe Aktar') + '</h1><p>' + $t('Başka cihazdan aldığın kodu yapıştır. <b>Mevcut ilerlemen bu kodla değiştirilir.</b>') + '</p><textarea id="save-code" rows="6" placeholder="' + $t('Kodu buraya yapıştır') + '"></textarea><div class="actions"><button class="btn small" data-act="back">' + $t('Geri') + '</button><button class="btn gold" data-act="load">' + $t('Yükle') + '</button></div>'), {
         back: UI.settingsModal,
         load: function () {
-          if (!S.importSave($('save-code').value)) { A.deny(); return UI.toast('Geçersiz kayıt kodu'); }
-          var st2 = S.data.settings; A.enabled = st2.sound; A.musicOn = st2.music; A.win(); UI.closeModal(); UI.showHub('map'); UI.toast('Kayıt yüklendi!');
+          if (!S.importSave($('save-code').value)) { A.deny(); return UI.toast($t('Geçersiz kayıt kodu')); }
+          var st2 = S.data.settings; A.enabled = st2.sound; A.musicOn = st2.music; A.win(); UI.closeModal(); UI.showHub('map'); UI.toast($t('Kayıt yüklendi!'));
         }
       });
     };
     acts.reset = function () {
-      UI.modal('<h1>Emin misin?</h1><p>Tüm ilerlemen silinecek. Bu işlem geri alınamaz.</p><div class="actions"><button class="btn" data-act="close">Vazgeç</button><button class="btn red" data-act="yes">Evet, sıfırla</button></div>',
+      UI.modal(('<h1>' + $t('Emin misin?') + '</h1><p>' + $t('Tüm ilerlemen silinecek. Bu işlem geri alınamaz.') + '</p><div class="actions"><button class="btn" data-act="close">' + $t('Vazgeç') + '</button><button class="btn red" data-act="yes">' + $t('Evet, sıfırla') + '</button></div>'),
         { close: UI.closeModal, yes: function () { S.reset(); UI.closeModal(); UI.showHub('map'); } });
     };
-    UI.modal('<h1>Ayarlar</h1>' + row('sound', '🔊 Ses efektleri') + row('music', '🥁 Savaş müziği') + row('vibrate', '📳 Titreşim') + row('menuBattle', '⚔️ Menüde canlı savaş (pil/performans için kapatılabilir)') +
-      '<div class="actions"><button class="btn small" data-act="exp">📤 Kaydı dışa aktar</button><button class="btn small" data-act="imp">📥 İçe aktar</button></div>' +
-      '<div class="actions"><button class="btn small red" data-act="reset">Kaydı sıfırla</button><button class="btn gold" data-act="close">Tamam</button></div>' +
-      (UI.isBrowser() ? '<p class="small" style="margin-top:14px">💡 Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.</p>' : '') +
-      '<p class="small" style="margin-top:20px">Sefer Vakti v' + Z.VERSION + ' (derleme ' + Z.BUILD + ')<br>Tüm grafik ve sesler kodla üretilmiştir.</p>', acts);
+    acts.lang = function () { UI.langModal(false); };
+    var li = Z.langInfo();
+    function slider(k, label) { return '<div class="slider"><span>' + label + '</span><input type="range" min="0" max="100" step="5" value="' + (st[k] === undefined ? 100 : st[k]) + '" data-vol="' + k + '"><b>' + (st[k] === undefined ? 100 : st[k]) + '</b></div>'; }
+    UI.modal(('<h1>' + $t('Ayarlar') + '</h1>') + ('<div class="toggle" data-act="lang"><span>🌐 ' + $t('Dil') + '</span><b>' + li.flag + ' ' + li.name + ' ›</b></div>') + row('sound', ('🔊 ' + $t('Ses efektleri'))) + row('music', ('🥁 ' + $t('Savaş müziği'))) + row('vibrate', ('📳 ' + $t('Titreşim'))) + row('menuBattle', ('⚔️ ' + $t('Menüde canlı savaş (pil/performans için kapatılabilir)'))) + slider('musicVol', '🥁 ' + $t('Müzik ses düzeyi')) + slider('sfxVol', '🔊 ' + $t('Efekt ses düzeyi')) +
+      ('<div class="actions"><button class="btn small" data-act="exp">📤 ' + $t('Kaydı dışa aktar') + '</button><button class="btn small" data-act="imp">📥 ' + $t('İçe aktar') + '</button></div>') +
+      ('<div class="actions"><button class="btn small red" data-act="reset">' + $t('Kaydı sıfırla') + '</button><button class="btn gold" data-act="close">' + $t('Tamam') + '</button></div>') +
+      (UI.isBrowser() ? ('<p class="small" style="margin-top:14px">💡 ' + $t('Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.') + '</p>') : '') +
+      ('<p class="small" style="margin-top:20px">' + $t('Sefer Vakti v')) + Z.VERSION + (' ' + $t('(derleme') + ' ') + Z.BUILD + (')<br>' + $t('Tüm grafik ve sesler kodla üretilmiştir.') + '</p>'), acts);
   };
 
   // ---------------------------------------------------------------- Acilis akisi
+  // Dil secimi (Ayarlar'dan ya da ilk acilista). Secim sayfayi yeniler.
+  UI.langModal = function (first) {
+    var acts = {}, html = '<h1>🌐 ' + $t('Dil') + (' / Language</h1><div class="langs">');
+    Z.LANGS.forEach(function (l) {
+      html += '<button class="btn lang-btn' + (l.id === Z.lang ? ' on' : '') + '" data-act="l_' + l.id + '"><span>' + l.flag + '</span> ' + l.name + (l.id === Z.lang ? ' ✔' : '') + '</button>';
+      acts['l_' + l.id] = function () { S.data.langChosen = true; S.save(); if (l.id === Z.lang) { UI.closeModal(); if (first) UI.welcome(); return; } Z.setLang(l.id); };
+    });
+    UI.modal(html + '</div>' + (first ? '' : '<div class="actions"><button class="btn small" data-act="close">' + $t('Geri') + '</button></div>'), Object.assign(acts, { close: function () { UI.settingsModal(); } }));
+  };
   UI.welcome = function () {
     var d = S.data;
+    if (!d.langChosen && !d.tutorialDone) { UI.langModal(true); return; }
     if (!d.tutorialDone) {
-      UI.modal('<h1>Hoş geldin, Komutan!</h1>' +
-        '<p>Sınırda düşman ordusu toplanıyor. Kaleni koru, ordunu kur ve <b>Sefer Vakti</b>\'ni başlat!</p>' +
-        '<p class="small">İlk savaşta sana adım adım nasıl oynanacağını göstereceğim.</p>' +
-        '<div class="actions"><button class="btn gold" data-act="go">⚔ İlk Savaşa Başla</button></div>',
+      UI.modal(('<h1>' + $t('Hoş geldin, Komutan!') + '</h1>') +
+        ('<p>' + $t('Sınırda düşman ordusu toplanıyor. Kaleni koru, ordunu kur ve <b>Sefer Vakti</b>\'ni başlat!') + '</p>') +
+        ('<p class="small">' + $t('İlk savaşta sana adım adım nasıl oynanacağını göstereceğim.') + '</p>') +
+        ('<div class="actions"><button class="btn gold" data-act="go">⚔ ' + $t('İlk Savaşa Başla') + '</button></div>'),
         { go: function () { d.tutorialDone = true; d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.game.startBattle('campaign', 1); } });
       return;
     }
     if (d.seenVersion !== Z.NOTES_ID) return UI.whatsNew();
     if (!d.daily.claimedToday) {
       var r = Z.DAILY_REWARDS[S.dailyIndex()];
-      UI.modal('<h1>🎁 Günlük Ödül</h1><p>Seri: <b>' + (d.daily.streak + 1) + '. gün</b></p><div class="rewards">' +
+      UI.modal(('<h1>🎁 ' + $t('Günlük Ödül') + '</h1><p>' + $t('Seri') + ': <b>') + $t('{n}. gün', { n: d.daily.streak + 1 }) + '</b></p><div class="rewards">' +
         (r.coins ? '<span class="coin">🪙 ' + r.coins + '</span>' : '') + (r.gems ? '<span class="gem">💎 ' + r.gems + '</span>' : '') + '</div>' +
-        '<p class="small">Her gün gir, seri bozulmasın — 7. gün büyük ödül!</p><div class="actions"><button class="btn gold" data-act="claim">Ödülü Al</button></div>',
-        { claim: function () { S.claimDaily(); A.win(); UI.closeModal(); UI.renderHub(); var p = S.treasuryPending(); if (p >= 100) UI.toast('Hazinende ' + p + ' altın birikti!'); } });
+        ('<p class="small">' + $t('Her gün gir, seri bozulmasın — 7. gün büyük ödül!') + '</p><div class="actions"><button class="btn gold" data-act="claim">' + $t('Ödülü Al') + '</button></div>'),
+        { claim: function () { S.claimDaily(); A.win(); UI.closeModal(); UI.renderHub(); var p = S.treasuryPending(); if (p >= 100) UI.toast(($t('Hazinende') + ' ') + p + (' ' + $t('altın birikti!'))); } });
       return;
     }
     var p = S.treasuryPending();
-    if (p >= 100) UI.toast('Hazinende ' + p + ' altın birikti!');
+    if (p >= 100) UI.toast(($t('Hazinende') + ' ') + p + (' ' + $t('altın birikti!')));
   };
 
   // ---------------------------------------------------------------- Sonuc ekrani
   UI.resultModal = function (b, out) {
     var r = b.result, isE = b.mode === 'endless', html, acts = {}, nextOk = b.mode === 'campaign' && r.win && b.level < Z.MAX_LEVEL;
-    function again() { UI.closeModal(); UI.game.startBattle(b.mode, b.level, b.startOpts); }
-    acts.again = again;
-    acts.menu = function () { UI.closeModal(); UI.game.toMenu(); };
-    acts.next = function () { UI.closeModal(); UI.game.startBattle('campaign', b.level + 1); };
-    acts.army = function () { UI.closeModal(); UI.game.toMenu('army'); };
+    M.noteBattleEnd();
+    function leave(fn) { UI.closeModal(); M.maybeInterstitial(b.level || 1, fn); } // gecis reklami (uygunsa) sonra devam
+    acts.again = function () { leave(function () { UI.game.startBattle(b.mode, b.level, b.startOpts); }); };
+    acts.menu = function () { leave(function () { UI.game.toMenu(); }); };
+    acts.next = function () { leave(function () { UI.game.startBattle('campaign', b.level + 1); }); };
+    acts.army = function () { leave(function () { UI.game.toMenu('army'); }); };
+    acts.dbl = function () {
+      M.showRewarded('double', function (ok) {
+        if (!ok) return UI.toast($t('Ödül için reklamı sonuna kadar izlemelisin'));
+        S.data.coins += base; S.save(); A.chest(); UI.toast('+' + base + ' 🪙'); var bt = $('btn-dbl'); if (bt) { bt.textContent = '✔'; bt.classList.add('off'); }
+      });
+    };
+    acts.adcoins = function () {
+      M.showRewarded('result', function (ok) {
+        if (!ok) return UI.toast($t('Ödül için reklamı sonuna kadar izlemelisin'));
+        var g = M.grantFreeReward('coins'); S.save(); A.chest(); UI.toast('+' + g.coins + ' 🪙'); var bt = $('btn-adcoins'); if (bt) { bt.textContent = '✔'; bt.classList.add('off'); }
+      });
+    };
     if (isE) {
-      html = '<h1>' + r.wave + '. Dalgaya Ulaştın!</h1>' + (out.newBest ? '<p style="color:var(--gold);font-weight:800">🏆 YENİ REKOR!</p>' : '<p class="mut">Rekor: ' + S.data.endlessBest + '. dalga</p>') +
-        '<p class="mut">Süre ' + Z.fmtTime(r.time) + ' · ' + r.kills + ' düşman</p><div class="rewards"><span class="coin">🪙 ' + out.coins + '</span>' + (out.gems ? '<span class="gem">💎 ' + out.gems + '</span>' : '') + '</div>';
+      html = '<h1>' + $t('{n}. Dalgaya Ulaştın!', { n: r.wave }) + '</h1>' + (out.newBest ? ('<p style="color:var(--gold);font-weight:800">🏆 ' + $t('YENİ REKOR!') + '</p>') : ('<p class="mut">' + $t('Rekor') + ': ') + S.data.endlessBest + ('. ' + $t('dalga') + '</p>')) +
+        '<p class="mut">' + $t('Süre {time} · {kills} düşman', { time: Z.fmtTime(r.time), kills: r.kills }) + '</p><div class="rewards"><span class="coin">🪙 ' + out.coins + '</span>' + (out.gems ? '<span class="gem">💎 ' + out.gems + '</span>' : '') + '</div>';
     } else if (r.win) {
       var base = out.coins - (out.chest ? out.chest.coins : 0), bg = out.gems - (out.chest ? out.chest.gems : 0);
-      html = '<h1>' + (b.mode === 'daily' ? 'GÜNLÜK SEFER TAMAM!' : 'ZAFER!') + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + Z.DIFFS[b.diff].icon + ' ' + Z.DIFFS[b.diff].name + ' kademe</p>' : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : '') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">★</span>'; }).join('') + '</div>' +
-        '<p class="mut">Süre ' + Z.fmtTime(r.time) + ' · ' + (b.kind === 'field' ? 'Ordu korundu %' : 'Kale canı %') + Math.round(r.basePct * 100) + ' · ' + r.kills + ' düşman</p>' +
+      html = '<h1>' + (b.mode === 'daily' ? $t('GÜNLÜK SEFER TAMAM!') : $t('ZAFER!')) + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + Z.DIFFS[b.diff].icon + ' ' + Z.DIFFS[b.diff].name + (' ' + $t('kademe') + '</p>') : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : '') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">★</span>'; }).join('') + '</div>' +
+        '<p class="mut">' + (b.kind === 'field' ? $t('Süre {time} · Ordu korundu %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills }) : $t('Süre {time} · Kale canı %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills })) + '</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + base + '</span>' + (bg > 0 ? '<span class="gem">💎 ' + bg + '</span>' : '') + '</div>' +
-        (out.chest ? '<div id="chest-area"><button class="chest" data-act="chest" style="font-size:110px">🎁</button><p class="small">Sandığı aç!</p></div>' : '') +
-        (b.mode === 'daily' && !out.dailyFirst ? '<p class="small">Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).</p>' : '') +
-        (out.firstHard ? '<p class="small" style="color:var(--green)">İlk kez bu kademede kazandın: bonus elmas!</p>' : '');
-      if (out.newUnits.length) html += '<p style="color:var(--green);font-weight:800;font-size:30px">🎉 Yeni birlik: ' + out.newUnits.map(function (u) { return Z.UNITS[u].icon + ' ' + Z.UNITS[u].name; }).join(', ') + '</p>';
+        (out.chest ? ('<div id="chest-area"><button class="chest" data-act="chest" style="font-size:110px">🎁</button><p class="small">' + $t('Sandığı aç!') + '</p></div>') : '') +
+        (b.mode === 'daily' && !out.dailyFirst ? ('<p class="small">' + $t('Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).') + '</p>') : '') +
+        (out.firstHard ? ('<p class="small" style="color:var(--green)">' + $t('İlk kez bu kademede kazandın: bonus elmas!') + '</p>') : '');
+      if (out.newUnits.length) html += ('<p style="color:var(--green);font-weight:800;font-size:30px">🎉 ' + $t('Yeni birlik') + ': ') + out.newUnits.map(function (u) { return Z.UNITS[u].icon + ' ' + Z.UNITS[u].name; }).join(', ') + '</p>';
       acts.chest = function () {
         var a = $('chest-area'); if (!a || !out.chest) return;
         a.innerHTML = '<div class="chest">🎁</div>'; A.chest();
         setTimeout(function () {
           if (!$('chest-area')) return;
           A.win();
-          $('chest-area').innerHTML = '<p class="small">Sandık ödülü</p><div class="rewards"><span class="coin">🪙 ' + out.chest.coins + '</span>' + (out.chest.gems ? '<span class="gem">💎 ' + out.chest.gems + '</span>' : '') + '</div>';
+          $('chest-area').innerHTML = ('<p class="small">' + $t('Sandık ödülü') + '</p><div class="rewards"><span class="coin">🪙 ') + out.chest.coins + '</span>' + (out.chest.gems ? '<span class="gem">💎 ' + out.chest.gems + '</span>' : '') + '</div>';
         }, 750);
       };
     } else {
-      html = '<h1 style="color:var(--red)">Yenilgi</h1><p>' + (b.kind === 'field' ? (b.cmdP.dead || b.cmdP.hp <= 0 ? 'Komutanın düştü! Onu arkada, korunaklı tut.' : 'Süre doldu ya da bayraklar kaybedildi. Dizilişini değiştirip tekrar dene!') : 'Kalen düştü. Ordunu güçlendirip tekrar dene!') + '</p>' +
-        '<div class="rewards"><span class="coin">🪙 ' + out.coins + '</span></div><p class="small">İpucu: Düşman birliklerine karşı üstün olanı çağır (🔱 > 🐎 > 🏹 > 🔱).</p>';
+      html = ('<h1 style="color:var(--red)">' + $t('Yenilgi') + '</h1><p>') + (b.kind === 'field' ? (b.cmdP.dead || b.cmdP.hp <= 0 ? $t('Komutanın düştü! Onu arkada, korunaklı tut.') : $t('Süre doldu ya da bayraklar kaybedildi. Dizilişini değiştirip tekrar dene!')) : $t('Kalen düştü. Ordunu güçlendirip tekrar dene!')) + '</p>' +
+        '<div class="rewards"><span class="coin">🪙 ' + out.coins + ('</span></div><p class="small">' + $t('İpucu: Düşman birliklerine karşı üstün olanı çağır (🔱 > 🐎 > 🏹 > 🔱).') + '</p>');
     }
-    html += '<div class="actions">' + (r.win || isE ? '' : '<button class="btn small" data-act="army">🛡️ Ordu</button>') +
-      '<button class="btn small" data-act="menu">Menü</button><button class="btn small" data-act="again">Tekrar</button>' +
-      (nextOk ? '<button class="btn gold" data-act="next">Sonraki ▶</button>' : '') + '</div>';
+    if (M.canRewarded()) {
+      if (r.win && !isE && Z.MONEY.ads.doubleWinReward && base > 0) html += '<div class="actions"><button id="btn-dbl" class="btn gold small" data-act="dbl">🎬 ' + $t('Ödülü ×2 yap') + ' (+' + base + ' 🪙)</button></div>';
+      else if (!r.win || isE) html += '<div class="actions"><button id="btn-adcoins" class="btn small" data-act="adcoins">🎬 +' + Z.MONEY.ads.rewardedCoins + ' 🪙</button></div>';
+    }
+    html += '<div class="actions">' + (r.win || isE ? '' : ('<button class="btn small" data-act="army">🛡️ ' + $t('Ordu') + '</button>')) +
+      ('<button class="btn small" data-act="menu">' + $t('Menü') + '</button><button class="btn small" data-act="again">' + $t('Tekrar') + '</button>') +
+      (nextOk ? ('<button class="btn gold" data-act="next">' + $t('Sonraki') + ' ▶</button>') : '') + '</div>';
     UI.modal(html, acts);
   };
 
@@ -574,7 +679,7 @@
     $('perk-row').innerHTML = '';
     var rc = $('rule-chip'), rtxt = (b.diff > 0 ? Z.DIFFS[b.diff].icon + ' ' : '') + b.rules.map(function (r) { return Z.RULES[r].icon + (b.rules.length === 1 ? ' ' + Z.RULES[r].name : ''); }).join(' ');
     if (rtxt) { rc.textContent = rtxt; rc.classList.remove('hidden'); } else rc.classList.add('hidden');
-    $('info-title').textContent = b.mode === 'endless' ? 'Sonsuz Kuşatma' : (b.mode === 'daily' ? 'Günlük Sefer' : 'Bölüm ' + b.level) + ' · ' + b.info.name;
+    $('info-title').textContent = b.mode === 'endless' ? $t('Sonsuz Kuşatma') : (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Bölüm') + ' ') + b.level) + ' · ' + b.info.name;
     $('btn-speed').textContent = 'x' + (UI.game.speed || 1);
     var f = b.kind === 'field';
     $('hud').classList.toggle('field', f);
@@ -582,9 +687,9 @@
     hud.sel = f ? b.deck[0] : null; hud.fdrag = null; Z.Render.fhover = null;
     if (f) {
       $('fb-stance').classList.add('hidden'); $('fb-go').classList.remove('hidden'); $('fb-auto').classList.remove('hidden'); $('fb-clear').classList.remove('hidden');
-      $('fb-stance').innerHTML = '⚔<small>Saldır</small>';
+      $('fb-stance').innerHTML = ('⚔<small>' + $t('Saldır') + '</small>');
       hud.fieldTut = !S.data.fieldTutDone; $('hint').classList.toggle('hidden', !hud.fieldTut);
-      $('hint').textContent = '👆 Kartı sahaya sürükle · birliğe dokun: geri al';
+      $('hint').textContent = ('👆 ' + $t('Kartı sahaya sürükle · birliğe dokun: geri al'));
     }
     if (!f && b.mode === 'campaign' && b.level === 1 && !S.data.tutorialDone2) UI.tutStart(b);
   };
@@ -592,13 +697,13 @@
   // ---- Etkilesimli ogretici (ilk kez oynayan: Sefer 1) ----
   var tut = null;
   var TUT = [
-    { kind: 'info', hold: true, text: 'Hoş geldin, Komutan! 🏰 Aşağıdaki kale <b>senin</b>, yukarıdaki <b>düşmanın</b>. Amaç: düşman kalesini yıkmak.', ok: 'Devam' },
-    { kind: 'action', hold: true, text: '🃏 Bir <b>birlik kartını</b> sürükleyip yukarıdaki <b>yollardan birine</b> bırak.', target: function (b) { return '[data-unit="' + b.deck[0] + '"]'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 1; }, assist: function (b) { b.gold = Math.max(b.gold, Z.UNITS[b.deck[0]].cost + 1); } },
-    { kind: 'info', hold: true, text: '⚔️ Her birliğin bir üstünlüğü var:<br><b>🔱 mızrakçı › 🐎 süvari › 🏹 okçu › 🔱</b><br>Düşmanın ne çıkardığına bak, ona karşı olanı çağır.', ok: 'Anladım' },
-    { kind: 'action', text: '🛤️ Altın birikince bu kez <b>başka bir yola</b> birlik çağır. (Bir yola dokunup seçip karta dokunmak da çalışır.)', target: function () { return '#cards'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 2; }, assist: function (b) { b.gold = Math.max(b.gold, 60); } },
-    { kind: 'action', text: '⛏ <b>Madeni yükselt!</b> Daha çok altın, daha çok ordu demek.', target: function () { return '#btn-mine'; }, hand: 'tap', cond: function (b) { return b.mine >= 1; }, assist: function (b) { var c = b.mineCost(); if (c) b.gold = Math.max(b.gold, c + 1); } },
-    { kind: 'action', text: '🦁 <b>Kahraman yeteneği!</b> Düğmeyi sürükleyip düşmanların olduğu <b>yola bırak</b>.', target: function () { return '#btn-skill'; }, hand: 'up', cond: function (b) { return b.stats.skills >= 1; }, assist: function (b) { if (b.heroCd > 0) b.heroCd = 0; } },
-    { kind: 'info', text: '🎉 Harika! Şimdi ordunu çağırmaya devam et ve <b>düşman kalesini yık</b>. Kazanınca yıldız, altın ve yeni birlikler seni bekliyor!', ok: 'Savaşa devam' }
+    { kind: 'info', hold: true, text: $t('Hoş geldin, Komutan! 🏰 Aşağıdaki kale <b>senin</b>, yukarıdaki <b>düşmanın</b>. Amaç: düşman kalesini yıkmak.'), ok: $t('Devam') },
+    { kind: 'action', hold: true, text: ('🃏 ' + $t('Bir <b>birlik kartını</b> sürükleyip yukarıdaki <b>yollardan birine</b> bırak.')), target: function (b) { return '[data-unit="' + b.deck[0] + '"]'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 1; }, assist: function (b) { b.gold = Math.max(b.gold, Z.UNITS[b.deck[0]].cost + 1); } },
+    { kind: 'info', hold: true, text: ('⚔️ ' + $t('Her birliğin bir üstünlüğü var:<br><b>🔱 mızrakçı › 🐎 süvari › 🏹 okçu › 🔱</b><br>Düşmanın ne çıkardığına bak, ona karşı olanı çağır.')), ok: $t('Anladım') },
+    { kind: 'action', text: ('🛤️ ' + $t('Altın birikince bu kez <b>başka bir yola</b> birlik çağır. (Bir yola dokunup seçip karta dokunmak da çalışır.)')), target: function () { return '#cards'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 2; }, assist: function (b) { b.gold = Math.max(b.gold, 60); } },
+    { kind: 'action', text: ('⛏ ' + $t('<b>Madeni yükselt!</b> Daha çok altın, daha çok ordu demek.')), target: function () { return '#btn-mine'; }, hand: 'tap', cond: function (b) { return b.mine >= 1; }, assist: function (b) { var c = b.mineCost(); if (c) b.gold = Math.max(b.gold, c + 1); } },
+    { kind: 'action', text: ('🦁 ' + $t('<b>Kahraman yeteneği!</b> Düğmeyi sürükleyip düşmanların olduğu <b>yola bırak</b>.')), target: function () { return '#btn-skill'; }, hand: 'up', cond: function (b) { return b.stats.skills >= 1; }, assist: function (b) { if (b.heroCd > 0) b.heroCd = 0; } },
+    { kind: 'info', text: ('🎉 ' + $t('Harika! Şimdi ordunu çağırmaya devam et ve <b>düşman kalesini yık</b>. Kazanınca yıldız, altın ve yeni birlikler seni bekliyor!')), ok: $t('Savaşa devam') }
   ];
   UI.tutActive = function () { return !!tut; };
   UI.tutStop = function (done) {
@@ -609,8 +714,8 @@
   UI.tutNext = function (b) {
     tut.i++; if (tut.i >= TUT.length) return UI.tutStop(true);
     var st = TUT[tut.i], info = st.kind === 'info';
-    $('tut-step').textContent = 'Öğretici ' + (tut.i + 1) + ' / ' + TUT.length; $('tut-text').innerHTML = st.text;
-    $('tut-ok').classList.toggle('hidden', !info); if (info) $('tut-ok').textContent = st.ok || 'Tamam';
+    $('tut-step').textContent = ($t('Öğretici') + ' ') + (tut.i + 1) + ' / ' + TUT.length; $('tut-text').innerHTML = st.text;
+    $('tut-ok').classList.toggle('hidden', !info); if (info) $('tut-ok').textContent = st.ok || $t('Tamam');
     $('tut').classList.toggle('block', info); UI.game.tutHold = !!st.hold; A.click();
     tut.target = st.target ? st.target(b) : null; tut.pos = 0; if (st.assist) st.assist(b); UI.tutPlace();
   };
@@ -635,7 +740,7 @@
     var L = hud.last, set = function (k, v, fn) { if (L[k] !== v) { L[k] = v; fn(v); } }, prep = b.phase === 'prep';
     set('g', Math.floor(b.gold), function (v) { $('gold-val').textContent = v; });
     set('cap', prep ? b.budget0 : b.goldCap(), function (v) { $('gold-cap').textContent = '/' + v; });
-    set('rate', prep ? -1 : b.income(), function (v) { $('gold-rate').textContent = v < 0 ? 'komuta puanı' : '+' + (Math.round(v * 10) / 10) + '/sn'; });
+    set('rate', prep ? -1 : b.income(), function (v) { $('gold-rate').textContent = v < 0 ? $t('komuta puanı') : '+' + (Math.round(v * 10) / 10) + ('/' + $t('sn')); });
     b.deck.forEach(function (id) {
       var cd = b.cooldown[id], def = Z.UNITS[id], c = hud.cards[id], f = Math.round(100 * cd / def.cd) / 100;
       set('cd' + id, f, function (v) { c.cd.style.transform = 'scaleY(' + v + ')'; });
@@ -644,41 +749,41 @@
     });
     var h = Z.HEROES[b.heroId];
     set('hcd', prep ? 1 : Math.round(100 * b.heroCd / h.cd) / 100, function (v) { document.querySelector('#btn-skill .cd').style.transform = 'scaleY(' + v + ')'; });
-    set('hst', prep ? 'Savaşta' : b.heroCd <= 0 ? 'HAZIR!' : Math.ceil(b.heroCd) + ' sn', function (v) { $('skill-state').textContent = v; $('btn-skill').classList.toggle('ready', !prep && b.heroCd <= 0); });
+    set('hst', prep ? $t('Savaşta') : b.heroCd <= 0 ? $t('HAZIR!') : Math.ceil(b.heroCd) + (' ' + $t('sn')), function (v) { $('skill-state').textContent = v; $('btn-skill').classList.toggle('ready', !prep && b.heroCd <= 0); });
     var mc = b.mineCost();
     set('mine', prep + ':' + b.mine + ':' + (mc !== null && b.gold >= mc), function () {
-      $('mine-txt').innerHTML = mc === null ? 'Maden MAKS' : 'Maden Sv.' + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
+      $('mine-txt').innerHTML = mc === null ? $t('Maden MAKS') : $t('Maden Sv.') + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
       $('btn-mine').classList.toggle('off', prep || mc === null || b.gold < mc);
     });
     set('phase', b.phase, function () {
       $('fb-go').classList.toggle('hidden', !prep); $('fb-auto').classList.toggle('hidden', !prep); $('fb-clear').classList.toggle('hidden', !prep); $('fb-stance').classList.toggle('hidden', prep);
       if (!prep) { hud.fieldTut = false; S.data.fieldTutDone = true; S.save(); $('hint').classList.add('hidden'); }
     });
-    set('stance', b.stance, function (v) { $('fb-stance').innerHTML = (v === 'defend' ? '🛡<small>Savun</small>' : '⚔<small>Saldır</small>'); $('fb-stance').classList.toggle('def', v === 'defend'); });
+    set('stance', b.stance, function (v) { $('fb-stance').innerHTML = (v === 'defend' ? ('🛡<small>' + $t('Savun') + '</small>') : ('⚔<small>' + $t('Saldır') + '</small>')); $('fb-stance').classList.toggle('def', v === 'defend'); });
     var oc = $('obj-chip'), txt;
     if (b.objective === 'capture') txt = '🚩 ' + Math.floor(b.scores.p) + ' – ' + Math.floor(b.scores.e);
     else if (b.objective === 'survive') txt = '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t));
     else txt = '👑 ' + Math.round(100 * Math.max(0, b.cmdE.hp) / b.cmdE.max) + '%';
     txt = '🛡 ' + Math.round(100 * Math.max(0, b.cmdP.hp) / b.cmdP.max) + '% · ' + txt;
     set('obj', txt, function (v) { oc.textContent = v; });
-    set('title', Math.floor(b.t / 2), function () { $('info-title').textContent = (b.mode === 'daily' ? 'Günlük Sefer' : 'Sefer ' + b.level) + ' · ' + b.info.name + (prep ? ' · Hazırlık' : ' · ' + Z.fmtTime(b.t)); });
-    set('combo', b.combo >= 3 ? b.combo : 0, function (v) { var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = '🔥 Seri x' + v; });
+    set('title', Math.floor(b.t / 2), function () { $('info-title').textContent = (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Sefer') + ' ') + b.level) + ' · ' + b.info.name + (prep ? (' · ' + $t('Hazırlık')) : ' · ' + Z.fmtTime(b.t)); });
+    set('combo', b.combo >= 3 ? b.combo : 0, function (v) { var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = ('🔥 ' + $t('Seri x')) + v; });
     set('perks', Object.keys(b.perks).join(), function () { $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join(''); });
   }
   UI.fieldPlace = function (type, x, y, el) {
     var b = hud.battle;
-    if (b.phase === 'battle' && y < Z.FH - Z.FZONE.battle) { A.deny(); UI.toast('Takviye yalnızca alt şeritten gelir'); return false; }
+    if (b.phase === 'battle' && y < Z.FH - Z.FZONE.battle) { A.deny(); UI.toast($t('Takviye yalnızca alt şeritten gelir')); return false; }
     var cost = Z.UNITS[type].cost;
-    if (b.gold < cost) { A.deny(); UI.toast(b.phase === 'prep' ? 'Komuta puanın yetmiyor' : 'Altın yetmiyor'); return false; }
+    if (b.gold < cost) { A.deny(); UI.toast(b.phase === 'prep' ? $t('Komuta puanın yetmiyor') : $t('Altın yetmiyor')); return false; }
     if (b.phase === 'battle' && b.cooldown[type] > 0) { A.deny(); return false; }
-    if (!b.canPlace(x, y)) { A.deny(); UI.toast(y < Z.FH - Z.FZONE.prep ? 'Burası yerleştirme alanı dışında' : 'Buraya yerleştirilemez (nehir/kaya)'); return false; }
-    if (!b.place(type, x, y)) { A.deny(); UI.toast('Ordu dolu'); return false; }
+    if (!b.canPlace(x, y)) { A.deny(); UI.toast(y < Z.FH - Z.FZONE.prep ? $t('Burası yerleştirme alanı dışında') : $t('Buraya yerleştirilemez (nehir/kaya)')); return false; }
+    if (!b.place(type, x, y)) { A.deny(); UI.toast($t('Ordu dolu')); return false; }
     if (b.phase === 'prep') A.click();
     return true;
   };
   UI.fieldSkill = function (x, y, el) {
     var b = hud.battle;
-    if (b.phase !== 'battle') { A.deny(); UI.toast('Yetenek savaşta kullanılır'); return false; }
+    if (b.phase !== 'battle') { A.deny(); UI.toast($t('Yetenek savaşta kullanılır')); return false; }
     if (b.useSkill(x, y)) return true;
     A.deny(); if (el) el.animate([{ transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }], { duration: 180 });
     return false;
@@ -701,7 +806,7 @@
     var g = Math.floor(b.gold);
     set('g', g, function (v) { $('gold-val').textContent = v; });
     set('cap', b.goldCap(), function (v) { $('gold-cap').textContent = '/' + v; });
-    set('rate', b.income(), function (v) { $('gold-rate').textContent = '+' + (Math.round(v * 10) / 10) + '/sn'; });
+    set('rate', b.income(), function (v) { $('gold-rate').textContent = '+' + (Math.round(v * 10) / 10) + ('/' + $t('sn')); });
     b.deck.forEach(function (id) {
       var cd = b.cooldown[id], def = Z.UNITS[id], c = hud.cards[id];
       var f = Math.round(100 * cd / def.cd) / 100;
@@ -710,18 +815,18 @@
     });
     var h = Z.HEROES[b.heroId];
     set('hcd', Math.round(100 * b.heroCd / h.cd) / 100, function (v) { document.querySelector('#btn-skill .cd').style.transform = 'scaleY(' + v + ')'; });
-    set('hst', b.heroCd <= 0 ? 'HAZIR!' : Math.ceil(b.heroCd) + ' sn', function (v) {
+    set('hst', b.heroCd <= 0 ? $t('HAZIR!') : Math.ceil(b.heroCd) + (' ' + $t('sn')), function (v) {
       $('skill-state').textContent = v; $('btn-skill').classList.toggle('ready', b.heroCd <= 0);
     });
     var mc = b.mineCost();
     set('mine', b.mine + ':' + (mc !== null && b.gold >= mc), function () {
-      $('mine-txt').innerHTML = mc === null ? 'Maden MAKS' : 'Maden Sv.' + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
+      $('mine-txt').innerHTML = mc === null ? $t('Maden MAKS') : $t('Maden Sv.') + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
       $('btn-mine').classList.toggle('off', mc === null || b.gold < mc);
     });
-    if (b.mode === 'endless') set('title', 'w' + b.wave(), function () { $('info-title').textContent = 'Dalga ' + b.wave() + ' · ' + Z.fmtTime(b.t); });
-    else set('title', Math.floor(b.t), function () { $('info-title').textContent = (b.mode === 'daily' ? 'Günlük Sefer' : 'Sefer ' + b.level) + ' · ' + b.info.name + ' · ' + (b.rl('survive') ? '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t)) : Z.fmtTime(b.t)); });
+    if (b.mode === 'endless') set('title', 'w' + b.wave(), function () { $('info-title').textContent = ($t('Dalga') + ' ') + b.wave() + ' · ' + Z.fmtTime(b.t); });
+    else set('title', Math.floor(b.t), function () { $('info-title').textContent = (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Sefer') + ' ') + b.level) + ' · ' + b.info.name + ' · ' + (b.rl('survive') ? '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t)) : Z.fmtTime(b.t)); });
     set('combo', b.combo >= 3 ? b.combo : 0, function (v) {
-      var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = '🔥 Seri x' + v;
+      var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = ('🔥 ' + $t('Seri x')) + v;
     });
     set('perks', Object.keys(b.perks).join(), function () {
       $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join('');
@@ -790,7 +895,7 @@
         hud.fdrag = null; Rn.fhover = null;
         var bf = hud.battle, pf = stagePoint(e);
         if (!bf || UI.game.paused || bf.phase !== 'prep') return;
-        if (!fd.moved || pf.y > UI.game.stage.h - 262) { var un = bf.units.filter(function (q) { return q.id === fd.id; })[0]; if (bf.removeUnit(fd.id)) { A.click(); UI.toast('Geri alındı +' + (un ? un.cost : 0) + ' puan'); } }
+        if (!fd.moved || pf.y > UI.game.stage.h - 262) { var un = bf.units.filter(function (q) { return q.id === fd.id; })[0]; if (bf.removeUnit(fd.id)) { A.click(); UI.toast(($t('Geri alındı') + ' +') + (un ? un.cost : 0) + (' ' + $t('puan'))); } }
         return;
       }
       var d = hud.drag; if (!d || e.pointerId !== d.id) return;
@@ -818,22 +923,27 @@
     document.addEventListener('pointercancel', function (e) { if (hud.fdrag) { hud.fdrag = null; Rn.fhover = null; } var d = hud.drag; if (d && e.pointerId === d.id) { Rn.fhover = null; hud.drag = null; Rn.dragLane = -1; if (hud.ghost) { hud.ghost.remove(); hud.ghost = null; } } });
 
     $('tut-ok').addEventListener('click', function () { if (tut) UI.tutNext(hud.battle); });
-    $('tut-skip').addEventListener('click', function () { A.click(); UI.tutStop(true); UI.toast('Öğretici geçildi'); });
+    $('tut-skip').addEventListener('click', function () { A.click(); UI.tutStop(true); UI.toast($t('Öğretici geçildi')); });
     $('btn-mine').addEventListener('click', function () {
       if (!hud.battle || UI.game.paused) return;
       if (!hud.battle.upgradeMine()) { A.deny(); } else { A.coin(); }
     });
-    $('fb-auto').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep') return; A.click(); b.autoPlace(); UI.toast('Ordu otomatik dizildi — dilediğin gibi sürükleyip değiştir'); });
+    $('fb-auto').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep') return; A.click(); b.autoPlace(); UI.toast($t('Ordu otomatik dizildi — dilediğin gibi sürükleyip değiştir')); });
     $('fb-clear').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep') return; A.click(); b.units.filter(function (u) { return u.team === 0 && !u.commander; }).forEach(function (u) { b.removeUnit(u.id); }); });
     $('fb-go').addEventListener('click', function () {
       var b = hud.battle; if (!b || b.kind !== 'field' || b.phase !== 'prep' || UI.game.paused) return;
-      if (b.countTeam(0) < 2) { A.deny(); UI.toast('Önce birlik yerleştir (ya da 🎲 Otomatik)'); return; }
+      if (b.countTeam(0) < 2) { A.deny(); UI.toast($t('Önce birlik yerleştir (ya da 🎲 Otomatik)')); return; }
       b.startBattle();
     });
-    $('fb-stance').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field') return; A.click(); b.setStance(b.stance === 'attack' ? 'defend' : 'attack'); UI.toast(b.stance === 'defend' ? '🛡 Savunma: birlikler yakındaki düşmana karşılık verir' : '⚔ Saldırı: birlikler düşmana yürür'); });
+    $('fb-stance').addEventListener('click', function () { var b = hud.battle; if (!b || b.kind !== 'field') return; A.click(); b.setStance(b.stance === 'attack' ? 'defend' : 'attack'); UI.toast(b.stance === 'defend' ? ('🛡 ' + $t('Savunma: birlikler yakındaki düşmana karşılık verir')) : ('⚔ ' + $t('Saldırı: birlikler düşmana yürür'))); });
     $('btn-pause').addEventListener('click', function () { A.click(); UI.game.pause(); });
     $('btn-speed').addEventListener('click', function () {
-      var g = UI.game; g.speed = g.speed === 1 ? 2 : 1; $('btn-speed').textContent = 'x' + g.speed; A.click();
+      var g = UI.game; g.speed = g.speed === 1 ? 2 : g.speed === 2 ? 3 : 1; $('btn-speed').textContent = 'x' + g.speed; A.click();
+    });
+    $('btn-auto').addEventListener('click', function () {
+      var g = UI.game, b = g.battle; if (!b || b.over) return;
+      if (S.data.cleared < Z.AUTO_UNLOCK) { A.deny(); return UI.toast($t('Oto savaş {n}. bölümden sonra açılır', { n: Z.AUTO_UNLOCK })); }
+      g.setAuto(!g.auto); A.click(); UI.toast(g.auto ? ('🤖 ' + $t('Oto savaş açık')) : $t('Oto savaş kapalı'));
     });
   }
 
@@ -852,7 +962,7 @@
   };
 
   UI.perkModal = function (b, done) {
-    var acts = {}, html = '<h1>⚔️ Savaş Ganimeti</h1><p>Birini seç — bu savaş boyunca geçerli olur.</p><div class="perks">';
+    var acts = {}, html = ('<h1>⚔️ ' + $t('Savaş Ganimeti') + '</h1><p>' + $t('Birini seç — bu savaş boyunca geçerli olur.') + '</p><div class="perks">');
     b.perkOffer.forEach(function (id) {
       var p = Z.PERKS[id];
       html += '<button class="perk" data-act="p_' + id + '"><span class="p-ico">' + p.icon + '</span><span class="p-name">' + p.name + '</span><span class="p-desc">' + p.desc + '</span></button>';
@@ -863,19 +973,20 @@
 
   UI.whatsNew = function () {
     var d = S.data;
-    UI.modal('<h1>🎉 Sefer Vakti 0.7</h1><p>Yeni ana menü ve öğretici geldi:</p><div class="new-list">' +
-      '🏠 <b>Ayrı ana menü:</b> arkada savaş sürüyor; harita artık <b>Sefer Haritası</b> düğmesinin arkasında<br>' +
-      '🎓 <b>Etkileşimli öğretici:</b> ilk kez oynayanlar 1. seferi adım adım öğrenerek oynar<br>' +
-      '🧹 Savaşta sol alttaki koridor düğmeleri kalktı: kartı doğrudan yola sürükle (ya da yola dokunup seç)</div>' +
-      '<p class="small">İlerlemen korundu.</p>' +
-      '<div class="actions"><button class="btn gold" data-act="ok">Sefere çıkalım!</button></div>',
+    UI.modal('<h1>🎉 ' + $t('Sefer Vakti 0.8 geldi!') + '</h1><div class="new-list">' +
+      '🌐 ' + $t('<b>6 dil:</b> Türkçe, English, Español, Português, Русский, 中文 — Ayarlar\'dan değiştir') + '<br>' +
+      '🛒 ' + $t('<b>Mağaza:</b> elmas paketleri, başlangıç paketi ve ücretsiz reklam ödülleri') + '<br>' +
+      '🔊 ' + $t('<b>Yeni sesler:</b> her diyarın kendi ortam sesi ve müziği, müzik/efekt ses düzeyi ayarı') + '<br>' +
+      '🤖 ' + $t('<b>Oto savaş</b> ve <b>x3 hız</b> düğmeleri') + '</div>' +
+      '<p class="small">' + $t('İlerlemen korundu.') + '</p>' +
+      '<div class="actions"><button class="btn gold" data-act="ok">' + $t('Sefere çıkalım!') + '</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });
   };
 
   UI.pauseModal = function (acts) {
-    UI.modal('<h1>Duraklatıldı</h1><div class="actions" style="flex-direction:column;align-items:center">' +
-      '<button class="btn gold" data-act="resume" style="width:420px">▶ Devam</button>' +
-      '<button class="btn" data-act="restart" style="width:420px">↻ Yeniden Başla</button>' +
-      '<button class="btn red" data-act="quit" style="width:420px">✕ Savaştan Çık</button></div>', acts);
+    UI.modal(('<h1>' + $t('Duraklatıldı') + '</h1><div class="actions" style="flex-direction:column;align-items:center">') +
+      ('<button class="btn gold" data-act="resume" style="width:420px">▶ ' + $t('Devam') + '</button>') +
+      ('<button class="btn" data-act="restart" style="width:420px">↻ ' + $t('Yeniden Başla') + '</button>') +
+      ('<button class="btn red" data-act="quit" style="width:420px">✕ ' + $t('Savaştan Çık') + '</button></div>'), acts);
   };
 })(globalThis.Z = globalThis.Z || {});

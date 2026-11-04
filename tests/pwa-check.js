@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const url = process.argv[2] || 'http://127.0.0.1:8765/erenmaral/';
 (async () => {
   const b = await chromium.launch(); const errors = [];
-  const ctx = await b.newContext({ viewport: { width: 412, height: 915 }, serviceWorkers: 'allow' });
+  const ctx = await b.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, serviceWorkers: 'allow' });
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push(e.message));
   p.on('response', r => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });

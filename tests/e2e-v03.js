@@ -5,12 +5,12 @@ const out = process.argv[2] || path.join(__dirname, '..', 'shots'); require('fs'
 const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
   const browser = await chromium.launch(); const errors = [];
-  const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ locale: 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
   const p = await ctx.newPage();
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); }); p.on('pageerror', e => errors.push('pageerror: ' + e.message));
   const shot = (n) => p.screenshot({ path: path.join(out, n + '.png') });
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
-  await ctx.addInitScript(() => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.7', cleared: 13, coins: 900, gems: 30, stars: { 1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3, 12: 3, 13: 2 }, stats: { totalStars: 35, wins: 13 }, daily: { lastDay: new Date().toISOString().slice(0,10), claimedToday: true, streak: 1 } })); } catch (e) {} });
+  await ctx.addInitScript(() => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.8', cleared: 13, coins: 900, gems: 30, stars: { 1: 3, 2: 3, 3: 3, 4: 2, 5: 3, 6: 3, 7: 2, 8: 3, 9: 3, 10: 2, 11: 3, 12: 3, 13: 2 }, stats: { totalStars: 35, wins: 13 }, daily: { lastDay: new Date().toISOString().slice(0,10), claimedToday: true, streak: 1 } })); } catch (e) {} });
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(800);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); });
   await p.waitForTimeout(400); await shot('v03-01-map');

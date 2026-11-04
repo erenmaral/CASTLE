@@ -43,6 +43,12 @@ node tests/gallery.js              # görsel galeri (ekran görüntüsü) — ye
 ## Yeni diyar eklemek (özet)
 `Z.REALMS`'e ad, `Z.LEVEL_NAMES` ve `Z.STORIES`'e 15'er satır (her 5. bölüm PATRON), `Z.MAX_LEVEL`'i 15 artır, `render.js` içindeki `THEMES`'e tema (+ varsa `leaf` renkleri), `ui.js` haritadaki `RI` (simge) ve `DEC` (süs) dizilerine ve `style.css`'e `.rbg.rN` / `.node.rN` ekle. Ardından `sim-balance.js` ve `field-balance.js` ile dengeyi kontrol et.
 
+## Çeviri (i18n)
+- Kaynak dil Türkçedir. Kodda kullanıcıya görünen her metni `$t('Türkçe metin')` ile sar (her dosyanın başında `var $t = Z.t || ...`). Sayı/ad içeren cümlelerde birleştirme yerine **şablon** kullan: `$t('{n}. bölümü tamamla', { n: 10 })` — çevirmen sözcük sırasını değiştirebilsin. Statik HTML için `data-i18n` (metin) ve `data-i18n-title` (aria-label) kullan.
+- `node scripts/i18n.js extract out.json` kaynak metinleri listeler; `check` paketlerdeki eksik anahtar / HTML etiketi / yer tutucu hatalarını bulur; `build <klasör>` `<dil>.json` (+ `<dil>.*.json` eklemeleri) dosyalarından `www/js/lang/<dil>.js` üretir. Yeni metinler için yalnızca eksik anahtarları (check çıktısı) çevirtip `<dil>.extra.json` olarak ekle.
+- `node tests/i18n-audit.js` sahte dilde (`sefervakti.lang=xx`) ekranları dolaşır; `⟦ ⟧` içine alınmamış harf = sarılmamış metin.
+- Yeni dil: `Z.LANGS`'a ekle, `www/js/lang/<kod>.js` üret, `sw.js` önbellek listesine ve `scripts/i18n.js` `LANGS` dizisine ekle, `e2e-v08.js` dil döngüsüne ekle.
+
 ## Yeni sefer kuralı
 `Z.RULES` (ad, simge, açıklama) → `sim.js` içinde `this.rl('kuralAdi')` ile etkisini yaz → `Z.ruleOf` döngüsüne (`RULE_CYCLE`) ve gerekirse `Z.dailySefer` havuzuna ekle. Çelişen kurallar (`rich`+`famine` gibi) günlük seferde birlikte gelmemeli.
 

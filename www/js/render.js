@@ -2,6 +2,7 @@
 // Simulasyondaki 'x' (koridor boyunca konum) ekranda yukari dogru y ekseni olur. Tum grafikler kodla cizilir.
 (function (Z) {
   'use strict';
+  var $t = Z.t || function (s) { return s; };
   var C = Z.C, TAU = Math.PI * 2;
   var DW = 720;        // tasarim genisligi (3 koridor x 240)
   var SPR = 1.28;      // birlik cizim olcegi (telefonda okunabilirlik)
@@ -94,7 +95,7 @@
     start: function (battle) {
       this.battle = battle; this.parts = []; this.texts = []; this.fx = []; this.shake = 0; this.banner = null;
       this.selLane = 1; this.dragLane = -1; this.active = true;
-      this.theme = battle.theme || 0;
+      this.theme = battle.theme || 0; if (Z.Audio && Z.Audio.setRealm) Z.Audio.setRealm(this.theme);
       this.seed = battle.mode === 'endless' ? (Date.now() % 997) + 3 : battle.level * 13 + 7; // her sefer kendi manzarasi
       this.buildBg();
       this.warmQ = []; // sprite kareleri: kart destesi + dusman kademeleri, kare basina birkac tane
@@ -414,17 +415,17 @@
             A.baseHit(); if (e.team === 0) A.vibrate(40);
             break;
           case 'skill':
-            if (e.kind === 'roar') { this.fx.push({ k: 'wave', x: this.ox + 360, y: this.pY + 30, t: 0.9, max: 0.9, col: '#ffd166' }); this.banner = { text: 'ZAFER NARAASI!', col: '#ffd166', t: 1.4 }; }
+            if (e.kind === 'roar') { this.fx.push({ k: 'wave', x: this.ox + 360, y: this.pY + 30, t: 0.9, max: 0.9, col: '#ffd166' }); this.banner = { text: $t('ZAFER NARAASI!'), col: '#ffd166', t: 1.4 }; }
             else if (e.kind === 'ward') { this.fx.push({ k: 'lane', lane: e.lane, t: 0.9, max: 0.9, col: '#6ee7b7' }); }
             else if (e.kind === 'bolt') { this.shake = Math.max(this.shake, 6); }
-            else if (e.kind === 'dragon') { this.fx.push({ k: 'lane', lane: e.lane, t: 1.0, max: 1.0, col: '#ff8a3a' }); this.banner = { text: 'EJDER NEFESİ!', col: '#ffb347', t: 1.3 }; this.shake = Math.max(this.shake, 6); }
-            else if (e.kind === 'freeze') { this.fx.push({ k: 'lane', lane: e.lane, t: 1.0, max: 1.0, col: '#9bd7ff' }); this.banner = { text: 'DON FIRTINASI!', col: '#9bd7ff', t: 1.2 }; }
+            else if (e.kind === 'dragon') { this.fx.push({ k: 'lane', lane: e.lane, t: 1.0, max: 1.0, col: '#ff8a3a' }); this.banner = { text: $t('EJDER NEFESİ!'), col: '#ffb347', t: 1.3 }; this.shake = Math.max(this.shake, 6); }
+            else if (e.kind === 'freeze') { this.fx.push({ k: 'lane', lane: e.lane, t: 1.0, max: 1.0, col: '#9bd7ff' }); this.banner = { text: $t('DON FIRTINASI!'), col: '#9bd7ff', t: 1.2 }; }
             A.skill(e.kind); A.vibrate(25);
             break;
           case 'bolt': this.fx.push({ k: 'bolt', x: ex, y: ey, t: 0.4, max: 0.4, seed: Math.random() * 99 }); this.sparks(ex, ey, 9, '#a5d8ff'); break;
-          case 'boss': this.banner = { text: 'PATRON GELİYOR!', col: '#ff6b6b', t: 1.8 }; this.shake = 10; A.boom(); break;
-          case 'ambush': this.banner = { text: 'PUSU!', col: '#ffb347', t: 1.4 }; this.shake = 6; A.boom(); break;
-          case 'mine': this.text(this.ox + 360, this.H - 330, 'Maden Sv.' + e.level + '!', '#ffd23f', 30); A.click(); break;
+          case 'boss': this.banner = { text: $t('PATRON GELİYOR!'), col: '#ff6b6b', t: 1.8 }; this.shake = 10; A.boom(); break;
+          case 'ambush': this.banner = { text: $t('PUSU!'), col: '#ffb347', t: 1.4 }; this.shake = 6; A.boom(); break;
+          case 'mine': this.text(this.ox + 360, this.H - 330, $t('Maden Sv.') + e.level + '!', '#ffd23f', 30); A.click(); break;
           case 'win': A.win(); break;
           case 'lose': A.lose(); break;
         }
@@ -471,7 +472,7 @@
         if (on || sel) {
           this.roadPath(c, i, 74);
           c.fillStyle = on ? 'rgba(255,255,255,.26)' : 'rgba(255,240,170,.13)'; c.fill();
-          if (on) { c.fillStyle = '#fff'; c.font = 'bold 26px system-ui'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText('▼ BURAYA BIRAK ▼', this.laneX(i), this.eY + 110); c.fillText('▼ BURAYA BIRAK ▼', this.laneX(i), this.eY + 110); }
+          if (on) { c.fillStyle = '#fff'; c.font = 'bold 26px system-ui'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(('▼ ' + $t('BURAYA BIRAK') + ' ▼'), this.laneX(i), this.eY + 110); c.fillText(('▼ ' + $t('BURAYA BIRAK') + ' ▼'), this.laneX(i), this.eY + 110); }
         }
       }
       this.drawCastle(c, 1); this.drawCastle(c, 0);
@@ -718,7 +719,7 @@
         var tl = Math.max(0, Math.ceil(b.hp)) + ' / ' + Math.ceil(b.max); c.strokeText(tl, ox + DW / 2, by + 14); c.fillStyle = '#fff'; c.fillText(tl, ox + DW / 2, by + 14);
       } else {
         c.fillStyle = 'rgba(0,0,0,.65)'; rrect(c, ox + DW / 2 - 100, by - 4, 200, 26, 13); c.fill();
-        c.font = '800 14px system-ui'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.fillText('Yıkılamaz kale', ox + DW / 2, by + 14);
+        c.font = '800 14px system-ui'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.fillText($t('Yıkılamaz kale'), ox + DW / 2, by + 14);
       }
       c.restore();
     },

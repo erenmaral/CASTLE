@@ -2,6 +2,13 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.8.0 — Diller, Mağaza, Sesler
+- 🌐 **6 dil:** Türkçe, English, Español, Português (Brasil), Русский, 简体中文. İlk açılışta cihaz diline göre seçilir ve dil penceresi çıkar; Ayarlar → Dil'den değişir (sayfa yenilenir). Hikâyeler, bölüm/diyar adları, görevler, başarımlar, öğretici ve tüm arayüz çevrildi (651 metin). Eksik çeviri varsa Türkçe gösterilir. Çeviri aracı: `node scripts/i18n.js extract|check|build`.
+- 🛒 **Mağaza sekmesi:** 5 elmas paketi, Başlangıç Paketi (tek seferlik), Reklamları Kaldır, ücretsiz **ödüllü reklam** düğmeleri (günde 8). Ana menüde elmas çipi ve Mağaza düğmesi. Zafer sonunda *ödülü ×2 yap (reklam)*, yenilgide reklamla altın. Geçiş reklamı kuralları ve banner yuvası. **Reklam/ödeme SDK'sı bağlı değilken mağaza "Yakında" der ve hiçbir şey bedava verilmez.** Kurulum: `docs/MONETIZATION.md` (AdMob + Google Play Faturalandırma adımları, test modu).
+- 🔊 **Sesler yenilendi:** her diyarın kendi **ortam sesi** (orman kuşları, çöl/buz rüzgârı, volkan gürültüsü ve çıtırtı, bataklık kurbağaları, sonbahar yaprakları, gece cırcır böcekleri/baykuş), **diyara göre müzik tonu** (dorian, frigien, minör…) ve yumuşak pad/melodi katmanı, menü için ayrı sakin-destansi müzik modu, yeni arayüz sesleri (elmas, ödül, sekme). Ayarlar'da **müzik ve efekt ses düzeyi kaydırıcıları**.
+- 🤖 **Oto savaş** düğmesi (8. bölümden sonra; kale ve açık alan) ve **x3 hız**.
+- 🧰 `tests/unit-v08.js` (dil + gelir mantığı), `tests/e2e-v08.js` (6 dilde taşma/eksik anahtar denetimi, mağaza test akışı, oto savaş, ses ayarı), `tests/i18n-audit.js` (sahte dil denetimi: sarılmamış metin yakalar).
+
 ## 0.7.0 — Ana menü ve öğretici
 - 🏠 **Ayrı ana menü:** oyun artık büyük bir ana menüyle açılır (arkada canlı savaş + savaş müziği). **▶ Sefere Devam** sıradaki seferin brifingini açar; *Sefer Haritası, Ordu, Günlük Sefer, Sonsuz Kuşatma, Hazine, Görevler, Ayarlar* düğmeleri ayrı. Harita ana menüde görünmez, kendi ekranındadır; sol üstteki ‹ ve Android geri tuşu ana menüye döner.
 - 🔋 Canlı savaş yalnızca ana menüde çalışır; harita/ordu ekranlarında durur (pil ve akıcılık).
