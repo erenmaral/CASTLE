@@ -37,6 +37,8 @@ jobs:
         run: |
           node tests/unit-features.js | tail -3
           node tests/unit-v06.js | tail -3
+          node tests/unit-v08.js | tail -3
+          node scripts/i18n.js check
 
       - name: Oyun mantigi duman testi (denge botu - kale ve acik alan)
         run: |
