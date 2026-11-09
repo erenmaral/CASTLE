@@ -11,4 +11,6 @@ Mini oyunlar (7 tur, her biri bir kez, rastgele sırayla):
 - **Tek Farklı:** farklı emojiyi ilk bulan kazanır, yanlış dokunan 1,2 sn cezalı.
 - **Tut ve Bırak:** basılı tut, tam 3 saniye dolunca bırak. Sayaç ilk 1 saniye görünür, sonra gizlenir.
 
+Ses ve titreşim: tüm sesler Web Audio ile kodla üretilir (dosya yok). Titreşim `navigator.vibrate` ile çalışır; iPhone Safari titreşimi desteklemez, orada yalnızca ses olur. Menüden açılıp kapatılır, tercih hatırlanır.
+
 Çalıştırma: `npx serve dokun` ile aç veya `dokun/index.html` dosyasını tarayıcıda aç (telefonda yatay kilidi kapalı, dikey kullan).

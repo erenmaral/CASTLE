@@ -82,6 +82,7 @@
     <button data-n="3">3</button>
     <button data-n="4">4</button>
   </div>
+  <button id="sound">🔊 Ses ve titreşim: Açık</button>
   <button class="go" id="start">Başla</button>
 </div>
 
@@ -93,6 +94,51 @@
 
   const board = $('#board'), hud = $('#hud'), menu = $('#menu');
   let N = 2, scores = [], zones = [], handler = null, upHandler = null;
+
+  // ---------- Ses (Web Audio, dosya yok) ve titresim ----------
+  const fx = (() => {
+    let ctx = null, on = true;
+    try { on = localStorage.getItem('dokun-ses') !== 'kapali'; } catch (_) {}
+    const ensure = () => {
+      if (!on) return null;
+      if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    };
+    const tone = (freq, dur, o = {}) => {
+      const c = ensure(); if (!c) return;
+      const { type = 'sine', vol = 0.2, at = 0, slide = 0 } = o;
+      const t = c.currentTime + at, osc = c.createOscillator(), g = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t);
+      if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(g); g.connect(c.destination);
+      osc.start(t); osc.stop(t + dur + 0.02);
+    };
+    const vib = pattern => { if (on && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (_) {} } };
+    return {
+      get on() { return on; },
+      unlock: ensure,
+      toggle() {
+        on = !on;
+        try { localStorage.setItem('dokun-ses', on ? 'acik' : 'kapali'); } catch (_) {}
+        if (on) { tone(660, 0.08); vib(30); }
+        return on;
+      },
+      tick()  { tone(900, 0.04, { type: 'square', vol: 0.04 }); vib(8); },
+      hit()   { tone(660, 0.07, { vol: 0.15 }); tone(990, 0.09, { at: 0.06, vol: 0.15 }); vib(20); },
+      go()    { tone(880, 0.18, { type: 'triangle', vol: 0.25 }); vib(60); },
+      bad()   { tone(180, 0.25, { type: 'sawtooth', vol: 0.15, slide: -80 }); vib([60, 40, 60]); },
+      round() { tone(520, 0.08, { vol: 0.15 }); tone(780, 0.1, { at: 0.09, vol: 0.15 }); },
+      win()   { [523, 659, 784].forEach((f, k) => tone(f, 0.14, { at: k * 0.09, vol: 0.2, type: 'triangle' })); vib([40, 30, 80]); },
+      none()  { tone(300, 0.2, { vol: 0.15, slide: -100 }); },
+      fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, k) => tone(f, 0.2, { at: k * 0.14, vol: 0.22, type: 'triangle' })); vib([80, 50, 80, 50, 200]); },
+    };
+  })();
+  document.addEventListener('pointerdown', () => fx.unlock(), { passive: true });
 
   // ---------- Arayuz yardimcilari ----------
   function build() {
@@ -109,7 +155,7 @@
       z.addEventListener('pointerdown', e => {
         e.preventDefault();
         try { z.setPointerCapture(e.pointerId); } catch (_) {}
-        if (handler) handler(i, e);
+        if (handler) { fx.tick(); handler(i, e); }
       });
       const up = () => { if (upHandler) upHandler(i); };
       z.addEventListener('pointerup', up);
@@ -140,7 +186,7 @@
       handler = i => {
         if (done || out.has(i)) return;
         if (!go) {                                    // erken dokundu: bu turdan elendi
-          out.add(i); setS(i, 'out'); body(i, 'Erken! ✖');
+          out.add(i); setS(i, 'out'); body(i, 'Erken! ✖'); fx.bad();
           if (out.size === N) finish();
           return;
         }
@@ -150,6 +196,7 @@
         if (done) return;
         go = true;
         zones.forEach((_, i) => { if (!out.has(i)) { setS(i, 'go'); body(i, 'DOKUN!'); } });
+        fx.go();
         setTimeout(() => { if (!done) finish(); }, 3000);
       }, 1500 + Math.random() * 2500);
     });
@@ -162,6 +209,7 @@
     zones.forEach((_, i) => body(i, 'Hazır…'));
     await sleep(1200);
     zones.forEach((_, i) => { setS(i, 'go'); body(i, '0'); });
+    fx.go();
     handler = i => { c[i]++; body(i, c[i]); };
     const end = performance.now() + 5000;
     while (performance.now() < end) {
@@ -226,7 +274,7 @@
     await new Promise(res => {
       handler = (i, e) => {
         if (winner >= 0 || !e.target.classList.contains('tgt')) return;
-        cnt[i]++;
+        cnt[i]++; fx.hit();
         zones[i].querySelector('.cnt').textContent = cnt[i] + '/' + GOAL;
         if (cnt[i] >= GOAL) { winner = i; res(); } else place(i);
       };
@@ -246,8 +294,11 @@
     });
     await new Promise(res => {
       handler = (i, e) => {
-        if (winner >= 0 || +e.target.dataset.n !== next[i]) return;
-        e.target.classList.add('done');
+        if (winner >= 0) return;
+        const n = +e.target.dataset.n;
+        if (!n) return;
+        if (n !== next[i]) { fx.bad(); return; }
+        e.target.classList.add('done'); fx.hit();
         if (++next[i] > 6) { winner = i; res(); }
       };
       setTimeout(res, 15000);
@@ -272,7 +323,7 @@
       handler = (i, e) => {
         if (winner >= 0 || lock[i] || e.target.dataset.odd === undefined) return;
         if (e.target.dataset.odd === '1') { winner = i; res(); return; }
-        lock[i] = true; setS(i, 'out');                  // yanlis dokunus: 1,2 sn ceza
+        lock[i] = true; setS(i, 'out'); fx.bad();                  // yanlis dokunus: 1,2 sn ceza
         setTimeout(() => { lock[i] = false; if (winner < 0) setS(i, 'go'); }, 1200);
       };
       setTimeout(res, 12000);
@@ -326,12 +377,13 @@
     const deck = shuffle(GAMES);
     for (let r = 1; r <= deck.length; r++) {
       const g = deck[r - 1];
-      resetZones(); showScores();
+      resetZones(); showScores(); fx.round();
       say(g.name + ' <small>Tur ' + r + '/' + deck.length + ' · ' + g.hint + '</small>');
       await sleep(2200);
       const winners = await g.run();
       winners.forEach(i => { scores[i]++; setS(i, 'win'); });
       showScores();
+      if (winners.length) fx.win(); else fx.none();
       say(winners.length ? winners.map(i => 'Oyuncu ' + (i + 1)).join(' & ') + ' +1' : 'Kimse puan alamadı');
       await sleep(1800);
     }
@@ -340,6 +392,7 @@
 
   function finish() {
     hud.classList.add('hidden');
+    fx.fanfare();
     const max = Math.max(...scores);
     const w = scores.map((s, i) => s === max ? 'Oyuncu ' + (i + 1) : null).filter(Boolean);
     $('#menu h1').textContent = w.length > 1 ? 'BERABERE' : 'KAZANAN';
@@ -355,11 +408,15 @@
     N = +b.dataset.n;
     [...$('#count-row').children].forEach(x => x.classList.toggle('sel', x === b));
   });
+  const soundBtn = $('#sound');
+  const paintSound = () => { soundBtn.textContent = fx.on ? '🔊 Ses ve titreşim: Açık' : '🔇 Ses ve titreşim: Kapalı'; };
+  soundBtn.addEventListener('click', () => { fx.toggle(); paintSound(); });
+  paintSound();
   $('#start').addEventListener('click', play);
 
   // test icin disariya ac
   document.addEventListener('contextmenu', e => e.preventDefault());
-  window.__dokun = { get scores() { return scores; }, get zones() { return zones; }, GAMES, resetZones,
+  window.__dokun = { get scores() { return scores; }, get zones() { return zones; }, GAMES, resetZones, fx,
     setup(n) { N = n; scores = Array(N).fill(0); build(); menu.classList.add('hidden'); } };
 })();
 </script>
