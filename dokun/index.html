@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>Dokun!</title>
+<style>
+  :root { --bg:#0b1020; --ink:#f4f6ff; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    overflow:hidden; overscroll-behavior:none; }
+  body { height:100dvh; }
+  .noselect { user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:none; }
+
+  #board { position:fixed; inset:0; display:grid; gap:3px; background:#000; }
+  #board.p2 { grid-template-rows:1fr 1fr; }
+  #board.p3 { grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; }
+  #board.p3 .zone:nth-child(3) { grid-column:1 / -1; }
+  #board.p4 { grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; }
+
+  .zone { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:color-mix(in srgb, var(--c) 22%, #10162a); transition:background .12s;
+    padding:12px; overflow:hidden; }
+  .zone.flip { transform:rotate(180deg); }
+  .zone .head { position:absolute; bottom:10px; left:14px; right:14px; display:flex; justify-content:space-between;
+    font-weight:700; font-size:15px; color:var(--c); letter-spacing:.03em; }
+  .zone .head .score { color:var(--ink); font-size:20px; }
+  .zone .body { font-size:clamp(26px, 9vmin, 64px); font-weight:800; text-align:center; width:100%; }
+  .zone[data-s="go"]  { background:color-mix(in srgb, var(--c) 70%, #10162a); }
+  .zone[data-s="out"] { background:#2a2a33; color:#888; }
+  .zone[data-s="win"] { background:color-mix(in srgb, var(--c) 90%, #fff 10%); }
+  .zone[data-s="win"] .head { color:#10162a; }
+  .zone[data-s="win"] .head .score { color:#10162a; }
+
+  .track { position:relative; width:86%; height:46px; margin:0 auto; background:rgba(0,0,0,.35); border-radius:23px; }
+  .track .mid { position:absolute; left:50%; top:-6px; bottom:-6px; width:4px; margin-left:-2px; background:#fff; border-radius:2px; opacity:.85; }
+  .track .mk { position:absolute; top:5px; width:36px; height:36px; margin-left:-18px; border-radius:50%; background:var(--c);
+    border:3px solid #fff; left:0; }
+  .pct { font-size:clamp(18px,5vmin,30px); margin-top:14px; font-weight:700; }
+
+  #hud { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5; pointer-events:none;
+    background:rgba(8,10,20,.85); border:2px solid rgba(255,255,255,.25); border-radius:16px;
+    padding:8px 16px; text-align:center; max-width:86vw; font-weight:700; font-size:16px; line-height:1.3; }
+  #hud small { display:block; font-weight:500; opacity:.7; font-size:12px; }
+  #hud.hidden { display:none; }
+
+  #menu { position:fixed; inset:0; z-index:10; background:var(--bg); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; padding:24px; text-align:center; }
+  #menu.hidden { display:none; }
+  #menu h1 { font-size:clamp(44px,14vw,84px); margin:0; letter-spacing:.04em; }
+  #menu p { margin:0; opacity:.75; max-width:32ch; line-height:1.4; }
+  .row { display:flex; gap:10px; }
+  button { font:inherit; font-weight:800; color:var(--ink); background:#1c2547; border:2px solid #3a4780;
+    border-radius:14px; padding:14px 22px; font-size:20px; cursor:pointer; }
+  button.sel { background:#4dabf7; border-color:#fff; color:#08101f; }
+  button.go { background:#3ddc97; border-color:#fff; color:#08101f; font-size:24px; padding:16px 40px; }
+</style>
+</head>
+<body class="noselect">
+<div id="board"></div>
+<div id="hud" class="hidden"></div>
+
+<div id="menu">
+  <h1>DOKUN!</h1>
+  <p id="menu-text">Aynı telefonu paylaşan arkadaşlar için hızlı mini oyunlar. Herkes kendi bölgesine dokunur.</p>
+  <div>Oyuncu sayısı</div>
+  <div class="row" id="count-row">
+    <button data-n="2" class="sel">2</button>
+    <button data-n="3">3</button>
+    <button data-n="4">4</button>
+  </div>
+  <button class="go" id="start">Başla</button>
+</div>
+
+<script>
+(() => {
+  const COLORS = ['#ff5a5f', '#3ddc97', '#4dabf7', '#ffd43b'];
+  const TOTAL_ROUNDS = 9;
+  const $ = s => document.querySelector(s);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  const board = $('#board'), hud = $('#hud'), menu = $('#menu');
+  let N = 2, scores = [], zones = [], handler = null;
+
+  // ---------- Arayuz yardimcilari ----------
+  function build() {
+    board.innerHTML = '';
+    board.className = 'p' + N;
+    zones = [];
+    for (let i = 0; i < N; i++) {
+      const z = document.createElement('div');
+      z.className = 'zone';
+      z.style.setProperty('--c', COLORS[i]);
+      const flipped = N === 2 ? i === 0 : i < 2;       // ust siradaki oyuncular karsidan oynar
+      if (flipped) z.classList.add('flip');
+      z.innerHTML = '<div class="head"><span>Oyuncu ' + (i + 1) + '</span><span class="score">0</span></div><div class="body"></div>';
+      z.addEventListener('pointerdown', e => { e.preventDefault(); if (handler) handler(i); });
+      board.appendChild(z);
+      zones.push(z);
+    }
+  }
+  const body = (i, html) => { zones[i].querySelector('.body').innerHTML = html; };
+  const setS = (i, s) => { zones[i].dataset.s = s || ''; };
+  const showScores = () => zones.forEach((z, i) => { z.querySelector('.score').textContent = scores[i]; });
+  const resetZones = () => zones.forEach((_, i) => { setS(i, ''); body(i, ''); });
+  function say(main, sub) {
+    hud.innerHTML = main + (sub ? '<small>' + sub + '</small>' : '');
+    hud.classList.remove('hidden');
+  }
+
+  // ---------- Mini oyunlar: kazananlarin indeksini dondurur ----------
+  async function reaction() {
+    const out = new Set();
+    let go = false, winner = -1, done = false;
+    zones.forEach((_, i) => body(i, 'Hazır…'));
+    await new Promise(res => {
+      const finish = () => { done = true; res(); };
+      handler = i => {
+        if (done || out.has(i)) return;
+        if (!go) {                                    // erken dokundu: bu turdan elendi
+          out.add(i); setS(i, 'out'); body(i, 'Erken! ✖');
+          if (out.size === N) finish();
+          return;
+        }
+        winner = i; finish();
+      };
+      setTimeout(() => {
+        if (done) return;
+        go = true;
+        zones.forEach((_, i) => { if (!out.has(i)) { setS(i, 'go'); body(i, 'DOKUN!'); } });
+        setTimeout(() => { if (!done) finish(); }, 3000);
+      }, 1500 + Math.random() * 2500);
+    });
+    handler = null;
+    return winner >= 0 ? [winner] : [];
+  }
+
+  async function spam() {
+    const c = Array(N).fill(0);
+    zones.forEach((_, i) => body(i, 'Hazır…'));
+    await sleep(1200);
+    zones.forEach((_, i) => { setS(i, 'go'); body(i, '0'); });
+    handler = i => { c[i]++; body(i, c[i]); };
+    const end = performance.now() + 5000;
+    while (performance.now() < end) {
+      say('Çılgınca dokun!', Math.ceil((end - performance.now()) / 1000) + ' sn');
+      await sleep(100);
+    }
+    handler = null;
+    const max = Math.max(...c);
+    return max > 0 ? c.map((v, i) => v === max ? i : -1).filter(i => i >= 0) : [];
+  }
+
+  async function stopbar() {
+    zones.forEach((_, i) => {
+      setS(i, 'go');
+      body(i, '<div class="track"><div class="mid"></div><div class="mk"></div></div><div class="pct">&nbsp;</div>');
+    });
+    const speed = zones.map(() => 0.7 + Math.random() * 0.7);
+    const phase = zones.map(() => Math.random() * 2);
+    const pos = Array(N).fill(null);
+    const posAt = (i, t) => { const x = (t / 1000 * speed[i] + phase[i]) % 2; return x < 1 ? x : 2 - x; };
+    const t0 = performance.now();
+    const mk = i => zones[i].querySelector('.mk');
+    await new Promise(res => {
+      let raf;
+      const finish = () => { cancelAnimationFrame(raf); res(); };
+      handler = i => {
+        if (pos[i] !== null) return;
+        pos[i] = posAt(i, performance.now() - t0);
+        mk(i).style.left = pos[i] * 100 + '%';
+        if (pos.every(p => p !== null)) setTimeout(finish, 300);
+      };
+      const tick = () => {
+        const t = performance.now() - t0;
+        zones.forEach((_, i) => { if (pos[i] === null) mk(i).style.left = posAt(i, t) * 100 + '%'; });
+        if (t > 6000) { finish(); return; }
+        raf = requestAnimationFrame(tick);
+      };
+      say('Topu ortadaki çizgide durdur!');
+      tick();
+    });
+    handler = null;
+    const dist = pos.map(p => p === null ? 1 : Math.abs(p - 0.5));
+    zones.forEach((z, i) => {
+      z.querySelector('.pct').textContent = pos[i] === null ? 'Durdurmadı' : '%' + Math.round((1 - dist[i] * 2) * 100);
+    });
+    const best = Math.min(...dist);
+    return best < 1 ? [dist.indexOf(best)] : [];
+  }
+
+  const GAMES = [
+    { name: 'Tepki', hint: 'Yeşil olunca ilk dokunan kazanır. Erken dokunan elenir!', run: reaction },
+    { name: 'Seri Dokun', hint: '5 saniyede en çok dokunan kazanır.', run: spam },
+    { name: 'Tam Ortada', hint: 'Top ortaya en yakın durursa kazanırsın.', run: stopbar },
+  ];
+
+  // ---------- Oyun akisi ----------
+  async function play() {
+    scores = Array(N).fill(0);
+    build();
+    menu.classList.add('hidden');
+    for (let r = 1; r <= TOTAL_ROUNDS; r++) {
+      const g = GAMES[(r - 1) % GAMES.length];
+      resetZones(); showScores();
+      say(g.name + ' <small>Tur ' + r + '/' + TOTAL_ROUNDS + ' · ' + g.hint + '</small>');
+      await sleep(2200);
+      const winners = await g.run();
+      winners.forEach(i => { scores[i]++; setS(i, 'win'); });
+      showScores();
+      say(winners.length ? winners.map(i => 'Oyuncu ' + (i + 1)).join(' & ') + ' +1' : 'Kimse puan alamadı');
+      await sleep(1800);
+    }
+    finish();
+  }
+
+  function finish() {
+    hud.classList.add('hidden');
+    const max = Math.max(...scores);
+    const w = scores.map((s, i) => s === max ? 'Oyuncu ' + (i + 1) : null).filter(Boolean);
+    $('#menu h1').textContent = w.length > 1 ? 'BERABERE' : 'KAZANAN';
+    $('#menu-text').innerHTML = '<b style="font-size:26px">' + w.join(' & ') + '</b><br>' +
+      scores.map((s, i) => 'Oyuncu ' + (i + 1) + ': ' + s).join(' · ');
+    $('#start').textContent = 'Tekrar oyna';
+    menu.classList.remove('hidden');
+  }
+
+  // ---------- Menu ----------
+  $('#count-row').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    N = +b.dataset.n;
+    [...$('#count-row').children].forEach(x => x.classList.toggle('sel', x === b));
+  });
+  $('#start').addEventListener('click', play);
+
+  // test icin disariya ac
+  window.__dokun = { get scores() { return scores; }, get zones() { return zones; } };
+})();
+</script>
+</body>
+</html>
