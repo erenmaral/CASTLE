@@ -61,16 +61,16 @@ let n = 0; const ok = (name) => { n++; console.log('  ✓', name); };
   const b = mk(['spear'], 'aslan', 4); assert(b.base[1].max >= 1e8, 'savunma seferinde dusman kalesi yikilamaz olmali');
   for (let i = 0; i < 30 * (info.surviveTime + 5) && !b.over; i++) b.update(1 / 30);
   assert(b.over && b.result.win && b.t >= info.surviveTime && b.result.time < info.surviveTime + 1, 'sure dolunca kazanmali'); ok('Savunma seferi: süre dolunca zafer (' + info.surviveTime + ' sn), düşman kalesi yıkılamaz'); }
-{ const base = mk(['spear'], 'aslan', 1).income(), rich = mk(['spear'], 'aslan', 3).income(), famine = mk(['spear'], 'aslan', 11).income();
-  assert(Z.levelInfo(3).rule === 'rich' && Math.abs(rich / base - 1.3) < 1e-9, 'rich'); assert(Z.levelInfo(11).rule === 'famine' && Math.abs(famine / base - 0.8) < 1e-9, 'famine');
+{ const base = mk(['spear'], 'aslan', 1).income(), rich = mk(['spear'], 'aslan', 3).income(), FL = [...Array(40).keys()].map(i => i + 3).find(l => Z.ruleOf(l) === 'famine'), famine = mk(['spear'], 'aslan', FL).income();
+  assert(Z.levelInfo(3).rule === 'rich' && Math.abs(rich / base - 1.3) < 1e-9, 'rich'); assert(Z.levelInfo(FL).rule === 'famine' && Math.abs(famine / base - 0.8) < 1e-9, 'famine');
   ok('Altın Damarı +%30, Kıtlık -%20 gelir'); }
-{ const b = mk(['spear'], 'aslan', 8); assert(Z.levelInfo(8).rule === 'ambush'); for (let i = 0; i < 60; i++) b.update(1 / 30);
+{ const AL = [...Array(40).keys()].map(i => i + 3).find(l => Z.ruleOf(l) === 'ambush' && Z.levelType(l) === 'castle'); const b = mk(['spear'], 'aslan', AL); assert(Z.levelInfo(AL).rule === 'ambush'); for (let i = 0; i < 60; i++) b.update(1 / 30);
   const lanes = new Set(b.units.filter(u => u.team === 1).map(u => u.lane)); assert(lanes.has(0) && lanes.has(2), 'pusu kenar koridorlara baskin yapmali'); ok('Pusu: düşman kenar koridorlardan (1 ve 3) baskın yapar'); }
-{ const b1 = mk(['spear'], 'aslan', 7), bs = mk(['spear'], 'aslan', 1); assert(Z.levelInfo(7).rule === 'heavy');
+{ const b1 = mk(['spear'], 'aslan', 9), bs = mk(['spear'], 'aslan', 1); assert(Z.levelInfo(9).rule === 'heavy');
   const e1 = b1.spawn(1, 'spear', 1), s1 = b1.enemyScale(); assert(Math.abs(e1.max - Z.UNITS.spear.hp * s1 * 1.2) < 1e-6, 'zirhli ordu +%20 can'); ok('Zırhlı Ordu: düşman canı +%20'); }
-{ const f = mk(['spear'], 'aslan', 12), n = mk(['spear'], 'aslan', 1); assert(Z.levelInfo(12).rule === 'fortress');
-  assert(Math.abs(f.base[1].max - Z.levelInfo(12).baseHp * 1.4) < 1e-6, 'kale +%40'); f.cooldown.spear = 0; f.gold = 500; f.deploy('spear', 0); assert(Math.abs(f.cooldown.spear - Z.UNITS.spear.cd * 0.85) < 1e-9, 'bekleme -%15'); ok('Kale Kuşatması: düşman kalesi +%40, kart bekleme -%15'); }
-{ const w = mk(['spear'], 'aslan', 6), x = mk(['spear'], 'aslan', 1); assert(Z.levelInfo(6).rule === 'swift');
+{ const f = mk(['spear'], 'aslan', 19), n = mk(['spear'], 'aslan', 1); assert(Z.levelInfo(19).rule === 'fortress');
+  assert(Math.abs(f.base[1].max - Z.levelInfo(19).baseHp * 1.4) < 1e-6, 'kale +%40'); f.cooldown.spear = 0; f.gold = 500; f.deploy('spear', 0); assert(Math.abs(f.cooldown.spear - Z.UNITS.spear.cd * 0.85) < 1e-9, 'bekleme -%15'); ok('Kale Kuşatması: düşman kalesi +%40, kart bekleme -%15'); }
+{ const w = mk(['spear'], 'aslan', 8), x = mk(['spear'], 'aslan', 1); assert(Z.levelInfo(8).rule === 'swift');
   const a = w.spawn(0, 'spear', 1), c = x.spawn(0, 'spear', 1); a.atkCd = c.atkCd = 99; for (let i = 0; i < 30; i++) { w.update(1 / 30); x.update(1 / 30); }
   assert(Math.abs((a.x - 180) / (c.x - 180) - 1.25) < 0.02, 'hiz +%25'); ok('Fırtına Rüzgârı: birlikler %25 daha hızlı'); }
 { for (let n = 1; n <= Z.MAX_LEVEL; n++) { const i = Z.levelInfo(n); assert(i.story && i.story.length > 10 && i.name, 'hikaye/ad eksik ' + n); assert(Z.RULES[i.rule], 'kural tanimsiz ' + n); assert(i.rule === 'none' || n >= 3, 'ilk iki bolum kuralsiz'); if (Z.isBoss(n)) assert(i.rule === 'none', 'patron kuralsiz'); }
@@ -194,8 +194,8 @@ const clearEnemy = b => { b.units = b.units.filter(u => u.team === 0 || u.comman
 { const b = fmk(['spear']); b.phase = 'battle'; b.kill(b.cmdE); assert(b.over && b.result.win, 'dusman komutani oldu: zafer'); const c = fmk(['spear']); c.phase = 'battle'; c.kill(c.cmdP); assert(c.over && !c.result.win, 'komutan oldu: yenilgi');
   ok('Komutan düşünce savaş biter (düşman: zafer, senin: yenilgi)'); }
 // F8) Bayrak ele gecirme
-{ const b = fmk(['spear'], 8); assert(b.objective === 'capture' && b.flags.length === 3, 'bayrak modu'); clearEnemy(b); b.cmdE.hp = b.cmdE.max = 1e9; b.cmdE.x = 20; b.cmdE.y = 20; b.cmdP.hp = b.cmdP.max = 1e9; b.phase = 'battle';
-  b.flags.forEach(f => { for (let k = 0; k < 4; k++) b.spawn(0, 'spear', f.x + k * 6, f.y); });
+{ const b = fmk(['spear'], 8, { rules: [] }); assert(b.objective === 'capture' && b.flags.length === 3, 'bayrak modu'); clearEnemy(b); b.cmdE.hp = b.cmdE.max = 1e9; b.cmdE.x = 20; b.cmdE.y = 20; b.cmdP.hp = b.cmdP.max = 1e9; b.phase = 'battle';
+  b.setStance('defend'); b.flags.forEach(f => { for (let k = 0; k < 4; k++) b.spawn(0, 'spear', f.x + k * 6, f.y); });
   for (let i = 0; i < 30 * 70 && !b.over; i++) { b.update(1 / 30); if (b.perkOffer) b.pickPerk(b.perkOffer[0]); } assert(b.over && b.result.win && b.scores.p >= 100, 'bayraklar tutuldu ama kazanilmadi: ' + b.scores.p); ok('Bayrak hedefi: 3 bayrağı tutan taraf 100 puana ulaşıp kazanır'); }
 // F9) Durus: savunmada birlik uzak dusmana yurumez; yetenek noktaya etki eder; settle uyumlu
 { const b = fmk(['spear']); clearEnemy(b); b.phase = 'battle'; b.cmdE.hp = b.cmdE.max = 1e9; b.cmdE.x = 360; b.cmdE.y = 30; b.setStance('defend'); const u = b.spawn(0, 'spear', 360, 700), y0 = u.y;

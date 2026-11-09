@@ -41,7 +41,7 @@ node tests/gallery.js              # görsel galeri (ekran görüntüsü) — ye
 - Günlük sayı `Z.DAILY_QUEST_COUNT`, haftalık sayı `Z.WEEKLY_QUEST_COUNT`. Hafta pazartesi başlar (`weekIndex`).
 
 ## Yeni diyar eklemek (özet)
-`Z.REALMS`'e ad, `Z.LEVEL_NAMES` ve `Z.STORIES`'e 15'er satır (her 5. bölüm PATRON), `Z.MAX_LEVEL`'i 15 artır, `render.js` içindeki `THEMES`'e tema (+ varsa `leaf` renkleri), `ui.js` haritadaki `RI` (simge) ve `DEC` (süs) dizilerine ve `style.css`'e `.rbg.rN` / `.node.rN` ekle. Ardından `sim-balance.js` ve `field-balance.js` ile dengeyi kontrol et.
+`Z.REALMS`'e ad, `Z.LEVEL_NAMES` ve `Z.STORIES`'e 15'er satır (her bölüm GERÇEK bir tarihî kuşatma: ad + yıl, ve olgusal tek cümlelik not; her 5. bölüm diyarın en bilinen kuşatması), `Z.MAX_LEVEL`'i 15 artır, `render.js` içindeki `THEMES`'e tema (+ varsa `leaf` renkleri), `ui.js` haritadaki `RI` (simge) ve `DEC` (süs) dizilerine ve `style.css`'e `.rbg.rN` / `.node.rN` ekle. Ardından `sim-balance.js` ve `field-balance.js` ile dengeyi kontrol et.
 
 ## Zorluk ayarı (denge) — doğru yöntem
 1. `node tests/progression.js 6 0.5` — gerçekçi oyuncu: her bölümde ne kadar denemede geçtiğini ve ortalama birlik seviyesini yazar (`OUT=dosya.json` bölüm başına oyuncu durumunu kaydeder; depodaki `tests/progression-state.json` bunun çıktısıdır).

@@ -11,7 +11,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const shot = (n) => p.screenshot({ path: path.join(out, n + '.png') });
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
   const stars = {}; for (let i = 1; i <= 20; i++) stars[i] = 3;
-  await ctx.addInitScript((st) => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.9', cleared: 20, coins: 5000, gems: 100, stars: st, stats: { totalStars: 60, wins: 20 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
+  await ctx.addInitScript((st) => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.10', cleared: 20, coins: 5000, gems: 100, stars: st, stats: { totalStars: 60, wins: 20 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(700);
   // dunya -> tarayici koordinati
   const scr = (wx, wy) => p.evaluate(([x, y]) => { const s = Z.Game.stage, R = Z.Render; return { x: s.left + (R.fox + x) * s.scale, y: (R.foy + y) * s.scale }; }, [wx, wy]);
@@ -24,7 +24,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.evaluate(() => document.querySelector('.node[data-level="8"]').scrollIntoView({ block: 'center' })); await p.waitForTimeout(200);
   await p.evaluate(() => document.querySelector('.node[data-level="8"]').click()); await p.waitForTimeout(400); await shot('v05-01-briefing');
   const mt = await p.locator('.modal').innerText();
-  check(/AÇIK ALAN/.test(mt) && /Bayrakları Ele Geçir/.test(mt) && /komuta puanı/.test(mt), 'Brifing: açık alan rozeti, hedef ve komuta puanı');
+  check(/KALE ÖNÜ/.test(mt) && /Mevzileri Ele Geçir/.test(mt) && /komuta puanı/.test(mt), 'Brifing: açık alan rozeti, hedef ve komuta puanı');
   await p.click('[data-act="fight"]'); await p.waitForTimeout(1500);
   check(await p.evaluate(() => Z.Game.battle.kind === 'field' && Z.Game.battle.phase === 'prep'), 'Açık alan savaşı hazırlık aşamasında başladı');
   check(await p.evaluate(() => !document.getElementById('field-bar').classList.contains('hidden') && !document.getElementById('lane-pick')), 'HUD: yerleştirme çubuğu açık, koridor seçici gizli');

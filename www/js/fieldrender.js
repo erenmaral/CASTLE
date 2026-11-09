@@ -37,7 +37,7 @@
     this.amb = [];
     for (var i = 0; i < n; i++) this.amb.push({ x: Math.random() * this.W, y: Math.random() * this.H, v: 20 + Math.random() * 50, r: 1 + Math.random() * 2.2, ph: Math.random() * 6, c: Math.random() });
     var oi = Z.FIELD_OBJECTIVES[b.objective];
-    this.banner = { text: ($t('AÇIK ALAN') + ' · ') + oi.name.toUpperCase(), col: '#ffd166', t: 2.4 };
+    this.banner = { text: ($t('KALE ÖNÜ') + ' · ') + oi.name.toUpperCase(), col: '#ffd166', t: 2.4 };
   };
 
   // ---- sabit arka plan ---------------------------------------------------
@@ -318,6 +318,51 @@
     }
   };
 
+  // ---- Kale onu muharebesi: ustte dusman kalesi (sur+kuleler+kapi), altta bizim kamp (cit+yurt+ates) ----
+  R.fieldSiegeBackdrop = function (c) {
+    var pe = R.PAL[1], pp = R.PAL[0], t = this.time, i, x;
+    // dusman kalesi (arka plan; birlikler onunde)
+    var wg = c.createLinearGradient(0, 0, 0, 46); wg.addColorStop(0, '#9fa1b3'); wg.addColorStop(1, '#6a6c80');
+    c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(0, 44, FW, 9);
+    c.fillStyle = wg; c.fillRect(0, 0, FW, 44);
+    c.strokeStyle = 'rgba(30,32,48,.35)'; c.lineWidth = 1.3;
+    for (var r = 0; r < 3; r++) { var ry = 8 + r * 12; c.beginPath(); c.moveTo(0, ry); c.lineTo(FW, ry); c.stroke(); for (x = (r % 2) * 14; x < FW; x += 28) { c.beginPath(); c.moveTo(x, ry); c.lineTo(x, ry + 12); c.stroke(); } }
+    c.fillStyle = '#b9bbcb'; for (x = 6; x < FW - 6; x += 26) c.fillRect(x, 40, 16, 8);      // siperlikler (sahaya bakan kenar)
+    c.fillStyle = '#3a3c4e'; c.fillRect(0, 0, FW, 4);
+    [60, FW - 60].forEach(function (tx) {                                                    // kuleler
+      c.fillStyle = 'rgba(0,0,0,.3)'; circ(c, tx + 5, 28, 34);
+      c.fillStyle = pe.dark; circ(c, tx, 22, 32);
+      for (var sg = 0; sg < 12; sg++) { var a0 = sg * TAU / 12 + 0.2; c.fillStyle = sg % 2 ? pe.main : pe.cloth; c.beginPath(); c.moveTo(tx - 2, 20); c.arc(tx, 22, 30, a0, a0 + TAU / 12); c.closePath(); c.fill(); }
+      c.strokeStyle = pe.trim; c.lineWidth = 2.4; c.beginPath(); c.arc(tx, 22, 31, 0, TAU); c.stroke(); c.fillStyle = '#ffd24d'; circ(c, tx - 2, 20, 4.5);
+    });
+    var gx = FW / 2;                                                                          // kapi
+    c.fillStyle = '#4a4c60'; rrect(c, gx - 46, 4, 92, 50, 16); c.fill();
+    var dg = c.createLinearGradient(0, 12, 0, 54); dg.addColorStop(0, '#0e0a08'); dg.addColorStop(1, '#2a1c12'); c.fillStyle = dg; rrect(c, gx - 38, 12, 76, 42, 14); c.fill();
+    c.strokeStyle = '#8a8a98'; c.lineWidth = 2.2; for (var pk = -3; pk <= 3; pk++) { c.beginPath(); c.moveTo(gx + pk * 10, 14); c.lineTo(gx + pk * 10, 30); c.stroke(); }
+    c.fillStyle = pe.main; circ(c, gx, 8, 9); c.fillStyle = pe.trim; circ(c, gx, 8, 3.4);
+    [gx - 150, gx + 150].forEach(function (fx) { var sw = Math.sin(t * 2.4 + fx) * 3; c.fillStyle = pe.main; c.beginPath(); c.moveTo(fx - 10, 6); c.lineTo(fx + 10, 6); c.lineTo(fx + 10 + sw * .4, 30); c.lineTo(fx + sw, 38); c.lineTo(fx - 10 + sw * .4, 30); c.closePath(); c.fill(); c.strokeStyle = pe.trim; c.lineWidth = 1.6; c.stroke(); });
+    // bizim kamp (alt): yurtlar arkada, sivri kazikli cit onde
+    var by = FH;
+    [[90, 15], [210, 18], [360, 16], [510, 18], [630, 15]].forEach(function (y, yi) {
+      var cx = y[0], cy = by - 12, rr = y[1];
+      c.fillStyle = 'rgba(0,0,0,.28)'; ell(c, cx + 3, cy + 5, rr * 1.05, rr * 0.5);
+      c.fillStyle = '#d9ccb0'; circ(c, cx, cy, rr);
+      for (var sg = 0; sg < 12; sg++) { var a0 = sg * TAU / 12, a1 = a0 + TAU / 12; c.fillStyle = sg % 2 ? '#efe6d0' : '#e2d5b8'; c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, rr - 1.5, a0, a1); c.closePath(); c.fill(); }
+      c.strokeStyle = pp.main; c.lineWidth = rr * 0.16; c.beginPath(); c.arc(cx, cy, rr * 0.74, 0, TAU); c.stroke();
+      c.fillStyle = '#3a2a1c'; circ(c, cx, cy, rr * 0.16);
+      if (yi % 2 === 0) { var fl = 0.8 + 0.2 * Math.sin(t * 10 + yi); c.fillStyle = 'rgba(255,170,60,.85)'; ell(c, cx + rr + 9, cy + 2, 3.4, 6 * fl); }
+    });
+    for (x = 4; x < FW - 8; x += 14) {
+      var gate = Math.abs(x + 6 - FW / 2) < 40; if (gate) continue;
+      c.fillStyle = (x / 14 | 0) % 2 ? '#8a5a2b' : '#76491f'; c.fillRect(x, by - 46, 11, 20);
+      c.beginPath(); c.moveTo(x, by - 46); c.lineTo(x + 5.5, by - 53); c.lineTo(x + 11, by - 46); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(30,18,8,.55)'; c.lineWidth = 1; c.strokeRect(x, by - 46, 11, 20);
+    }
+    c.strokeStyle = '#3a2814'; c.lineWidth = 2.6; c.beginPath(); c.moveTo(0, by - 40); c.lineTo(FW / 2 - 40, by - 40); c.moveTo(FW / 2 + 40, by - 40); c.lineTo(FW, by - 40); c.stroke();
+    var sw2 = Math.sin(t * 2.2) * 2.5;
+    [28, FW - 28].forEach(function (tx) { c.save(); c.translate(0, by - 26); c.scale(1, -1); R.tugBanner(c, tx, 0, 30, pp, sw2); c.restore(); });      // tug
+  };
+
   // ---- Ana cizim ---------------------------------------------------------
   R.frame = function (dt) {
     if (!this.field) return base.frame.call(this, dt);
@@ -352,9 +397,10 @@
     if (prep) {
       var eg = c.createLinearGradient(0, 0, 0, Z.FZONE.prep); eg.addColorStop(0, 'rgba(255,70,70,.24)'); eg.addColorStop(1, 'rgba(255,70,70,0)'); c.fillStyle = eg; c.fillRect(0, 0, FW, Z.FZONE.prep);
       c.font = '900 22px system-ui'; c.textAlign = 'center'; c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.55)';
-      c.globalAlpha = 0.6; c.strokeText($t('YERLEŞTİRME ALANI'), FW / 2, zt + 22); c.fillStyle = 'rgba(210,230,255,.95)'; c.fillText($t('YERLEŞTİRME ALANI'), FW / 2, zt + 22);
-      c.strokeText($t('DÜŞMAN ORDUSU'), FW / 2, 22); c.fillStyle = 'rgba(255,200,200,.95)'; c.fillText($t('DÜŞMAN ORDUSU'), FW / 2, 22); c.globalAlpha = 1;
+      c.globalAlpha = 0.6; c.strokeText($t('KAMP ÖNÜ: YERLEŞTİR'), FW / 2, zt + 22); c.fillStyle = 'rgba(210,230,255,.95)'; c.fillText($t('KAMP ÖNÜ: YERLEŞTİR'), FW / 2, zt + 22);
+      c.strokeText($t('KALE GARNİZONU'), FW / 2, 96); c.fillStyle = 'rgba(255,200,200,.95)'; c.fillText($t('KALE GARNİZONU'), FW / 2, 96); c.globalAlpha = 1;
     }
+    this.fieldSiegeBackdrop(c);
     // bayraklar
     for (i = 0; i < b.flags.length; i++) this.fieldFlag(c, b.flags[i]);
     // birlikler (y'ye gore)

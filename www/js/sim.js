@@ -59,7 +59,8 @@
       { hp: castle, max: castle, shoot: 0.8, flash: 0 },
       { hp: eHp, max: eHp, shoot: 1.2, flash: 0 }
     ];
-    this.ambushIdx = 0;
+    this.ambushIdx = 0; this.breached = false; this.reliefIdx = 0;
+    this.reliefAt = Math.round(70 + 0.5 * Math.min(this.level, 100)); // 'Yardim Ordusu' kurali: bu saniyede kaleye yardim gelir
 
     this.ai = { gold: this.info.startGold, think: 3, pending: null, pendingT: 0, bossDone: 0 };
     // istatistikler
@@ -77,6 +78,8 @@
     return this.mode === 'endless' ? 1 + 0.065 * (this.wave() - 1) : this.info.scale;
   };
   P.rl = function (name) { return this.rules.indexOf(name) >= 0; };
+  // Hendek: kalenin onunde yakin dovuscu saldirganlar yavaslar (menzilliler etkilenmez)
+  P.moatSlow = function (u) { return (this.rl('moat') && u.team === 0 && !u.ranged && C.EF - u.x < 150) ? 0.65 : 1; };
   // Sefer hazirlik kartlari (Z.BOOSTERS): savasin basinda uygulanir
   P.applyBoosters = function (list) {
     this.boosters = (list || []).slice();
@@ -227,9 +230,11 @@
   };
   P.hitBase = function (team, dmg, srcCls) {
     var b = this.base[team];
-    var d = dmg * (srcCls === 'cata' ? Z.UNITS.cata.baseMult : 1);
+    var d = dmg * (srcCls === 'cata' ? Z.UNITS.cata.baseMult : 1) * (team === 1 && this.breached ? 1.1 : 1);
     b.hp -= d; b.flash = 0.15;
     this.emit({ type: 'baseHit', team: team, dmg: d });
+    // Gedik: kale canı yarıya inince sur yarılır; kale okları zayıflar, saldırganlar gediğe yüklenir
+    if (team === 1 && !this.breached && b.max < 1e8 && b.hp <= b.max * 0.5 && b.hp > 0) { this.breached = true; this.emit({ type: 'breach' }); }
   };
 
   // ---- Ana dongu --------------------------------------------------------
@@ -302,7 +307,7 @@
     // Sifaci: savasmaz, yarali dostu iyilestirir, dusmana yaklasmaz
     if (u.heal) {
       if (hurt && u.atkCd <= 0) this.healUnit(u, hurt);
-      if (enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; }
+      if (enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * this.moatSlow(u) * dt; u.moving = true; }
       return;
     }
 
@@ -318,7 +323,7 @@
     } else {
       // dusmanla temas varsa (mancinik gibi ates edemeyenler dahil) ilerleme
       var blocked = enemyAhead < 30; // dost birlikler engel degil: hizli olan yavasi gecer
-      if (!blocked) { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * dt; u.moving = true; } else { u.moving = false; }
+      if (!blocked) { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * this.moatSlow(u) * dt; u.moving = true; } else { u.moving = false; }
     }
   };
 
@@ -452,6 +457,7 @@
         b.shoot = 1.5;
         var dm = 11 * (team === 0 ? 1 + 0.1 * ((this.sv.castleLvl || 1) - 1) : 1 + (this.enemyScale() - 1) * 0.8);
         if (team === 0 && this.perks.tower) dm *= 2;
+        if (team === 1 && this.breached) dm *= 0.6;
         this.damage(tgt, dm, 'tower', true);
         this.emit({ type: 'tower', team: team, lane: tgt.lane, x: tgt.x });
       } else {
@@ -471,6 +477,15 @@
         ai.bossDone++;
         this.spawn(1, 'knight', 1, true);
         this.emit({ type: 'boss' });
+      }
+    }
+    if (this.rl('relief')) { // Yardim ordusu: uyari + her koridora dalga
+      if (this.reliefIdx === 0 && this.t >= this.reliefAt - 8) { this.reliefIdx = 1; this.emit({ type: 'reliefWarn' }); }
+      if (this.reliefIdx === 1 && this.t >= this.reliefAt) {
+        this.reliefIdx = 2;
+        var rt = this.tiers(), heavyT = rt.indexOf('knight') >= 0 ? 'knight' : (rt.indexOf('cav') >= 0 ? 'cav' : 'spear');
+        for (var rl2 = 0; rl2 < 3; rl2++) { this.spawn(1, 'spear', rl2); this.spawn(1, heavyT, rl2); }
+        this.emit({ type: 'relief' });
       }
     }
     if (this.rl('ambush')) { // kenar koridorlardan baskin

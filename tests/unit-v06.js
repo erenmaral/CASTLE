@@ -7,8 +7,8 @@ const Z = globalThis.Z; let n = 0; const ok = (m) => { n++; console.log('  ✓',
 // 1) Icerik tutarliligi
 { assert(Z.MAX_LEVEL === 105 && Z.REALMS.length === 7 && Z.realmOf(105) === 6 && Z.realmOf(76) === 5 && Z.realmOf(75) === 4, 'diyar-bolum esleme');
   assert(Z.LEVEL_NAMES.length === 105 && Z.STORIES.length === 105, 'ad/hikaye sayisi'); assert(new Set(Z.LEVEL_NAMES).size === 105, 'bolum adlari benzersiz olmali');
-  for (let l = 1; l <= 105; l++) { const i = Z.levelInfo(l); assert(i.scale >= 1 && i.rewardCoins > 0 && i.tiers.length >= 2, 'bolum ' + l); if (l % 5 === 0) assert(/^PATRON/.test(Z.STORIES[l - 1]), 'patron hikayesi ' + l); }
-  ok('105 bölüm, 7 diyar: adlar benzersiz, her patron hikâyesi PATRON ile başlar'); }
+  for (let l = 1; l <= 105; l++) { const i = Z.levelInfo(l); assert(i.scale >= 1 && i.rewardCoins > 0 && i.tiers.length >= 2, 'bolum ' + l); assert(/\d/.test(Z.LEVEL_NAMES[l - 1]) && Z.STORIES[l - 1].length > 20, 'tarihi kusatma adi (yil) + not ' + l); }
+  ok('105 bölüm, 7 diyar: her bölüm gerçek bir kuşatma (ad + yıl), adlar benzersiz'); }
 // 2) Gorev havuzlari
 { const ids = Z.QUEST_POOL.concat(Z.WEEKLY_POOL).map(q => q.id); assert(new Set(ids).size === ids.length, 'gorev id benzersiz'); assert(Z.QUEST_POOL.length >= 20 && Z.WEEKLY_POOL.length >= 8, 'havuz boyutu');
   const stats = new Set(['wins', 'plays', 'kills', 'spawns', 'skills', 'threeStars', 'mines', 'perks', 'fieldWins', 'castleWins', 'bossWins', 'hardWins']);

@@ -79,7 +79,7 @@
     var d = S.data, n = UI.homeLevel(), info = Z.levelInfo(n), dots = computeDots();
     $('home-coins').textContent = Z.fmt(d.coins); $('home-gems').textContent = Z.fmt(d.gems);
     $('hb-main').textContent = d.cleared === 0 ? ('▶ ' + $t('İLK SEFERE ÇIK')) : d.cleared >= Z.MAX_LEVEL ? ('▶ ' + $t('SEFERİ TEKRARLA')) : ('▶ ' + $t('SEFERE DEVAM'));
-    $('hb-sub').textContent = (info.type === 'field' ? ('🏕️ ' + $t('Açık alan')) : ('🏰 ' + $t('Kale kuşatması'))) + (' · ' + $t('Sefer') + ' ') + n + ' · ' + info.name;
+    $('hb-sub').textContent = (info.type === 'field' ? ('🏕️ ' + $t('Kale önü muharebesi')) : ('🏰 ' + $t('Kale kuşatması'))) + (' · ' + $t('Sefer') + ' ') + n + ' · ' + info.name;
     Array.prototype.forEach.call(document.querySelectorAll('#home [data-home]'), function (b) {
       var k = b.getAttribute('data-home'), old = b.querySelector('.dot'); if (old) old.remove();
       var map = { map: 'map', army: 'army', vault: 'vault', quests: 'quests', shop: 'shop' };
@@ -203,9 +203,9 @@
     var info = Z.levelInfo(n);
     if (info.type === 'field') {
       var ob = Z.FIELD_OBJECTIVES[Z.fieldObjective(n, rules)];
-      return ('<div class="rule-box field-box">' + $t('<b>🏕️ Açık Alan Savaşı') + ' · ') + ob.icon + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + (' ' + $t('Önce') + ' <b>') + Z.fieldBudget(n) + (' ' + $t('komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.') + '</span></div>');
+      return ('<div class="rule-box field-box">' + $t('<b>🏕️ Kale Önü Muharebesi') + ' · ') + ob.icon + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + (' ' + $t('Önce') + ' <b>') + Z.fieldBudget(n) + (' ' + $t('komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.') + '</span></div>');
     }
-    return ('<p style="margin:6px 0">🎯 ' + $t('Hedef') + ': ') + (rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + ('</b> ' + $t('boyunca kaleni savun')) : $t('düşman kalesini yık')) + '</p>';
+    return ('<p style="margin:6px 0">🎯 ' + $t('Hedef') + ': ') + (rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + ('</b> ' + $t('boyunca kampını savun')) : $t('düşman kalesini yık')) + '</p>';
   }
 
   var boostSel = {}, boostFor = 0; // brifingte secilen hazirlik kartlari (bolum degisince sifirlanir)
@@ -242,13 +242,13 @@
     Z.BOOSTER_ORDER.forEach(function (id) { extraActs['bst_' + id] = function () { if (!(d.boost[id] > 0)) { A.deny(); return UI.toast($t('Bu kart bitti — Hazine → Pazar\'dan al')); } boostSel[id] = !boostSel[id]; levelModal(n, diff); }; });
     Z.HERO_ORDER.forEach(function (h) { extraActs['hero_' + h] = function () { d.hero = h; S.save(); A.click(); levelModal(n, diff); }; });
     UI.modal(
-      ('<h1>' + $t('Sefer') + ' ') + n + (info.boss ? (' <span class="badge">' + $t('PATRON') + '</span>') : '') + (info.type === 'field' ? (' <span class="badge fld">' + $t('AÇIK ALAN') + '</span>') : '') + '</h1>' +
+      ('<h1>' + $t('Sefer') + ' ') + n + (info.boss ? (' <span class="badge">' + $t('PATRON') + '</span>') : '') + (info.type === 'field' ? (' <span class="badge fld">' + $t('KALE ÖNÜ') + '</span>') : '') + '</h1>' +
       '<p class="mut" style="margin:0">' + Z.REALMS[info.realm] + ' · ' + info.name + (d.hardCleared[n] ? ' · ' + Z.DIFFS[d.hardCleared[n]].icon : '') + '</p>' +
-      '<p class="story">“' + info.story + '”</p>' + drow +
+      '<p class="story">📜 ' + info.story + '</p>' + drow +
       (info.rule !== 'none' ? '<div class="rule-box"><b>' + rl.icon + (' ' + $t('Sefer kuralı') + ': ') + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
       goalHtml(n, [info.rule]) +
       '<div class="big-stars" style="font-size:54px;margin:0">' + star3(st) + '</div>' +
-      '<p class="small" style="margin:0 0 6px">' + (info.type === 'field' ? $t('3 yıldız için ordunun en az %65\'i hayatta kalsın') : $t('3 yıldız için kale canı %70\'in üstünde kalsın')) + '</p>' +
+      '<p class="small" style="margin:0 0 6px">' + (info.type === 'field' ? $t('3 yıldız için ordunun en az %65\'i hayatta kalsın') : $t('3 yıldız için kamp canı %70\'in üstünde kalsın')) + '</p>' +
       boostRow(n) + heroRow(n) +
       ('<div class="row-lines"><span>' + $t('Düşman') + ': ') + info.tiers.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '</span>' +
       ('<span>' + $t('Ödül') + ': 🪙 ') + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
@@ -307,8 +307,8 @@
         '</div></div></div>';
     });
     var cc = Z.castleUpgradeCost(d.castleLvl);
-    html += ('</div><div class="sect">' + $t('Kale') + '</div><div class="panel ucard"><div class="big">🏰</div><div class="info"><h3>' + $t('Kale Surları') + ' <span class="lvl">' + $t('Sv.')) + d.castleLvl + '</span></h3>' +
-      ('<small>' + $t('Kale canı') + ': ❤ ') + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1) + '</small></div>' +
+    html += ('</div><div class="sect">' + $t('Kamp') + '</div><div class="panel ucard"><div class="big">🏕️</div><div class="info"><h3>' + $t('Kamp Tahkimatı') + ' <span class="lvl">' + $t('Sv.')) + d.castleLvl + '</span></h3>' +
+      ('<small>' + $t('Kamp canı') + ': ❤ ') + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1) + '</small></div>' +
       (d.castleLvl >= Z.MAX_CASTLE_LVL ? ('<button class="btn off">' + $t('MAKS') + '</button>') : '<button class="btn ' + (d.coins >= cc ? 'gold' : 'off') + '" data-castle="1">⬆ 🪙 ' + Z.fmt(cc) + '</button>') + '</div>';
     c.innerHTML = html;
   }
@@ -534,7 +534,7 @@
 
   UI.endlessModal = function () {
     var d = S.data;
-    UI.modal(('<h1>♾️ ' + $t('Sonsuz Kuşatma') + '</h1><p>' + $t('Düşman dalgalar hâlinde gelir ve her dalga güçlenir. Kaleni koru, ne kadar dayanabilirsin?') + '</p>') +
+    UI.modal(('<h1>♾️ ' + $t('Sonsuz Kuşatma') + '</h1><p>' + $t('Düşman dalgalar hâlinde gelir ve her dalga güçlenir. Kampını koru, ne kadar dayanabilirsin?') + '</p>') +
       ('<p>' + $t('En iyi') + ': <b style="color:var(--gold)">') + $t('{n}. dalga', { n: d.endlessBest }) + ('</b></p><p class="small">' + $t('Her 5 dalgada 💎 kazanırsın. Düşman kalesi yıkılamaz.') + '</p>') +
       ('<div class="actions"><button class="btn" data-act="close">' + $t('Geri') + '</button><button class="btn gold" data-act="go">⚔ ' + $t('BAŞLA') + '</button></div>'),
       { close: UI.closeModal, go: function () { UI.closeModal(); UI.game.startBattle('endless', 1); } });
@@ -588,7 +588,7 @@
       ('<div class="actions"><button class="btn small" data-act="exp">📤 ' + $t('Kaydı dışa aktar') + '</button><button class="btn small" data-act="imp">📥 ' + $t('İçe aktar') + '</button></div>') +
       ('<div class="actions"><button class="btn small red" data-act="reset">' + $t('Kaydı sıfırla') + '</button><button class="btn gold" data-act="close">' + $t('Tamam') + '</button></div>') +
       (UI.isBrowser() ? ('<p class="small" style="margin-top:14px">💡 ' + $t('Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.') + '</p>') : '') +
-      ('<p class="small" style="margin-top:20px">' + $t('Sefer Vakti v')) + Z.VERSION + (' ' + $t('(derleme') + ' ') + Z.BUILD + (')<br>' + $t('Tüm grafik ve sesler kodla üretilmiştir.') + '</p>'), acts);
+      ('<p class="small" style="margin-top:20px">' + Z.NAME + ' v') + Z.VERSION + (' ' + $t('(derleme') + ' ') + Z.BUILD + (')<br>' + $t('Tüm grafik ve sesler kodla üretilmiştir.') + '</p>'), acts);
   };
 
   // ---------------------------------------------------------------- Acilis akisi
@@ -605,7 +605,7 @@
     var d = S.data;
     if (!d.tutorialDone) {
       UI.modal(('<h1>' + $t('Hoş geldin, Komutan!') + '</h1>') +
-        ('<p>' + $t('Sınırda düşman ordusu toplanıyor. Kaleni koru, ordunu kur ve <b>Sefer Vakti</b>\'ni başlat!') + '</p>') +
+        ('<p>' + $t('Düşman kalesi yolunu kesiyor. Kampını kur, ordunu hazırla ve kuşatmayı başlat!') + '</p>') +
         ('<p class="small">' + $t('İlk savaşta sana adım adım nasıl oynanacağını göstereceğim.') + '</p>') +
         ('<div class="actions"><button class="btn gold" data-act="go">⚔ ' + $t('İlk Savaşa Başla') + '</button></div>'),
         { go: function () { d.tutorialDone = true; d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.game.startBattle('campaign', 1); } });
@@ -651,7 +651,7 @@
     } else if (r.win) {
       var base = out.coins - (out.chest ? out.chest.coins : 0), bg = out.gems - (out.chest ? out.chest.gems : 0);
       html = '<h1>' + (b.mode === 'daily' ? $t('GÜNLÜK SEFER TAMAM!') : $t('ZAFER!')) + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + Z.DIFFS[b.diff].icon + ' ' + Z.DIFFS[b.diff].name + (' ' + $t('kademe') + '</p>') : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : '') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">★</span>'; }).join('') + '</div>' +
-        '<p class="mut">' + (b.kind === 'field' ? $t('Süre {time} · Ordu korundu %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills }) : $t('Süre {time} · Kale canı %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills })) + '</p>' +
+        '<p class="mut">' + (b.kind === 'field' ? $t('Süre {time} · Ordu korundu %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills }) : $t('Süre {time} · Kamp canı %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills })) + '</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + base + '</span>' + (bg > 0 ? '<span class="gem">💎 ' + bg + '</span>' : '') + '</div>' +
         (out.chest ? ('<div id="chest-area"><button class="chest" data-act="chest" style="font-size:110px">🎁</button><p class="small">' + $t('Sandığı aç!') + '</p></div>') : '') +
         (b.mode === 'daily' && !out.dailyFirst ? ('<p class="small">' + $t('Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).') + '</p>') : '') +
@@ -668,7 +668,7 @@
         }, 750);
       };
     } else {
-      html = ('<h1 style="color:var(--red)">' + $t('Yenilgi') + '</h1><p>') + (b.kind === 'field' ? (b.cmdP.dead || b.cmdP.hp <= 0 ? $t('Komutanın düştü! Onu arkada, korunaklı tut.') : $t('Süre doldu ya da bayraklar kaybedildi. Dizilişini değiştirip tekrar dene!')) : $t('Kalen düştü. Ordunu güçlendirip tekrar dene!')) + '</p>' +
+      html = ('<h1 style="color:var(--red)">' + $t('Yenilgi') + '</h1><p>') + (b.kind === 'field' ? (b.cmdP.dead || b.cmdP.hp <= 0 ? $t('Komutanın düştü! Onu arkada, korunaklı tut.') : $t('Süre doldu ya da bayraklar kaybedildi. Dizilişini değiştirip tekrar dene!')) : $t('Kampın düştü. Ordunu güçlendirip tekrar dene!')) + '</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + out.coins + ('</span></div><p class="small">' + $t('İpucu: Düşman birliklerine karşı üstün olanı çağır (🔱 > 🐎 > 🏹 > 🔱).') + '</p>');
     }
     if (M.canRewarded()) {
@@ -720,7 +720,7 @@
   // ---- Etkilesimli ogretici (ilk kez oynayan: Sefer 1) ----
   var tut = null;
   var TUT = [
-    { kind: 'info', hold: true, text: $t('Hoş geldin, Komutan! 🏰 Aşağıdaki kale <b>senin</b>, yukarıdaki <b>düşmanın</b>. Amaç: düşman kalesini yıkmak.'), ok: $t('Devam') },
+    { kind: 'info', hold: true, text: $t('Hoş geldin, Komutan! 🏕️ Aşağıdaki kamp <b>senin</b>, yukarıdaki kale <b>düşmanın</b>. Amaç: düşman kalesini yıkmak.'), ok: $t('Devam') },
     { kind: 'action', hold: true, text: ('🃏 ' + $t('Bir <b>birlik kartını</b> sürükleyip yukarıdaki <b>yollardan birine</b> bırak.')), target: function (b) { return '[data-unit="' + b.deck[0] + '"]'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 1; }, assist: function (b) { b.gold = Math.max(b.gold, Z.UNITS[b.deck[0]].cost + 1); } },
     { kind: 'info', hold: true, text: ('⚔️ ' + $t('Her birliğin bir üstünlüğü var:<br><b>🔱 mızrakçı › 🐎 süvari › 🏹 okçu › 🔱</b><br>Düşmanın ne çıkardığına bak, ona karşı olanı çağır.')), ok: $t('Anladım') },
     { kind: 'action', text: ('🛤️ ' + $t('Altın birikince bu kez <b>başka bir yola</b> birlik çağır. (Bir yola dokunup seçip karta dokunmak da çalışır.)')), target: function () { return '#cards'; }, hand: 'up', cond: function (b) { return b.stats.spawns >= 2; }, assist: function (b) { b.gold = Math.max(b.gold, 60); } },
@@ -997,11 +997,11 @@
 
   UI.whatsNew = function () {
     var d = S.data;
-    UI.modal('<h1>🎉 ' + $t('Sefer Vakti 0.9 geldi!') + '</h1><div class="new-list">' +
-      '⚖️ ' + $t('<b>Yeniden dengelenen zorluk:</b> bölümler artık gerçek ilerleme hızına göre ayarlı — erken bölümler rahat, geç bölümler adım adım zorlaşır') + '<br>' +
-      '🎒 ' + $t('<b>Hazırlık kartları:</b> savaşa altın, hazır yetenek ya da sur zırhıyla başla (Pazar\'dan al, sandıktan düşer)') + '<br>' +
-      '🦁 ' + $t('<b>Brifingte kahraman seçimi</b> ve 3 yıldız için hedef ipucu') + '<br>' +
-      '🐞 ' + $t('Hata taraması: yüzlerce rastgele savaş ve uzun rastgele oyun testi, çökme düzeltmeleri') + '</div>' +
+    UI.modal('<h1>🎉 ' + Z.NAME + ' 0.10</h1><div class="new-list">' +
+      '🏰 ' + $t('<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması') + '<br>' +
+      '🏕️ ' + $t('<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ') + '<br>' +
+      '⚔️ ' + $t('<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik') + '<br>' +
+      '🌐 ' + $t('Oyunun adı artık her dilde <b>Campaign Time</b>') + '</div>' +
       '<p class="small">' + $t('İlerlemen korundu.') + '</p>' +
       '<div class="actions"><button class="btn gold" data-act="ok">' + $t('Sefere çıkalım!') + '</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });

@@ -2,6 +2,14 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.10.0 — Campaign Time: gerçek kuşatmalar, kamp, kuşatma kuralları
+- 🏷️ **Oyunun adı sabit "Campaign Time"** ("Sefer Vakti"nin İngilizcesi): her dilde, başlıkta, simgede, APK adında aynı (`Z.NAME`).
+- 🏰 **105 bölümün her biri gerçek bir tarihî kuşatma:** Rochester 1215 → Orléans 1429 → Akka 1291 → Kazan 1552 → Malta 1565 → Bağdat 1258 → Viyana 1683 → İstanbul 1453. Haritada ad + yıl, brifingte kısa tarih notu. Diyarlar bölgelere döndü: Batı Avrupa, Kutsal Topraklar, Kuzey Seferleri, Akdeniz, Alçak Ülkeler, Asya, Anadolu ve Balkanlar (manzara temaları aynı kaldı).
+- 🏕️ **Senin tarafında kale yok, kamp var:** sivri kazıklı tahta çit, yurtlar, ateşler, nöbet kuleleri ve at kuyruklu **tuğ**; düşman kalesinde. "Kale canı" artık **Kamp canı**, "Kale Surları" **Kamp Tahkimatı**. Askerler yine kamp kapılarından çıkar.
+- ⚔️ **Kuşatma mekanikleri:** 🌊 **Hendek** (kalenin önünde yakın dövüşçüler %35 yavaşlar, ahşap köprüler), 🐎 **Yardım Ordusu** (uyarıdan sonra her koridora ağır dalga), ⏳ **Abluka** (eski Savunma Seferi: kampını koru, kale açlıktan teslim olur), 🏰 **Sağlam Surlar**, ve her kale savaşında **gedik**: kale yarıya inince sur yarılır, kale okları %40 zayıflar, saldırgan hasarı +%10.
+- 🏕️ Açık alan savaşları **kale önü muharebesi** oldu: üstte düşman kalesi (sur, kuleler, kapı), altta kampın; hedefler "Garnizon Komutanını Yok Et", "Mevzileri Ele Geçir", "Mevzii Tut". Kurallar tür başına ayrı döngüde (hendek/yardım ordusu yalnızca kale kuşatmasında).
+- Testler: `tests/unit-v10.js` (6): sabit ad, 105 gerçek kuşatma, kural dağılımı, hendek yavaşlatması, yardım ordusu zamanlaması, gedik, tüm kurallarla çökmeden savaş döngüsü.
+
 ## 0.9.2 — Yeni görsel kimlik (frontend-design)
 - 🎨 **Arayüz baştan giydirildi:** konu "Türk bozkır seferi" — keçe kahvesi zemin, kan boyası kırmızısı, turkuaz, yaldız altını ve kemik beyazı (6 renk). Parlak degrade/cam efekti yok; düz yüzey, kalın alt kenar ve **dikiş çizgisi**.
 - 🚩 **Ana menü:** solda sallanan **tuğ** (at kuyruklu sancak) amblemi, "Sefer Vakti" Almendra başlığı, kilim bandı; düğmeler ortalı kartlar yerine ikonlu, sola yaslı satırlar.

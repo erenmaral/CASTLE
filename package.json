@@ -1,8 +1,8 @@
 {
   "name": "seferhan",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "private": true,
-  "description": "Sefer Vakti - 2D strateji ve savas oyunu (mobil)",
+  "description": "Campaign Time (Sefer Vakti) - 2D strateji ve savas oyunu (mobil)",
   "scripts": {
     "sim": "node tests/sim-balance.js",
     "sync": "cap sync android"

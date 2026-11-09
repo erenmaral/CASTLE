@@ -1,15 +1,17 @@
-# ⚔️ Sefer Vakti
+# ⚔️ Campaign Time (Sefer Vakti)
+
+Oyunun adı **Campaign Time** — "Sefer Vakti"nin İngilizcesi; her dilde sabit kalır (`Z.NAME`, `www/js/version.js`).
 
 **Dikey (portre)** 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
 Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
 
 **6 dil** (Türkçe, English, Español, Português-BR, Русский, 简体中文), **mağaza ve reklam altyapısı** (bkz. `docs/MONETIZATION.md`).
 
-**İki savaş türü:** 🏰 3 koridorlu **kale kuşatması** ve 🏕️ ordunu sahaya serbestçe yerleştirdiğin **açık alan savaşı** (komutan, bayrak, nehir geçitleri, orman, tepe). Bölümler sırayla ikisini de getirir.
+**Her bölüm gerçek bir tarihî kuşatmadır** (Orléans 1429, Akka 1291, Kazan 1552, Malta 1565, Viyana 1683, İstanbul 1453…): sen **kampından** saldırırsın, düşman kalesindedir. İki savaş türü: 🏰 3 koridorlu **kale kuşatması** ve 🏕️ ordunu kamp önüne serbestçe yerleştirdiğin **kale önü muharebesi** (komutan, mevzi bayrakları, nehir geçitleri, orman, tepe). Kuşatma kuralları: Hendek, Yardım Ordusu, Abluka, Sağlam Surlar; kale yarıya inince **gedik** açılır.
 
 ## APK nasıl alınır?
 Her `push` sonrası GitHub Actions otomatik APK derler:
-**GitHub → bu depo → Releases** → en yeni `Sefer Vakti x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
+**GitHub → bu depo → Releases** → en yeni `Campaign Time x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
 (Ayarlar'dan "bilinmeyen kaynaklardan yüklemeye" izin vermek gerekir).
 Tüm sürümler aynı anahtarla imzalandığı için yeni APK eskisinin **üzerine kurulur, kayıtlarınız silinmez**.
 
