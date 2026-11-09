@@ -75,10 +75,14 @@
           store.register(conf.products.map(function (x) { return { id: x.id, type: x.type === 'gems' ? PT.CONSUMABLE : PT.NON_CONSUMABLE, platform: PL }; }));
           store.when().approved(function (tx) { // NOT: sunucu tarafi makbuz dogrulamasi onerilir (docs/MONETIZATION.md)
             var id = tx.products && tx.products[0] && tx.products[0].id, w = pending[id];
-            if (w) { delete pending[id]; w({ ok: true, token: tx.transactionId || tx.purchaseId }); } else if (id) ownedIds.push(id);
+            var tok = tx.transactionId || tx.purchaseId;
+            if (w) { delete pending[id]; w({ ok: true, token: tok }); }
+            else if (id) { // bekleyen istek yok (zaman asimi / uygulama kapanmis / yeniden oynatma): odemeyi KAYBETME, simdi ver
+              var g = M.grant(id, tok); if (g && !g.dup && Z.UI) { Z.UI.toast('💎 ' + (g.gems ? '+' + g.gems : '') + (g.coins ? ' 🪙 +' + g.coins : '')); if (Z.UI.renderHub) Z.UI.renderHub(); } ownedIds.push(id);
+            }
             tx.finish();
           });
-          store.error(function () { Object.keys(pending).forEach(function (k) { pending[k]({ ok: false }); delete pending[k]; }); });
+          store.error(function () { Object.keys(pending).forEach(function (k) { pending[k]({ ok: false }); delete pending[k]; }); }); // onay sonradan gelirse yukaridaki 'bekleyen yok' dali verir
           store.initialize([PL]);
         } catch (e) { /* yok say */ }
       };

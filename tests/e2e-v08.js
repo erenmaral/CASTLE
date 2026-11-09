@@ -6,7 +6,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 (async () => {
   const browser = await chromium.launch(); const errors = [];
   const stars = {}; for (let i = 1; i <= 30; i++) stars[i] = 2;
-  const save = (st) => JSON.stringify({ v: 1, tutorialDone: true, tutorialDone2: true, fieldTutDone: true, langChosen: true, seenVersion: '0.8', cleared: 30, coins: 3000, gems: 50, stars: st, stats: { totalStars: 60, wins: 30 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } });
+  const save = (st) => JSON.stringify({ v: 1, tutorialDone: true, tutorialDone2: true, fieldTutDone: true, langChosen: true, seenVersion: '0.9', cleared: 30, coins: 3000, gems: 50, stars: st, stats: { totalStars: 60, wins: 30 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } });
   const check = (c, msg) => { if (!c) errors.push('KONTROL BASARISIZ: ' + msg); else console.log('  ✓', msg); };
   async function open(opts) {
     const ctx = await browser.newContext({ locale: opts.locale || 'tr-TR', viewport: { width: 412, height: 915 }, deviceScaleFactor: 1.5, hasTouch: true, isMobile: true });

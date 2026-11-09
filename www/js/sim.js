@@ -40,7 +40,7 @@
     this.events = [];
     this.nextId = 1;
 
-    this.mine = 0;
+    this.mine = 0; this.boosters = [];
     this.gold = 120;
     this.cooldown = {};
     this.deck.forEach(function (u) { this.cooldown[u] = 0; }, this);
@@ -77,6 +77,13 @@
     return this.mode === 'endless' ? 1 + 0.065 * (this.wave() - 1) : this.info.scale;
   };
   P.rl = function (name) { return this.rules.indexOf(name) >= 0; };
+  // Sefer hazirlik kartlari (Z.BOOSTERS): savasin basinda uygulanir
+  P.applyBoosters = function (list) {
+    this.boosters = (list || []).slice();
+    if (this.boosters.indexOf('gold') >= 0) this.gold += 150;
+    if (this.boosters.indexOf('skill') >= 0) this.heroCd = 0;
+    if (this.boosters.indexOf('shield') >= 0) { this.base[0].max *= 1.3; this.base[0].hp *= 1.3; }
+  };
   P.aiRate = function () {
     return this.mode === 'endless' ? 8 + 0.8 * this.wave() : this.info.aiRate;
   };
@@ -99,6 +106,7 @@
     return !this.over && this.cooldown[type] !== undefined && this.cooldown[type] <= 0 && this.gold >= Z.UNITS[type].cost;
   };
   P.deploy = function (type, lane) {
+    if (!(lane >= 0 && lane <= 2) || lane !== Math.floor(lane)) return false; // gecersiz koridor sim'i bozmasin
     if (!this.canDeploy(type)) return false;
     if (this.laneCount(0, lane) >= MAX_PER_LANE) return false;
     var def = Z.UNITS[type];
@@ -583,6 +591,9 @@
       var wk = b.kind === 'field' ? 'fieldWins' : 'castleWins'; d.stats[wk] = (d.stats[wk] || 0) + 1; S.track(wk, 1);
       if (b.info.boss) { d.stats.bossWins = (d.stats.bossWins || 0) + 1; S.track('bossWins', 1); }
       if (b.diff > 0) S.track('hardWins', 1);
+    }
+    if (r.win && b.mode === 'campaign' && b.rng() < 0.18 + 0.06 * r.stars) { // zafer sandigindan hazirlik karti dusebilir
+      var bid = Z.BOOSTER_ORDER[Math.floor(b.rng() * Z.BOOSTER_ORDER.length)]; d.boost[bid] = (d.boost[bid] || 0) + 1; out.booster = bid;
     }
     d.coins += out.coins; d.gems += out.gems;
     S.save();

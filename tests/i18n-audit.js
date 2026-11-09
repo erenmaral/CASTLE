@@ -7,7 +7,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const browser = await chromium.launch(); const problems = new Map(); const seenScreens = [];
   const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, locale: 'tr-TR' });
   const stars = {}; for (let i = 1; i <= 60; i++) stars[i] = 2;
-  await ctx.addInitScript((st) => { try { localStorage.setItem('sefervakti.lang', 'xx'); localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, tutorialDone2: true, fieldTutDone: true, langChosen: true, seenVersion: '0.8', cleared: 60, coins: 5000, gems: 100, stars: st, stats: { totalStars: 120, wins: 60 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
+  await ctx.addInitScript((st) => { try { localStorage.setItem('sefervakti.lang', 'xx'); localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, tutorialDone2: true, fieldTutDone: true, langChosen: true, seenVersion: '0.9', cleared: 60, coins: 5000, gems: 100, stars: st, stats: { totalStars: 120, wins: 60 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   const scan = async (name) => {
     const bad = await p.evaluate(() => {

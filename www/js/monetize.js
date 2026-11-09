@@ -20,8 +20,8 @@
 
   // ---- saglayici secimi ----
   M.detect = function () {
-    var test = false;
-    try { test = (typeof localStorage !== 'undefined' && localStorage.getItem('sv.monetize') === 'test') || (typeof location !== 'undefined' && /[?&]monetize=test/.test(location.search)); } catch (e) { /* engelli */ }
+    var test = false, allowed = Z.BUILD === 'dev' || (Z.MONEY && Z.MONEY.allowTestMode === true); // yayin surumunde test saglayici KAPALI (bedava elmas kapisi olmasin)
+    try { test = allowed && ((typeof localStorage !== 'undefined' && localStorage.getItem('sv.monetize') === 'test') || (typeof location !== 'undefined' && /[?&]monetize=test/.test(location.search))); } catch (e) { /* engelli */ }
     if (test && M.testProvider) { M.provider = M.testProvider(); M.mode = 'test'; }
     else {
       var P = globalThis.Capacitor && globalThis.Capacitor.Plugins, hasAd = P && P.AdMob, hasIap = globalThis.CdvPurchase;

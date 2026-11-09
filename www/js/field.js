@@ -59,7 +59,7 @@
     this.map = Z.fieldMap(this.level, this.objective);
     this.W = FW; this.H = FH;
     this.t = 0; this.over = false; this.result = null; this.units = []; this.projs = []; this.events = []; this.nextId = 1;
-    this.phase = 'prep'; this.budget0 = Z.fieldBudget(this.level); this.gold = this.budget0; this.mine = 0;
+    this.boosters = []; this.phase = 'prep'; this.budget0 = Z.fieldBudget(this.level); this.gold = this.budget0; this.mine = 0;
     this.cooldown = {}; this.deck.forEach(function (u) { this.cooldown[u] = 0; }, this);
     this.heroCd = Z.HEROES[this.heroId].cd * 0.4; this.roarUntil = 0; this.stance = 'attack';
     this.perks = {}; this.perkIdx = 0; this.perkOffer = null;
@@ -76,7 +76,7 @@
   P.emit = function (e) { e.field = true; this.events.push(e); };
   P.drain = function () { var e = this.events; this.events = []; return e; };
   P.buffed = function () { return this.roarUntil > this.t; };
-  P.enemyScale = function () { return this.info.scale; };
+  P.enemyScale = function () { return this.info.fieldScale; };
   P.income = function () { return Z.mineIncome(this.mine) * 0.8 * (this.perks.gold ? 1.25 : 1) * (this.rl('rich') ? 1.3 : this.rl('famine') ? 0.8 : 1); };
   P.goldCap = function () { return Z.mineCap(this.mine); };
   P.mineCost = function () { return this.mine < Z.MINE_COSTS.length ? Z.MINE_COSTS[this.mine] : null; };
@@ -88,7 +88,7 @@
   P.spawn = function (team, type, x, y, boss) {
     var def = type === 'commander' ? CMD : Z.UNITS[type], hpM, dmgM;
     if (team === 0) { var lvl = this.sv.unitLvl[type] || 1; hpM = Z.unitHpMult(lvl); dmgM = Z.unitDmgMult(lvl); if (this.perks.hp) hpM *= 1.15; }
-    else { var s = this.enemyScale(), late = 1 + 0.011 * Math.max(0, Math.min(this.level, 75) - 20) + 0.04 * Math.max(0, this.level - 75); hpM = s * late * (this.rl('heavy') ? 1.2 : 1) * (this.rl('fortress') ? 1.25 : 1) * this.D.hp; dmgM = (1 + (s - 1) * 0.8) * (1 + (late - 1) * 0.6) * this.D.dmg; }
+    else { var s = this.enemyScale(), late = 1; hpM = s * late * (this.rl('heavy') ? 1.2 : 1) * (this.rl('fortress') ? 1.25 : 1) * this.D.hp; dmgM = (1 + (s - 1) * 0.8) * (1 + (late - 1) * 0.6) * this.D.dmg; }
     hpM *= HPX; // acik alanda savaslar daha uzun ve taktiksel sursun
     if (boss) { hpM *= 3; dmgM *= 1.15; }
     var u = {
@@ -292,6 +292,12 @@
   P.upgradeMine = function () {
     var c = this.mineCost(); if (this.over || c === null || this.gold < c || this.phase !== 'battle') return false;
     this.gold -= c; this.mine++; this.stats.mines++; this.emit({ type: 'mine', level: this.mine }); return true;
+  };
+  P.applyBoosters = function (list) { // Z.BOOSTERS: hazirlik asamasinda uygulanir
+    this.boosters = (list || []).slice();
+    if (this.boosters.indexOf('gold') >= 0) { this.gold += 120; this.budget0 += 120; }
+    if (this.boosters.indexOf('skill') >= 0) this.heroCd = 0;
+    if (this.boosters.indexOf('shield') >= 0) { this.cmdP.max *= 1.5; this.cmdP.hp *= 1.5; }
   };
   P.setStance = function (s) { this.stance = s === 'defend' ? 'defend' : 'attack'; };
 

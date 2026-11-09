@@ -22,7 +22,7 @@
     },
 
     startBattle: function (mode, level, opts) {
-      opts = opts || {};
+      opts = opts || {}; S.rollDay();
       S.sanitizeDeck();
       var d = S.data;
       A.init();
@@ -31,6 +31,9 @@
         diff: opts.diff || 0, daily: opts.daily, rules: opts.daily ? opts.daily.rules : undefined,
         theme: mode === 'daily' ? opts.daily.theme : mode === 'endless' ? Math.floor(Math.random() * Z.REALMS.length) : undefined };
       this.battle = isField ? new Z.FieldBattle(cfg) : new Z.Battle(cfg);
+      if (opts.boosters && opts.boosters.length && mode !== 'endless' && lvl > 1) { // hazirlik kartlarini tuket ve uygula
+        var used = opts.boosters.filter(function (id) { return d.boost[id] > 0; }); used.forEach(function (id) { d.boost[id]--; }); S.save(); this.battle.applyBoosters(used);
+      }
       this.battle.startOpts = opts; this.demo = null; A.setSfxLevel(1); A.noVibrate = false; A.setMode('battle'); this.setAuto(false);
       this.paused = false; this.ending = false; this.endTimer = 0; this.perkOpen = false;
       UI.closeModal(); UI.hideHub();
@@ -114,7 +117,7 @@
       var self = this;
       UI.pauseModal({
         resume: function () { self.resume(); },
-        restart: function () { var b = self.battle; self.startBattle(b.mode, b.level, b.startOpts); },
+        restart: function () { var b = self.battle, o = Object.assign({}, b.startOpts); delete o.boosters; self.startBattle(b.mode, b.level, o); }, // kartlar tekrar harcanmaz
         quit: function () { self.toMenu(); }
       });
     },
@@ -124,6 +127,7 @@
     },
 
     loop: function (now) {
+      requestAnimationFrame(Game.loop); // once sonraki kareyi iste: tek bir istisna oyunu dondurmasin
       var dt = Math.min(0.1, (now - Game.last) / 1000 || 0.016);
       Game.last = now;
       var b = Game.battle;
@@ -150,12 +154,12 @@
         R.frame(Game.paused ? 0 : dt);
         UI.hudUpdate(b);
       } else if (Game.demo) Game.demoStep(dt);
-      requestAnimationFrame(Game.loop);
     },
 
     // Android geri tusu
     onBack: function () {
       if (this.battle && this.battle.perkOffer) return; // ganimet secilmeden kapatilamaz
+      if (this.battle && this.battle.over) { if (this.settled) { UI.closeModal(); return this.toMenu(); } return; } // sonuc ekraninda geri = menu; sonuc hesaplanirken yok say
       if (UI.modalOpen()) {
         if (this.paused) return this.resume();
         return UI.closeModal();
@@ -186,7 +190,11 @@
     Game.resize();
     globalThis.addEventListener('resize', function () { Game.resize(); });
     globalThis.addEventListener('orientationchange', function () { setTimeout(function () { Game.resize(); }, 200); });
-    document.addEventListener('visibilitychange', function () { if (document.hidden) { Game.pause(); A.musicStop(); } else if (!Game.battle) Game.menuMusic(); });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { Game.pause(); A.musicStop(); return; }
+      S.rollDay(); // uygulama gece yarisini asarak acik kaldiysa gunluk durumu yenile
+      if (!Game.battle) Game.menuMusic(); else if (!Game.paused && !Game.battle.over) A.musicStart();
+    });
     document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     // ilk dokunusta ses motorunu ac
     document.addEventListener('pointerdown', function () { A.init(); if (!Game.battle) Game.menuMusic(); }, { once: true });

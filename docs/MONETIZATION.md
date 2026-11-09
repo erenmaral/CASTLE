@@ -18,14 +18,14 @@ Bu belge, oyundaki **mağaza / reklam / uygulama içi satın alma** altyapısın
 
 ## 1) Önce test modunda deneyin (tarayıcıda)
 
-Tarayıcı sürümünde (GitHub Pages) adres sonuna `?monetize=test` ekleyin ya da konsolda:
+Yerel geliştirmede (`www/index.html`, derleme numarası `dev`) adres sonuna `?monetize=test` ekleyin ya da konsolda — yayınlanmış (Pages/APK) sürümde test modu **varsayılan olarak kapalıdır**, çünkü açık olsaydı herkes sahte ödemeyle bedava elmas alabilirdi. Yayınlanmış Pages sürümünde denemek için `monetize-config.js` içinde geçici olarak `allowTestMode: true` yapın:
 
 ```js
 localStorage.setItem('sv.monetize', 'test'); location.reload();
 ```
 
 Mağazada sahte reklam (3 sn sayaç) ve sahte ödeme onayı çıkar; elmaslar gerçekten eklenir. Kapatmak: `localStorage.removeItem('sv.monetize')`.
-**Yayınladığınız APK/Pages sürümünde bu bayrak oyuncuda kapalıdır**; bir oyuncu konsoldan açarsa yalnızca kendi cihazındaki kaydına elmas ekler (sunucu doğrulaması olmadığından zaten yapabilir; bkz. "Güvenlik").
+`allowTestMode` yayında **false** kalmalıdır. (Kayıt cihazda saklandığı için kararlı bir oyuncu yine de kendi kaydını düzenleyebilir; bkz. "Güvenlik".)
 
 ## 2) Reklamlar (Google AdMob)
 

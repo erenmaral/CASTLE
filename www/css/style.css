@@ -375,3 +375,13 @@ textarea{width:100%;background:rgba(0,0,0,.45);border:3px solid var(--line);bord
 #btn-auto.on{background:linear-gradient(#22c55e,#15803d);border-color:#bbf7d0;box-shadow:0 0 16px rgba(34,197,94,.7)}
 #btn-auto{font-size:30px}
 .btn.soft{filter:grayscale(.85) brightness(.7)}
+
+/* ---- Hazirlik kartlari + kahraman secimi (brifing) ---- */
+.boost-row{display:flex;align-items:center;gap:10px;margin:4px 0}
+.boost-row .bl{font-size:20px;font-weight:800;color:var(--mut);min-width:96px;text-align:left}
+.bchip{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:16px;background:rgba(10,14,34,.7);border:3px solid var(--line);font-size:30px;line-height:1.1;color:#fff}
+.bchip b{font-size:22px;color:var(--gold)}
+.bchip.on{border-color:var(--gold);background:rgba(251,191,36,.25);box-shadow:0 0 14px rgba(251,191,36,.5)}
+.bchip.none{opacity:.5}
+.bdesc{margin:2px 0 8px;min-height:24px}
+#hint{max-width:620px;width:max-content;white-space:normal;text-align:center;line-height:1.25;border-radius:30px}

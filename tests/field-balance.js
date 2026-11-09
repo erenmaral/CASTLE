@@ -5,9 +5,11 @@ globalThis.localStorage = { getItem() { return null; }, setItem() {} };
 ['version', 'data', 'save', 'sim', 'field'].forEach(f => require(path.join('..', 'www', 'js', f + '.js')));
 const Z = globalThis.Z;
 const SEEDS = +process.argv[2] || 8, LVL_BONUS = +(process.argv[3] || 0);
+const STATE = require('./progression-state.json'); // tests/progression.js ciktisi: bolum basina gercekci oyuncu durumu
 function makeSave(L) {
-  const lvl = Math.min(Z.MAX_UNIT_LVL, Math.max(1, 1 + Math.floor(L * 0.4) + LVL_BONUS)), unitLvl = {}; Z.UNIT_ORDER.forEach(u => (unitLvl[u] = lvl));
-  return { unitLvl, heroLvl: { aslan: 1 + Math.floor(L / 5), yildiz: 1, demir: 1 }, castleLvl: 1 + Math.floor(L / 6) };
+  const st = STATE[Math.min(L, Z.MAX_LEVEL)] || STATE[1], unitLvl = {};
+  Z.UNIT_ORDER.forEach(u => (unitLvl[u] = Math.max(1, Math.min(Z.MAX_UNIT_LVL, (st.units[u] || 1) + LVL_BONUS))));
+  return { unitLvl, heroLvl: { aslan: st.hero, yildiz: 1, demir: 1 }, castleLvl: st.castle };
 }
 const unlockedAt = L => Z.UNIT_ORDER.filter(u => L - 1 >= Z.UNLOCK_AT[u]);
 function playField(L, seed, stats) {

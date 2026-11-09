@@ -29,5 +29,7 @@ Z.MONEY = {
     { id: 'sefervakti_starter',   type: 'starter', gems: 300,  coins: 5000, price: '$1.99' },   // tek seferlik baslangic paketi
     { id: 'sefervakti_noads',     type: 'noads',   price: '$3.99' }                              // reklamlari kaldirir (odullu reklam serbest kalir)
   ],
+  // Test modunu (sahte reklam/odeme) YAYIN surumunde denemek isterseniz gecici olarak true yapin ve adrese ?monetize=test ekleyin. Yayinlamadan once false birakin!
+  allowTestMode: false,
   links: { privacy: '', terms: '', support: '' }   // Gizlilik politikasi / sartlar / destek adresleri (Play Store icin zorunlu)
 };

@@ -9,11 +9,11 @@ const Z = globalThis.Z;
 const SEEDS = +process.argv[2] || 12;
 const LVL_BONUS = +(process.argv[3] || 0);
 
+const STATE = require('./progression-state.json'); // tests/progression.js ciktisi: bolum basina gercekci oyuncu durumu
 function makeSave(L) {
-  const lvl = Math.min(Z.MAX_UNIT_LVL, Math.max(1, 1 + Math.floor(L * 0.4) + LVL_BONUS));
-  const unitLvl = {}; Z.UNIT_ORDER.forEach(u => (unitLvl[u] = lvl));
-  const heroLvl = { aslan: 1 + Math.floor(L / 5), yildiz: 1, demir: 1 };
-  return { unitLvl, heroLvl, castleLvl: 1 + Math.floor(L / 6) };
+  const st = STATE[Math.min(L, Z.MAX_LEVEL)] || STATE[1], unitLvl = {};
+  Z.UNIT_ORDER.forEach(u => (unitLvl[u] = Math.max(1, Math.min(Z.MAX_UNIT_LVL, (st.units[u] || 1) + LVL_BONUS))));
+  return { unitLvl, heroLvl: { aslan: st.hero, yildiz: 1, demir: 1 }, castleLvl: st.castle };
 }
 function unlockedAt(L) { return Z.UNIT_ORDER.filter(u => L - 1 >= Z.UNLOCK_AT[u]); }
 

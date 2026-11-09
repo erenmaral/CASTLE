@@ -43,6 +43,17 @@ node tests/gallery.js              # görsel galeri (ekran görüntüsü) — ye
 ## Yeni diyar eklemek (özet)
 `Z.REALMS`'e ad, `Z.LEVEL_NAMES` ve `Z.STORIES`'e 15'er satır (her 5. bölüm PATRON), `Z.MAX_LEVEL`'i 15 artır, `render.js` içindeki `THEMES`'e tema (+ varsa `leaf` renkleri), `ui.js` haritadaki `RI` (simge) ve `DEC` (süs) dizilerine ve `style.css`'e `.rbg.rN` / `.node.rN` ekle. Ardından `sim-balance.js` ve `field-balance.js` ile dengeyi kontrol et.
 
+## Zorluk ayarı (denge) — doğru yöntem
+1. `node tests/progression.js 6 0.5` — gerçekçi oyuncu: her bölümde ne kadar denemede geçtiğini ve ortalama birlik seviyesini yazar (`OUT=dosya.json` bölüm başına oyuncu durumunu kaydeder; depodaki `tests/progression-state.json` bunun çıktısıdır).
+2. `node tests/calibrate.js lane|field durum.json cikti.json [parça/toplam] [tohum]` — her bölüm için hedef kazanma oranını (`KNOTS`: 0.97→0.55) veren düşman ölçeğini bulur (parçalara bölüp paralel çalıştırılabilir).
+3. Sonuçları yumuşatıp `www/js/data.js` içindeki `Z.SCALE_KNOTS.lane/field` tablolarına yaz (düğüm noktaları arası doğrusal), sonra 1'i tekrar çalıştırıp deneme sayılarını kontrol et.
+Ekonomi (altın ödülü, yükseltme maliyeti) değişirse `Z.expectedLevel` (data.js) ve `tests/progression-state.json` yenilenmeli; yeni içerik (birim/diyar) eklenince 1-3 tekrarlanır.
+
+## Hata taraması araçları
+- `node tests/fuzz-sim.js 400 <tohum>` — rastgele savaşlar (NaN, istisna, bitmeyen savaş).
+- `node tests/monkey.js 120 <tohum> tr|en [genişlik yükseklik]` — Playwright ile gerçek rastgele tıklama/sürükleme; sayfa/konsol hataları ve değişmezler (NaN, negatif bakiye, takılan savaş).
+- `node tests/playthrough.js shots tr` — yeni oyuncu gibi ilk bölümler; ekran görüntüleri `shots/play-*.png`.
+
 ## Çeviri (i18n)
 - Kaynak dil Türkçedir. Kodda kullanıcıya görünen her metni `$t('Türkçe metin')` ile sar (her dosyanın başında `var $t = Z.t || ...`). Sayı/ad içeren cümlelerde birleştirme yerine **şablon** kullan: `$t('{n}. bölümü tamamla', { n: 10 })` — çevirmen sözcük sırasını değiştirebilsin. Statik HTML için `data-i18n` (metin) ve `data-i18n-title` (aria-label) kullan.
 - `node scripts/i18n.js extract out.json` kaynak metinleri listeler; `check` paketlerdeki eksik anahtar / HTML etiketi / yer tutucu hatalarını bulur; `build <klasör>` `<dil>.json` (+ `<dil>.*.json` eklemeleri) dosyalarından `www/js/lang/<dil>.js` üretir. Yeni metinler için yalnızca eksik anahtarları (check çıktısı) çevirtip `<dil>.extra.json` olarak ekle.

@@ -252,6 +252,21 @@
     return Math.floor(n / 5) % 2 === 1 ? 'capture' : 'commander';
   };
   Z.fieldBudget = function (n) { return 300 + 55 * n; }; // savas oncesi yerlestirme butcesi (komuta puani)
+  // ---- Dusman guc carpani (bolum basina): kale ve acik alan icin AYRI, kalibre edilmis tablolar -------------
+  // tests/calibrate.js ile uretilir; ara bolumler dogrusal aradeger. Z.SCALE_OVERRIDE yalnizca kalibrasyon icindir.
+  Z.SCALE_OVERRIDE = null;
+  Z.SCALE_KNOTS = {
+    lane:  [[1, 1.0], [5, 1.2], [10, 1.5], [15, 1.85], [20, 2.05], [30, 2.17], [45, 2.17], [60, 2.17], [75, 2.17], [90, 2.17], [105, 2.17]],
+    field: [[1, 1.0], [5, 1.15], [10, 1.5], [15, 1.8], [20, 2.0], [30, 2.44], [45, 2.45], [60, 3.0], [75, 3.6], [90, 4.2], [105, 4.46]]
+  };
+
+  Z.scaleFor = function (kind, n) {
+    if (Z.SCALE_OVERRIDE && Z.SCALE_OVERRIDE[kind] && Z.SCALE_OVERRIDE[kind][n] !== undefined) return Z.SCALE_OVERRIDE[kind][n];
+    var k = Z.SCALE_KNOTS[kind], i;
+    if (n <= k[0][0]) return k[0][1];
+    for (i = 1; i < k.length; i++) if (n <= k[i][0]) { var a = k[i - 1], b = k[i]; return a[1] + (b[1] - a[1]) * (n - a[0]) / (b[0] - a[0]); }
+    return k[k.length - 1][1];
+  };
   Z.levelInfo = function (n) {
     var tiers = ['spear', 'archer'];
     if (n >= 3) tiers.push('cav');
@@ -272,7 +287,8 @@
       rule: Z.ruleOf(n),
       story: Z.STORIES[(n - 1) % Z.STORIES.length],
       surviveTime: Math.round(90 + 2.5 * n),
-      scale: 1 + 0.033 * Math.min(n - 1, 29) + 0.028 * Math.max(0, Math.min(n - 30, 15)) + 0.008 * Math.max(0, n - 45),
+      scale: Z.scaleFor('lane', n),
+      fieldScale: Z.scaleFor('field', n),
       baseHp: 700 + 130 * n,
       aiRate: n <= 40 ? 8 + 0.29 * n : 20 + 0.04 * (n - 40), // oyuncunun azami geliriyle (27.5) dengeli kalir
       // // oyuncunun azami geliriyle (27.5) dengeli kalir
@@ -435,11 +451,30 @@
   };
 
   // ---- Pazar: elmas harcama yeri ----------------------------------------
+  // ---- Sefer hazirlik kartlari (tek kullanimlik, brifingte secilir) ----
+  Z.BOOSTERS = {
+    gold:   { id: 'gold',   icon: '💰', name: $t('Altın Hazırlığı'), desc: $t('Savaşa +150 altınla başla (açık alanda +120 komuta puanı).'), gems: 15 },
+    skill:  { id: 'skill',  icon: '⚡', name: $t('Kahraman Hazır'),  desc: $t('Kahraman yeteneği savaşın başında hazır gelir.'), gems: 15 },
+    shield: { id: 'shield', icon: '🛡️', name: $t('Sur Zırhı'),       desc: $t('Kale canı +%30 (açık alanda komutan canı +%50).'), gems: 20 }
+  };
+  Z.BOOSTER_ORDER = ['gold', 'skill', 'shield'];
+  Z.BOOST_UNLOCK = 3;   // bu kadar bolum kazanilinca brifingte gorunur
+  Z.BOOST_PACK = 3;     // Pazar'dan bir alimda kac kart
+  // Oyuncunun bu bolumde ulasmasi beklenen ortalama birlik seviyesi (tests/progression.js olcumu); onerilen seviye bunun %90'i
+  Z.expectedLevel = function (n) {
+    var k = [[1, 2], [5, 5], [10, 8], [20, 12.5], [40, 18], [60, 21], [80, 23.4], [105, 25.5]], i;
+    if (n <= 1) return 2;
+    for (i = 1; i < k.length; i++) if (n <= k[i][0]) return k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (n - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
+    return 25.5;
+  };
   Z.MARKET = [
     { id: 'coins',    icon: '👛', name: $t('Altın Kesesi'),       gems: 10, desc: function (d) { return '🪙 ' + (400 + 60 * d.cleared) + (' ' + $t('altın')); } },
     { id: 'chest',    icon: '🎁', name: $t('Büyük Sandık'),       gems: 40, desc: function (d) { return '🪙 ' + (3000 + 250 * d.cleared) + (' ' + $t('altın')); } },
     { id: 'treasury', icon: '💰', name: $t('Hazine Hızlandırma'), gems: 15, desc: function () { return $t('Hazine hemen 8 saatlik geliri biriktirir'); } },
-    { id: 'spin',     icon: '🎡', name: $t('Bonus Çark Hakkı'),   gems: 10, desc: function () { return $t('Şans Çarkı\'nı bedava çevir'); } }
+    { id: 'spin',     icon: '🎡', name: $t('Bonus Çark Hakkı'),   gems: 10, desc: function () { return $t('Şans Çarkı\'nı bedava çevir'); } },
+    { id: 'b_gold',   icon: '💰', name: $t('Altın Hazırlığı') + ' ×3', gems: 40, desc: function () { return Z.BOOSTERS.gold.desc; } },
+    { id: 'b_skill',  icon: '⚡', name: $t('Kahraman Hazır') + ' ×3',  gems: 40, desc: function () { return Z.BOOSTERS.skill.desc; } },
+    { id: 'b_shield', icon: '🛡️', name: $t('Sur Zırhı') + ' ×3',       gems: 55, desc: function () { return Z.BOOSTERS.shield.desc; } }
   ];
 
   // ---- Yardimcilar -----------------------------------------------------

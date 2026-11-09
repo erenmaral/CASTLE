@@ -16,7 +16,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(700);
 
   // Yenilikler penceresi (0.3 kaydi ile)
-  check(/Sefer Vakti 0\.8/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.8 penceresi gösterildi');
+  check(/Sefer Vakti 0\.9/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.9 penceresi gösterildi');
   await shot('v04-01-whatsnew'); await p.click('[data-act="ok"]'); await p.waitForTimeout(400);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); }); await p.waitForTimeout(300);
   check(await p.evaluate(() => document.querySelectorAll('.node').length === 105), 'Harita 105 bölümü gösteriyor');
@@ -56,7 +56,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
 
   // Pazar
   await p.click('[data-tab="vault"]'); await p.waitForTimeout(400);
-  check(await p.locator('[data-buy]').count() === 4, 'Pazar: 4 ürün');
+  check(await p.locator('[data-buy]').count() === 7, 'Pazar: 7 ürün (4 + 3 hazırlık kartı)');
   const bc = await p.evaluate(() => [Z.Save.data.coins, Z.Save.data.gems]);
   await p.locator('[data-buy="coins"]').click(); await p.waitForTimeout(300);
   check(await p.evaluate(([c, g]) => Z.Save.data.gems === g - 10 && Z.Save.data.coins > c, bc), 'Altın Kesesi alındı (elmas düştü, altın arttı)');

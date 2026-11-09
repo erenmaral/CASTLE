@@ -35,7 +35,7 @@
       settings: { sound: true, music: true, vibrate: true, menuBattle: true, musicVol: 70, sfxVol: 100 },
       seenUnlock: { spear: true, archer: true, cav: true },
       tutorialDone: false, seenVersion: '', langChosen: false,
-      iap: { noAds: false, starter: false, tokens: [] }, ads: { day: '', rewarded: 0, battles: 0, lastInter: 0 }
+      boost: { gold: 1, skill: 1, shield: 1 }, iap: { noAds: false, starter: false, tokens: [] }, ads: { day: '', rewarded: 0, battles: 0, lastInter: 0 }
     };
   }
 
@@ -44,7 +44,7 @@
     today: today,
     load: function () {
       var d = null;
-      try { d = JSON.parse(localStorage.getItem(KEY)); } catch (e) { d = null; }
+      var raw = null; try { raw = localStorage.getItem(KEY); d = JSON.parse(raw); } catch (e) { d = null; if (raw) { try { localStorage.setItem(KEY + '.bak', raw); } catch (e2) { /* dolu */ } } } // okunamayan kaydi yedekle
       var f = fresh();
       if (d && typeof d === 'object') {
         // eksik alanlari varsayilanlarla tamamla (guncellemeler eski kaydi bozmasin)
@@ -75,6 +75,9 @@
       }
       if (d.wheel.day !== t) d.wheel = { day: t, used: false };
       if (d.dailySefer.day !== t) d.dailySefer = { day: t, won: false };
+      var self = this, known = function (q) { return !!self.questDef(q.id); }; // surum guncellemesiyle silinen gorev kimlikleri gorevi/ekrani bozmasin
+      if (d.quests.list && d.quests.list.some(function (q) { return !known(q); })) d.quests.day = '';
+      if (d.weekly && d.weekly.list && d.weekly.list.some(function (q) { return !known(q); })) d.weekly = { week: -1, list: [] };
       if (d.quests.day !== t) {
         var pool = Z.QUEST_POOL.slice(), h = hashStr(t), list = [];
         for (var i = 0; i < Z.DAILY_QUEST_COUNT && pool.length; i++) {
@@ -112,7 +115,7 @@
       var self = this;
       d.quests.list.concat(d.weekly ? d.weekly.list : []).forEach(function (q) {
         var def = self.questDef(q.id);
-        if (def && def.stat === stat && !q.claimed) q.prog = Math.min(def.target, q.prog + (n || 1));
+        if (def && def.stat === stat && !q.claimed) q.prog = Math.min(def.target, q.prog + (n === undefined ? 1 : n));
       });
     },
     questDef: function (id) { return Z.QUEST_POOL.concat(Z.WEEKLY_POOL).filter(function (x) { return x.id === id; })[0]; },
@@ -181,6 +184,7 @@
       else if (id === 'chest') d.coins += 3000 + 250 * d.cleared;
       else if (id === 'treasury') d.treasuryLast = Date.now() - Z.TREASURY_CAP_H * 3600000;
       else if (id === 'spin') d.wheel.used = false;
+      else if (/^b_/.test(id)) { var bk = id.slice(2); d.boost[bk] = (d.boost[bk] || 0) + Z.BOOST_PACK; }
       d.stats.purchases++; this.save();
       return m;
     },
