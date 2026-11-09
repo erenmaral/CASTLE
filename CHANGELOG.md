@@ -2,6 +2,17 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.11.0 — Google Play yayına hazırlık
+- 📦 **Paket adı:** `io.github.erenmaral.castlesiege` (eski `com.zafarion.game` yerine; Play'e ilk yüklemeden önce değiştirilmesi gerekiyordu, yüklendikten sonra değişmez). Yeni uygulama eskisinin yanına ayrı kurulur; ilerleme için **Ayarlar → Kaydı dışa aktar / İçe aktar**.
+- 🧱 **AAB:** CI artık hem APK (yan yükleme) hem imzalı **AAB** (Play Console) üretir; ikisi de Releases'e eklenir. Dil bölünmesi kapalı (oyun dilini uygulama içinden değiştirir). `targetSdk 36`, tek izin `INTERNET` (+eklentilerin faturalandırma/reklam izinleri), açık HTTP yok, Android yedekleme kuralları.
+- 💳 **Gerçek Google Play Faturalandırma** (`cordova-plugin-purchase` 13.20, Billing Library 9) ve **Google AdMob** (`@capacitor-community/admob` 8.3) eklentileri kuruldu. Reklam kimlikleri GitHub **Variables**'tan (`ADMOB_*`) CI'da yazılır; yoksa Google TEST reklamları (uyarıyla).
+- 🛡️ **Onay (UMP):** AB/İngiltere/İsviçre'de reklamdan önce Google onay formu; Ayarlar'da **Reklam gizlilik tercihleri**.
+- 🐞 **Hata düzeltmesi:** geçiş reklamında olay adları eklenti v8 ile uyumsuzdu (reklam kapanınca oyun beklemede kalabilirdi); düzeltildi, ayrıca zaman aşımı eklendi. Cordova eklentileri için açılış `deviceready` bekler (en çok 3 sn).
+- 🔒 **Gizlilik Politikası + Kullanım Şartları** sayfası (`www/privacy.html`, tr/en); Ayarlar ve Mağaza'dan bağlantı.
+- 🖼️ **Mağaza girişi:** 6 dilde başlık/kısa/tam açıklama (`store/metadata/android/<yerel>/`), 512 simge, 1024×500 öne çıkan görsel ve 6 telefon ekran görüntüsü (1080×1920) — `node store/make-graphics.js` ile yeniden üretilir.
+- 📘 `docs/PLAY_STORE.md`: uygulama adı, paket adı, varsayılan dil, kategori, içerik derecelendirme ve veri güvenliği cevapları, adım adım yayın kontrol listesi.
+- Test: `tests/unit-v11.js`.
+
 ## 0.10.4 — Kale önü muharebelerinin arka planı
 - 🏕️ **Kale önü muharebesi sahnesi de aynı gerçekçi katmanlarla yenilendi:** ufukta sisli dağlar ve gökyüzü (düşman kalesi artık ufuk çizgisinde duruyor), dokulu zemin, dokulu ve tekerlek izli toprak yol (yol kenarında çim/kum/kar), nehirde derinlik + akış çizgileri + kıyı köpüğü + kamışlar + taş basamaklı geçitler, ışığa göre gölgelendirilmiş tepeler ve kayalar, gölgeli sprite ağaçlı ormanlar, kale ve kamp önünde ezilmiş toprak ve duvar gölgesi; 7 temanın hepsi.
 - Savaş başlığı (ör. "KALE ÖNÜ · MEVZİLERİ ELE GEÇİR") dar ekranlarda taşmıyor, yazı ekrana sığacak şekilde küçülüyor.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ yedekleme: oyun kaydi WebView depolamasinda (app_webview) tutulur; bulut yedegi ve cihaz aktarimi dahil, onbellekler haric. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="app_webview/Default/Cache" />
+        <exclude domain="root" path="app_webview/Default/Code Cache" />
+        <exclude domain="root" path="app_webview/Default/GPUCache" />
+    </cloud-backup>
+    <device-transfer>
+    </device-transfer>
+</data-extraction-rules>

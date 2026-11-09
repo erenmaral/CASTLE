@@ -14,7 +14,7 @@ Bu belge, oyundaki **mağaza / reklam / uygulama içi satın alma** altyapısın
 | **Test modu** (sahte reklam + sahte ödeme penceresi) | — |
 | Yerli adaptörler: `@capacitor-community/admob` ve `cordova-plugin-purchase` bulunursa otomatik devreye girer | **Gerçek cihazda test etmek** (bu adaptörleri burada cihazsız yazdım, doğrulanmadı) |
 
-> ⚠️ Bu depoda gerçek AdMob/Play Billing SDK'sı **kurulu değildir**. Aşağıdaki adımlar yapılmadan yayında reklam/ödeme çalışmaz.
+> **v0.11.0:** `@capacitor-community/admob` ve `cordova-plugin-purchase` artık kurulu; AdMob kimlikleri CI'da GitHub **Variables**'tan yazılır (`ADMOB_APP_ID`, `ADMOB_REWARDED_ID`, `ADMOB_INTERSTITIAL_ID`, `ADMOB_BANNER_ID`; bkz. **docs/PLAY_STORE.md**). Aşağıdaki 2. ve 3. maddelerdeki `npm i` / manifest adımları gerekmez; hesap, reklam birimi ve ürün oluşturma adımları geçerlidir. Gerçek cihazda sınanmadan yayınlamayın.
 
 ## 1) Önce test modunda deneyin (tarayıcıda)
 

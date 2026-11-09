@@ -217,5 +217,13 @@
       navigator.serviceWorker.register('sw.js').catch(function () { /* sessizce gec */ });
     }
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  // APK'da Cordova eklentileri (Play Faturalandirma: CdvPurchase) sayfa yuklendikten biraz sonra gelir: 'deviceready' beklenir (en cok 3 sn), sonra oyun acilir.
+  function start() {
+    var waitCordova = globalThis.cordova && !globalThis.CdvPurchase, fired = false;
+    if (!waitCordova) return boot();
+    function go() { if (fired) return; fired = true; boot(); }
+    document.addEventListener('deviceready', go, { once: true });
+    setTimeout(go, 3000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })(globalThis.Z = globalThis.Z || {});

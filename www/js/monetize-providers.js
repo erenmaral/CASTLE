@@ -41,8 +41,18 @@
     var p = {};
     if (AM) {
       p.ads = true;
-      p.init = function () { try { AM.initialize({ initializeForTesting: !!c.testMode }); } catch (e) { /* yok say */ } };
-      p.showRewarded = function () { return new Promise(function (resolve) {
+      // Once onay (Google UMP: AB/Ingiltere/Isvicre'de zorunlu), sonra SDK baslatma; reklam istekleri 'ready' bitene kadar bekler.
+      var ready = Promise.resolve();
+      p.init = function () {
+        ready = Promise.resolve()
+          .then(function () { return AM.requestConsentInfo ? AM.requestConsentInfo({ tagForUnderAgeOfConsent: false }) : null; })
+          .then(function (info) { return info && info.isConsentFormAvailable && info.status === 'REQUIRED' && AM.showConsentForm ? AM.showConsentForm() : null; })
+          .catch(function () { /* onay formu alinamazsa devam (reklam yine de istenebilir ya da SDK reddeder) */ })
+          .then(function () { return AM.initialize({ initializeForTesting: !!c.testMode }); })
+          .catch(function () { /* yok say */ });
+      };
+      function withTimeout(promise, ms, fallback) { return new Promise(function (resolve) { var t = setTimeout(function () { resolve(fallback); }, ms); promise.then(function (v) { clearTimeout(t); resolve(v); }, function () { clearTimeout(t); resolve(fallback); }); }); }
+      p.showRewarded = function () { return withTimeout(new Promise(function (resolve) {
         var rewarded = false, hs = [];
         function off() { hs.forEach(function (h) { try { h.remove(); } catch (e) { /* bitti */ } }); }
         function on(ev, fn) { try { var r = AM.addListener(ev, fn); if (r && r.then) r.then(function (h) { hs.push(h); }); else if (r) hs.push(r); } catch (e) { /* yok say */ } }
@@ -50,18 +60,19 @@
         on('onRewardedVideoAdDismissed', function () { off(); resolve(rewarded); });
         on('onRewardedVideoAdFailedToLoad', function () { off(); resolve(false); });
         on('onRewardedVideoAdFailedToShow', function () { off(); resolve(false); });
-        Promise.resolve(AM.prepareRewardVideoAd({ adId: adId('rewarded') })).then(function () { return AM.showRewardVideoAd(); }).catch(function () { off(); resolve(false); });
-      }); };
-      p.showInterstitial = function () { return new Promise(function (resolve) {
+        ready.then(function () { return AM.prepareRewardVideoAd({ adId: adId('rewarded') }); }).then(function () { return AM.showRewardVideoAd(); }).catch(function () { off(); resolve(false); });
+      }), 180000, false); };
+      p.showInterstitial = function () { return withTimeout(new Promise(function (resolve) {
         var hs = [];
         function off() { hs.forEach(function (h) { try { h.remove(); } catch (e) { /* bitti */ } }); }
-        function on(ev, fn) { try { var r = AM.addListener(ev, fn); if (r && r.then) r.then(function (h) { hs.push(h); }); } catch (e) { /* yok say */ } }
-        on('onInterstitialAdDismissed', function () { off(); resolve(); }); on('onInterstitialAdFailedToLoad', function () { off(); resolve(); }); on('onInterstitialAdFailedToShow', function () { off(); resolve(); });
-        Promise.resolve(AM.prepareInterstitial({ adId: adId('interstitial') })).then(function () { return AM.showInterstitial(); }).catch(function () { off(); resolve(); });
-      }); };
+        function on(ev, fn) { try { var r = AM.addListener(ev, fn); if (r && r.then) r.then(function (h) { hs.push(h); }); else if (r) hs.push(r); } catch (e) { /* yok say */ } }
+        // Eklenti v8 olay adlari: interstitialAdDismissed / interstitialAdFailedToLoad / interstitialAdFailedToShow
+        on('interstitialAdDismissed', function () { off(); resolve(); }); on('interstitialAdFailedToLoad', function () { off(); resolve(); }); on('interstitialAdFailedToShow', function () { off(); resolve(); });
+        ready.then(function () { return AM.prepareInterstitial({ adId: adId('interstitial') }); }).then(function () { return AM.showInterstitial(); }).catch(function () { off(); resolve(); });
+      }), 60000, undefined); };
       p.banner = function (show) {
-        if (show) AM.showBanner({ adId: adId('banner'), adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 96 });
-        else AM.hideBanner();
+        if (show) ready.then(function () { return AM.showBanner({ adId: adId('banner'), adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 96 }); }).catch(function () { /* yok say */ });
+        else try { AM.hideBanner(); } catch (e) { /* yok say */ }
       };
       p.privacyOptions = function () { return Promise.resolve(AM.showPrivacyOptionsForm ? AM.showPrivacyOptionsForm() : null); };
     }

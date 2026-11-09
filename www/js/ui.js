@@ -558,11 +558,7 @@
       if (sk === 'restore') { if (!M.iapOn()) { A.deny(); return UI.toast($t('Satın alma henüz etkin değil')); } return M.restore(function (n) { UI.toast(n ? $t('Geri yüklendi') + ': ' + n : $t('Geri yüklenecek ürün bulunamadı')); UI.renderHub(); }); }
       if (sk === 'privacy') return M.privacyOptions(function (ok) { if (!ok) UI.toast($t('Reklam gizlilik ayarı bu cihazda gerekli değil')); });
     }
-    if ((el = t.closest('[data-url]'))) {
-      var url = Z.MONEY.links[el.getAttribute('data-url')];
-      if (!url) { A.deny(); return UI.toast($t('Bağlantı henüz ayarlanmadı')); }
-      try { globalThis.open(url, '_blank'); } catch (e) { /* engelli */ } return;
-    }
+    if ((el = t.closest('[data-url]'))) return UI.openLink(el.getAttribute('data-url'));
     if ((el = t.closest('[data-quest]'))) {
       var def = S.claimQuest(+el.getAttribute('data-quest'), el.getAttribute('data-weekly') === '1'); if (!def) return A.deny();
       A.chest(); UI.toast(($t('Görev ödülü') + ': 🪙') + def.coins + ' 💎' + def.gems); return UI.renderHub();
@@ -581,6 +577,13 @@
     var native = globalThis.Capacitor && globalThis.Capacitor.isNativePlatform && globalThis.Capacitor.isNativePlatform();
     var standalone = globalThis.matchMedia && (globalThis.matchMedia('(display-mode: standalone)').matches || globalThis.matchMedia('(display-mode: fullscreen)').matches);
     return !native && !standalone;
+  };
+
+  // Gizlilik politikasi / sartlar / destek baglantisi (Z.MONEY.links); APK'da dis tarayicida acilir
+  UI.openLink = function (kind) {
+    var url = Z.MONEY.links[kind];
+    if (!url) { A.deny(); return UI.toast($t('Bağlantı henüz ayarlanmadı')); }
+    try { globalThis.open(url, '_blank'); } catch (e) { /* engelli */ }
   };
 
   // ---------------------------------------------------------------- Ayarlar
@@ -619,10 +622,14 @@
         { close: UI.closeModal, yes: function () { S.reset(); UI.closeModal(); UI.showHub('map'); } });
     };
     acts.lang = function () { UI.langModal(false); };
+    ['privacy', 'terms', 'support'].forEach(function (k) { acts['u_' + k] = function () { UI.openLink(k); }; });
+    acts.adprivacy = function () { Z.Monetize.privacyOptions(function (ok) { if (!ok) UI.toast($t('Reklam gizlilik ayarı bu cihazda gerekli değil')); }); };
     var li = Z.langInfo();
     function slider(k, label) { return '<div class="slider"><span>' + label + '</span><input type="range" min="0" max="100" step="5" value="' + (st[k] === undefined ? 100 : st[k]) + '" data-vol="' + k + '"><b>' + (st[k] === undefined ? 100 : st[k]) + '</b></div>'; }
     UI.modal(('<h1>' + $t('Ayarlar') + '</h1>') + ('<div class="toggle" data-act="lang"><span>🌐 ' + $t('Dil') + '</span><b>' + li.flag + ' ' + li.name + ' ›</b></div>') + row('sound', ('🔊 ' + $t('Ses efektleri'))) + row('music', ('🥁 ' + $t('Savaş müziği'))) + row('vibrate', ('📳 ' + $t('Titreşim'))) + row('menuBattle', ('⚔️ ' + $t('Menüde canlı savaş (pil/performans için kapatılabilir)'))) + slider('musicVol', '🥁 ' + $t('Müzik ses düzeyi')) + slider('sfxVol', '🔊 ' + $t('Efekt ses düzeyi')) +
       ('<div class="actions"><button class="btn small" data-act="exp">📤 ' + $t('Kaydı dışa aktar') + '</button><button class="btn small" data-act="imp">📥 ' + $t('İçe aktar') + '</button></div>') +
+      (Z.Monetize.adsOn() ? ('<div class="actions"><button class="btn small" data-act="adprivacy">🔒 ' + $t('Reklam gizlilik tercihleri') + '</button></div>') : '') +
+      ('<div class="links settings-links"><a data-act="u_privacy">' + $t('Gizlilik Politikası') + '</a> · <a data-act="u_terms">' + $t('Kullanım Şartları') + '</a> · <a data-act="u_support">' + $t('Destek') + '</a></div>') +
       ('<div class="actions"><button class="btn small red" data-act="reset">' + $t('Kaydı sıfırla') + '</button><button class="btn gold" data-act="close">' + $t('Tamam') + '</button></div>') +
       (UI.isBrowser() ? ('<p class="small" style="margin-top:14px">💡 ' + $t('Tarayıcı menüsünden <b>Ana ekrana ekle</b> / <b>Uygulamayı yükle</b> seçersen tam ekran, uygulama gibi açılır.') + '</p>') : '') +
       ('<p class="small" style="margin-top:20px">' + Z.NAME + ' v') + Z.VERSION + (' ' + $t('(derleme') + ' ') + Z.BUILD + (')<br>' + $t('Tüm grafik ve sesler kodla üretilmiştir.') + '</p>'), acts);

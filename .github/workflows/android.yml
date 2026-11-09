@@ -1,6 +1,6 @@
-name: Android APK
+name: Android APK + AAB
 
-# Her push'ta (ve elle tetiklemede) imzali bir APK uretir, Releases'e yukler.
+# Her push'ta (ve elle tetiklemede) imzali APK (yan yukleme) ve AAB (Google Play) uretir, Releases'e yukler.
 on:
   push:
     branches: ['**']
@@ -40,6 +40,7 @@ jobs:
           node tests/unit-v08.js | tail -3
           node tests/unit-v09.js | tail -3
           node tests/unit-v10.js | tail -3
+          node tests/unit-v11.js | tail -3
           node tests/fuzz-sim.js 120 1 | tail -2
           node scripts/i18n.js check
 
@@ -54,6 +55,14 @@ jobs:
           BASE=$(node -p "require('./package.json').version")
           echo "name=${BASE}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           sed -i "s/Z.BUILD = 'dev'/Z.BUILD = '${{ github.run_number }}'/" www/js/version.js
+
+      - name: Reklam kimlikleri (varsa)
+        env:
+          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
+          ADMOB_REWARDED_ID: ${{ vars.ADMOB_REWARDED_ID }}
+          ADMOB_INTERSTITIAL_ID: ${{ vars.ADMOB_INTERSTITIAL_ID }}
+          ADMOB_BANNER_ID: ${{ vars.ADMOB_BANNER_ID }}
+        run: node scripts/play-config.js
 
       - name: Capacitor senkronizasyonu
         run: npx cap sync android
@@ -102,25 +111,31 @@ jobs:
             echo "ZAFARION_KEY_ALIAS=zafarion"
           } >> "$GITHUB_ENV"
 
-      - name: APK derle
+      - name: APK ve AAB derle
         working-directory: android
         env:
           ZAFARION_VERSION_CODE: ${{ github.run_number }}
           ZAFARION_VERSION_NAME: ${{ steps.ver.outputs.name }}
+          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
 
-      - name: APK adini duzenle
+      - name: Cikti adlarini duzenle
         run: |
           mkdir -p dist
           cp android/app/build/outputs/apk/release/app-release.apk "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.aab"
           ls -la dist
+          # AAB'nin icinde beklenen paket adi ve surum kodu var mi (Play'e yuklemeden once son kontrol)
+          unzip -p "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.aab" base/manifest/AndroidManifest.xml | strings | grep -c "io.github.erenmaral.castlesiege" || true
 
       - uses: actions/upload-artifact@v4
         with:
           name: CastleSiegeHistory-${{ steps.ver.outputs.name }}
-          path: dist/*.apk
+          path: |
+            dist/*.apk
+            dist/*.aab
 
       - name: GitHub Release olustur
         if: github.event_name == 'push'
@@ -128,7 +143,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           MSG=$(git log -1 --pretty=%s)
-          gh release create "build-${{ github.run_number }}" "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.apk" \
+          gh release create "build-${{ github.run_number }}" "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.apk" "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.aab" \
             --target "${{ github.sha }}" --prerelease \
             --title "Castle Siege: History ${{ steps.ver.outputs.name }}" \
             --notes "Otomatik derleme #${{ github.run_number }} — ${MSG}"

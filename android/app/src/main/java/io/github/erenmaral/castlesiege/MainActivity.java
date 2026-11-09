@@ -1,4 +1,4 @@
-package com.zafarion.game;
+package io.github.erenmaral.castlesiege;
 
 import android.os.Build;
 import android.os.Bundle;

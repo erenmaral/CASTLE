@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Castle Siege: History</string>
     <string name="title_activity_main">Castle Siege: History</string>
-    <string name="package_name">com.zafarion.game</string>
-    <string name="custom_url_scheme">com.zafarion.game</string>
+    <string name="package_name">io.github.erenmaral.castlesiege</string>
+    <string name="custom_url_scheme">io.github.erenmaral.castlesiege</string>
 </resources>

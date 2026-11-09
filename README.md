@@ -54,9 +54,13 @@ python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 | `www/js/ui.js` | Ana menü, sefer merkezi (harita/ordu/hazine/görev), modallar, savaş HUD'u, etkileşimli öğretici |
 | `www/js/save.js` | Kayıt (localStorage), hazine, günlük ödül/görev |
 | `android/` | Capacitor Android projesi |
-| `.github/workflows/android.yml` | Otomatik APK derleme + Release |
+| `.github/workflows/android.yml` | Otomatik APK + AAB derleme + Release |
+| `store/` | Google Play mağaza girişi metinleri (6 dil) ve görselleri |
+| `www/privacy.html` | Gizlilik Politikası + Kullanım Şartları |
 
-> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Paket kimliği (`com.zafarion.game`), kayıt anahtarı ve `ZAFARION_*` secret adları, mevcut kurulumlar ve ilerleme bozulmasın diye bilerek değiştirilmedi.
+> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Kayıt anahtarı ve `ZAFARION_*` secret adları ilerleme/imza bozulmasın diye bilerek korundu. **Paket kimliği 0.11.0'da `io.github.erenmaral.castlesiege` oldu** (Google Play için); eski `com.zafarion.game` kurulumu ayrı bir uygulama olarak kalır, ilerleme için Ayarlar → Kaydı dışa aktar / İçe aktar kullanın.
+
+**Google Play'de yayınlamak için: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)** (uygulama adı, paket adı, varsayılan dil, form cevapları, kontrol listesi).
 
 ## İmza anahtarı (güncellemelerin üst üste kurulması için — bir kez yapılır)
 Anahtar ve şifre **depoda tutulmaz**. Bir kez kendi anahtarınızı üretip GitHub Secrets'a ekleyin:
