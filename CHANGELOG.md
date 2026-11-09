@@ -2,6 +2,12 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.10.3 — Gerçekçi koridor sahnesi
+- 🌄 **Koridor görüntüsü baştan çizildi** (`www/js/scenery.js`, bir kez çizilip önbelleğe alınır; 60 fps korunur): dokulu zemin (fBm gürültü + ot/kum izi/kar/kül ayrıntısı), toprak yollarda tekerlek izi, çakıl, su birikintisi ve kenar çimi, gökyüzünde yumuşak bulutlar ve sisli dağ katmanları, ufukta ağaç/kumul çizgisi.
+- 🌲 **Işık ve gölge:** tüm ağaçlar, çalılar ve kayalar ışığa göre gölgelendirilmiş (üst-soldan ışık, yumuşak yer gölgeleri); gün ışığı huzmeleri, yapraklardan sızan ışık lekeleri, sıcak/serin renk tonlaması, vinyet.
+- 🏜️ **7 temanın hepsinde:** orman (yaprak/çam), çöl (palmiye, zeytin, kaya, kumul), buz (karlı köknar), yanardağ (yanık ağaç, bazalt, lav çatlakları), bataklık (salkım söğüt, parlayan mantarlar), sonbahar, gece.
+- Güvenlik: yeni sahne hata verirse eski basit sahneye döner. Test: `tests/e2e-v10.js` (7 temada kurulum + süre + savaş).
+
 ## 0.10.2 — Gerçek karakter simgeleri, şifacı düzeltmesi, akıllı düşman, elmas fiyatları
 - 🛡️ **Ordu sekmesi, savaş kartları ve brifingde birlik simgeleri artık oyundaki gerçek karakter çizimi** (emoji değil); düşman listesi düşman renginde.
 - 💚 **Şifacı hatası düzeltildi:** önünde düşman kalmayınca düşman kalesini geçip gitmiyor, kalenin 200 birim önünde duruyor (iki taraf için).

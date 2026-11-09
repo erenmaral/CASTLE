@@ -122,8 +122,9 @@
       g.closePath();
     },
 
-    // ---- Arka plan: orman, yollar, isik (bir kez cizilir) ----------------
-    buildBg: function () {
+    // ---- Arka plan (yedek/basit surum; ayrintili surum scenery.js icinde, hata olursa buna doner) ----
+    buildBg: function () { this.buildBgBasic(); },
+    buildBgBasic: function () {
       var c = document.createElement('canvas'); c.width = this.canvas.width; c.height = this.canvas.height;
       var g = c.getContext('2d'), W = this.W, H = this.H, ox = this.ox, i, j, k, T = THEMES[this.theme || 0], rnd = seeded(this.seed || 1);
       this.phase = ((this.seed || 1) % 7) * 0.9;
