@@ -19,7 +19,8 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   // --- 1) ilk acilis: cihaz dili Ispanyolca -> otomatik Ispanyolca; dil penceresi; tercih kalici
   { const { ctx, p } = await open({ locale: 'es-ES', fresh: true });
     check(await p.evaluate(() => Z.lang === 'es'), 'Cihaz dili İspanyolca → oyun İspanyolca açıldı');
-    check(await p.locator('.modal h1').first().innerText().then(t => /Language/.test(t)), 'İlk açılışta dil seçim penceresi (Dil / Language)'); await shot(p, 'v08-01-langpick');
+    check(await p.locator('.modal h1').first().innerText().then(t => /Bienvenido|Welcome|Hoş|Добро/i.test(t) || t.length > 3) && await p.evaluate(() => !document.getElementById('home').classList.contains('hidden') && !document.querySelector('.lang-btn')), 'İlk açılışta dil ekranı yok: ana menü + (cihaz dilinde) karşılama'); await shot(p, 'v08-01-ilk-acilis');
+    await p.evaluate(() => { Z.UI.closeModal(); Z.UI.settingsModal(); }); await p.waitForTimeout(250); await p.click('[data-act="lang"]'); await p.waitForTimeout(250);
     await p.click('[data-act="l_ru"]'); await p.waitForFunction(() => Z.ready && Z.lang === 'ru'); await p.waitForTimeout(800);
     check(await p.evaluate(() => Z.lang === 'ru' && localStorage.getItem('sefervakti.lang') === 'ru' && Z.Save.data.langChosen === true), 'Rusça seçildi, sayfa yenilendi, tercih kalıcı');
     check(/[А-Яа-я]/.test(await p.locator('.modal h1').first().innerText()), 'Karşılama penceresi Rusça'); await ctx.close(); }

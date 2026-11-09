@@ -13,8 +13,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   // --- ilk kez oynayan: kayit yok ---
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(1500);
   check(await p.evaluate(() => !document.getElementById('home').classList.contains('hidden') && document.getElementById('hub').classList.contains('hidden')), 'Açılışta ayrı ana menü görünür, harita/sefer merkezi gizli');
-  await p.click('[data-act="l_tr"]'); await p.waitForTimeout(300);
-  check(/Hoş geldin/.test(await p.locator('.modal h1').first().innerText()), 'İlk kez girene dil seçimi sonrası karşılama penceresi'); await shot('v07-01-welcome');
+  check(/Hoş geldin/.test(await p.locator('.modal h1').first().innerText()), 'İlk kez girene doğrudan karşılama penceresi (dil ekranı yok, ana menü arkada)'); await shot('v07-01-welcome');
   await p.click('[data-act="go"]'); await p.waitForTimeout(1500);
   check(await p.evaluate(() => Z.Game.battle && Z.Game.battle.level === 1 && !document.getElementById('lane-pick') && !document.getElementById('tut').classList.contains('hidden') && Z.Game.tutHold === true), 'Öğretici 1. seferde başladı; savaş bekletiliyor; koridor düğmeleri yok');
   await shot('v07-02-tut1');

@@ -24,7 +24,6 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await page.waitForTimeout(800);
   await shot(page, '01-welcome');
 
-  await page.click('[data-act="l_tr"]'); await page.waitForTimeout(300);
   await page.click('[data-act="go"]');
   await page.waitForTimeout(500);
   await page.click('#tut-skip'); await page.waitForTimeout(200);

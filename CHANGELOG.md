@@ -2,6 +2,10 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.9.1 — Güncelleme çakışması ve ilk açılış
+- 🔑 **APK artık eskisinin üzerine kurulur:** secret tanımlı olmadığında her derleme *farklı geçici anahtarla* imzalanıyordu, Android de "mevcut uygulamayla çakışıyor" diye reddediyordu. CI imza anahtarını ilk derlemede üretip Actions önbelleğine kaydeder, sonraki derlemeler aynı anahtarı kullanır (kalıcı çözüm için README'deki secret'lar). **Bir kez** eski uygulamayı silmek gerekir (önce Ayarlar → Kaydı dışa aktar).
+- 🏠 **İlk açılışta doğrudan ana menü** (arkada canlı savaş + karşılama penceresi); dil cihaz dilinden otomatik seçilir, değiştirmek için Ayarlar → Dil.
+
 ## 0.9.0 — Dengeli zorluk, hazırlık kartları, hata taraması
 - ⚖️ **Bölüm zorlukları baştan dengelendi.** Yeni `tests/progression.js` gerçek bir oyuncuyu simüle ediyor (altınla birlik/kahraman/kale yükseltir, yenilince tekrar dener) ve 105. bölümde ortalama birlik seviyesinin **≈25** olduğunu gösterdi; eski denge botu ise 40 varsayıyordu, bu yüzden son bölümler (≈89+) gerçekte neredeyse geçilemezdi. `tests/calibrate.js` her bölüm için "hedef kazanma oranını" veren düşman ölçeğini buldu; sonuç **kale ve açık alan için ayrı** `Z.SCALE_KNOTS` tablolarına yazıldı (`data.js`). Hedef: erken bölümler rahat (~%97 → 1 deneme), 105. bölümde ~%55 (≈2 deneme); yeni ilerleme simülasyonunda diyar başına ortalama deneme sayısı 1.0 → 2.0. Önerilen birlik seviyesi artık gerçek beklenen seviyeye bağlı (`Z.expectedLevel`).
 - 🎒 **Hazırlık kartları** (tek kullanımlık, brifingte seçilir, 3. bölümden sonra): 💰 Altın Hazırlığı (+150 altın / açık alanda +120 puan), ⚡ Kahraman Hazır (yetenek savaşın başında hazır), 🛡️ Sur Zırhı (kale +%30 / komutan +%50). Her birinden 1 ile başlarsın; Pazar'dan 3'lü paket alınır, zaferde sandıktan düşebilir.

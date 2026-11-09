@@ -66,5 +66,6 @@ GitHub → Settings → Secrets and variables → Actions → **New repository s
 - `ZAFARION_KEYSTORE_B64` = base64 çıktısı
 - `ZAFARION_KEYSTORE_PASSWORD` = keytool'a girdiğiniz şifre (store ve key şifresi aynı olmalı)
 
-Secret'lar yoksa CI geçici bir anahtar üretir: APK yine kurulur, ama bir sonraki sürümü kurmadan önce eskisini silmeniz gerekir (kayıt gider).
+Secret'lar yoksa CI imza anahtarını **ilk derlemede üretip GitHub Actions önbelleğine kaydeder**; sonraki derlemeler aynı anahtarla imzalanır ve eski sürümün üzerine kurulur. Önbellek, 7 gün hiç erişilmezse (yani 7 gün derleme yapılmazsa) silinebilir; o zaman yeni anahtar üretilir ve bir kez eski uygulamayı silmek gerekir. **Garantili çözüm yukarıdaki secret'ları tanımlamaktır.**
+Eski bir derleme kuruluysa ("paket mevcut uygulamayla çakışıyor" hatası): önce **Ayarlar → Kaydı dışa aktar** ile ilerlemenizi kopyalayın, uygulamayı silin, yeni APK'yı kurun, **Ayarlar → İçe aktar** ile kaydı geri yükleyin.
 **Anahtar dosyasını ve şifresini asla depoya koymayın; kaybederseniz uygulamayı güncelleyemezsiniz, yedekleyin.**

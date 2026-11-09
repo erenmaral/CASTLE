@@ -603,7 +603,6 @@
   };
   UI.welcome = function () {
     var d = S.data;
-    if (!d.langChosen && !d.tutorialDone) { UI.langModal(true); return; }
     if (!d.tutorialDone) {
       UI.modal(('<h1>' + $t('Hoş geldin, Komutan!') + '</h1>') +
         ('<p>' + $t('Sınırda düşman ordusu toplanıyor. Kaleni koru, ordunu kur ve <b>Sefer Vakti</b>\'ni başlat!') + '</p>') +
