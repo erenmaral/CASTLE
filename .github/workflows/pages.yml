@@ -1,6 +1,6 @@
 name: Tarayici surumu (GitHub Pages)
 
-# Oyunu https://<kullanici>.github.io/<depo>/ adresinde yayinlar.
+# Zafarion: https://<kullanici>.github.io/<depo>/   Dokun: https://<kullanici>.github.io/<depo>/dokun/
 # Bir kez: Settings -> Pages -> Source = "GitHub Actions" secilmeli.
 on:
   push:
@@ -36,9 +36,16 @@ jobs:
 
       - uses: actions/configure-pages@v5
 
+      - name: Site klasorunu hazirla (Zafarion kokte, Dokun /dokun/ altinda)
+        run: |
+          mkdir _site
+          cp -r www/. _site/
+          cp -r dokun _site/dokun
+          ls _site _site/dokun
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: www
+          path: _site
 
       - id: deployment
         uses: actions/deploy-pages@v4

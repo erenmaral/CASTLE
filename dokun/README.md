@@ -13,4 +13,6 @@ Mini oyunlar (7 tur, her biri bir kez, rastgele sırayla):
 
 Ses ve titreşim: tüm sesler Web Audio ile kodla üretilir (dosya yok). Titreşim `navigator.vibrate` ile çalışır; iPhone Safari titreşimi desteklemez, orada yalnızca ses olur. Menüden açılıp kapatılır, tercih hatırlanır.
 
+Canlı adres (varsayılan dala birleşince yayınlanır): https://erenmaral.github.io/erenmaral/dokun/
+
 Çalıştırma: `npx serve dokun` ile aç veya `dokun/index.html` dosyasını tarayıcıda aç (telefonda yatay kilidi kapalı, dikey kullan).
