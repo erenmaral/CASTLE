@@ -15,7 +15,13 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
     const r = await p.evaluate(() => { const R = Z.Render, t0 = performance.now(); let ok = true; try { R.Scenery.build.call(R); } catch (e) { ok = e.message; } return { ok, ms: performance.now() - t0, theme: R.theme, has: !!R.bg }; });
     check(r.ok === true && r.has && r.ms < 400, 'Seferde ' + L + ' (tema ' + r.theme + '): ayrıntılı sahne kuruldu (' + Math.round(r.ms) + ' ms)' + (r.ok === true ? '' : ' → ' + r.ok));
   }
+  for (const L of [8, 23, 38, 53, 68, 83, 98]) {
+    await p.evaluate((L) => { Z.Game.startBattle('campaign', L, { diff: 1, boosters: [] }); }, L); await p.waitForTimeout(900);
+    const r = await p.evaluate(() => { const R = Z.Render, t0 = performance.now(); let ok = true; try { R.Scenery.field.call(R); } catch (e) { ok = e.message; } return { ok, ms: performance.now() - t0, field: R.field, theme: R.theme }; });
+    check(r.field && r.ok === true && r.ms < 400, 'Kale önü (sefer ' + L + ', tema ' + r.theme + '): ayrıntılı arka plan kuruldu (' + Math.round(r.ms) + ' ms)' + (r.ok === true ? '' : ' → ' + r.ok));
+  }
   check(warns.length === 0, 'basit sahneye geri dönüş olmadı');
+  await p.evaluate(() => { Z.Game.startBattle('campaign', 6, { diff: 1, boosters: [] }); }); await p.waitForTimeout(800);
   await p.evaluate(() => { const b = Z.Game.battle; b.gold = 1000; b.deploy('spear', 1); }); await p.waitForTimeout(2500);
   check(await p.evaluate(() => Z.Game.battle.units.length > 0), 'sahne üstünde savaş çalışıyor');
   await browser.close();

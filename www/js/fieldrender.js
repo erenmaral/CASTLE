@@ -45,7 +45,8 @@
     return kind === 'volcano' ? ['#8a2a0c', '#e0561a', '#ffb347', '#3a1208'] : kind === 'ice' ? ['#6fa8d6', '#a9d4f2', '#e8f6ff', '#4b7fa8']
       : kind === 'swamp' ? ['#1f3f35', '#2f6350', '#5fa88a', '#142a22'] : kind === 'desert' ? ['#2f7fa6', '#52a9c9', '#bfe8f2', '#1f5f7e'] : ['#245f94', '#3f8ac4', '#a9dcf5', '#17436b'];
   }
-  R.fieldBuildBg = function () {
+  // (basit surum; ayrintili surum scenery.js icinde, hata olursa buna doner)
+  R.fieldBuildBgBasic = function () {
     var b = this.battle, T = THEMES[this.theme || 0], map = b.map, W = this.W, H = this.H, rnd = seeded(this.seed || 1), i, j, k;
     var cv = document.createElement('canvas'); cv.width = this.canvas.width; cv.height = this.canvas.height;
     var g = cv.getContext('2d'); g.setTransform(this.px, 0, 0, this.px, 0, 0);
@@ -318,6 +319,11 @@
     }
   };
 
+  R.fieldBuildBg = function () {
+    try { if (R.Scenery && R.Scenery.field) R.Scenery.field.call(this); else this.fieldBuildBgBasic(); }
+    catch (e) { if (typeof console !== 'undefined') console.warn('scenery: basit kale onu arka planina donuldu', e); this.fieldBuildBgBasic(); }
+  };
+
   // ---- Kale onu muharebesi: ustte dusman kalesi (sur+kuleler+kapi), altta bizim kamp (cit+yurt+ates) ----
   R.fieldSiegeBackdrop = function (c) {
     var pe = R.PAL[1], pp = R.PAL[0], t = this.time, i, x;
@@ -433,7 +439,7 @@
     if (b.buffed()) { var pulse = 0.2 + 0.08 * Math.sin(this.time * 8), vg = c.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.62); vg.addColorStop(0, 'rgba(255,210,80,0)'); vg.addColorStop(1, 'rgba(255,200,60,' + pulse + ')'); c.fillStyle = vg; c.fillRect(0, 0, W, H); }
     if (this.banner) {
       var bn = this.banner, ba = Math.min(1, bn.t / 0.4);
-      c.save(); c.globalAlpha = ba; c.translate(W / 2, this.foy + 330); c.font = '900 50px system-ui'; c.textAlign = 'center'; c.lineWidth = 9; c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineJoin = 'round';
+      c.save(); c.globalAlpha = ba; c.translate(W / 2, this.foy + 330); c.font = '900 50px system-ui'; var bw = c.measureText(bn.text).width; if (bw > W - 40) c.font = '900 ' + Math.max(24, Math.floor(50 * (W - 40) / bw)) + 'px system-ui'; c.textAlign = 'center'; c.lineWidth = 9; c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineJoin = 'round';
       c.strokeText(bn.text, 0, 0); var tg = c.createLinearGradient(0, -40, 0, 8); tg.addColorStop(0, '#ffffff'); tg.addColorStop(0.45, bn.col); tg.addColorStop(1, bn.col); c.fillStyle = tg; c.fillText(bn.text, 0, 0); c.restore();
     }
   };

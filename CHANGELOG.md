@@ -2,6 +2,11 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.10.4 — Kale önü muharebelerinin arka planı
+- 🏕️ **Kale önü muharebesi sahnesi de aynı gerçekçi katmanlarla yenilendi:** ufukta sisli dağlar ve gökyüzü (düşman kalesi artık ufuk çizgisinde duruyor), dokulu zemin, dokulu ve tekerlek izli toprak yol (yol kenarında çim/kum/kar), nehirde derinlik + akış çizgileri + kıyı köpüğü + kamışlar + taş basamaklı geçitler, ışığa göre gölgelendirilmiş tepeler ve kayalar, gölgeli sprite ağaçlı ormanlar, kale ve kamp önünde ezilmiş toprak ve duvar gölgesi; 7 temanın hepsi.
+- Savaş başlığı (ör. "KALE ÖNÜ · MEVZİLERİ ELE GEÇİR") dar ekranlarda taşmıyor, yazı ekrana sığacak şekilde küçülüyor.
+- Ortak katmanlar (zemin, ufuk, ışık) `scenery.js` içinde paylaşılıyor; hata olursa eski basit arka plana dönülür.
+
 ## 0.10.3 — Gerçekçi koridor sahnesi
 - 🌄 **Koridor görüntüsü baştan çizildi** (`www/js/scenery.js`, bir kez çizilip önbelleğe alınır; 60 fps korunur): dokulu zemin (fBm gürültü + ot/kum izi/kar/kül ayrıntısı), toprak yollarda tekerlek izi, çakıl, su birikintisi ve kenar çimi, gökyüzünde yumuşak bulutlar ve sisli dağ katmanları, ufukta ağaç/kumul çizgisi.
 - 🌲 **Işık ve gölge:** tüm ağaçlar, çalılar ve kayalar ışığa göre gölgelendirilmiş (üst-soldan ışık, yumuşak yer gölgeleri); gün ışığı huzmeleri, yapraklardan sızan ışık lekeleri, sıcak/serin renk tonlaması, vinyet.

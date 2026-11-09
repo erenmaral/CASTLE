@@ -535,7 +535,7 @@
       if (this.banner) {
         var bn = this.banner, ba = Math.min(1, bn.t / 0.4);
         c.save(); c.globalAlpha = ba; c.translate(W / 2, this.eY + 160);
-        c.font = '900 54px system-ui'; c.textAlign = 'center'; c.lineWidth = 9; c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineJoin = 'round';
+        c.font = '900 54px system-ui'; var bw = c.measureText(bn.text).width; if (bw > W - 40) c.font = '900 ' + Math.max(24, Math.floor(54 * (W - 40) / bw)) + 'px system-ui'; c.textAlign = 'center'; c.lineWidth = 9; c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineJoin = 'round';
         c.strokeText(bn.text, 0, 0);
         var tg = c.createLinearGradient(0, -40, 0, 8); tg.addColorStop(0, '#ffffff'); tg.addColorStop(0.45, bn.col); tg.addColorStop(1, bn.col);
         c.fillStyle = tg; c.fillText(bn.text, 0, 0); c.restore();

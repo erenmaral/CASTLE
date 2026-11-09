@@ -139,15 +139,9 @@
   }
 
   // ---- ana cizim ------------------------------------------------------------------
-  function build() {
-    var c = document.createElement('canvas'); c.width = this.canvas.width; c.height = this.canvas.height;
-    var g = c.getContext('2d'), W = this.W, H = this.H, ox = this.ox, i, j, k, T = THEMES[this.theme || 0], rnd = seeded(this.seed || 1), self = this, kind = T.kind, theme = this.theme || 0;
-    this.phase = ((this.seed || 1) % 7) * 0.9;
-    g.setTransform(this.px, 0, 0, this.px, 0, 0);
-    var top = this.eY - CASTLE_H, bot = this.pY + CASTLE_H, px = this.px;
-    var leafy = kind === 'forest' || kind === 'swamp';
-
-    // ==== 1) zemin: degrade + makro leke + ince doku =============================
+  // ---- ortak katmanlar (koridor + kale onu sahnesi) ----
+  function groundLayer(g, c) {
+    var W = c.W, H = c.H, top = c.top, bot = c.bot, rnd = c.rnd, T = c.T, kind = c.kind, i, nearRoad = c.nearRoad || function () { return false; };
     var gr = g.createLinearGradient(0, top, 0, H);
     gr.addColorStop(0, T.g[0]); gr.addColorStop(0.5, T.g[1]); gr.addColorStop(1, T.g[2]);
     g.fillStyle = gr; g.fillRect(0, 0, W, H);
@@ -159,7 +153,6 @@
     g.save(); g.globalCompositeOperation = 'soft-light'; g.globalAlpha = 0.9; g.fillStyle = pattern(g, 0.42); g.fillRect(0, top, W, H - top); g.restore();
     g.save(); g.globalCompositeOperation = 'soft-light'; g.globalAlpha = 0.55; g.fillStyle = pattern(g, 1.6); g.fillRect(0, top, W, H - top); g.restore();
 
-    var self2 = this, nearRoad = function (x, y, m) { for (var l = 0; l < 3; l++) if (Math.abs(x - self2.roadX(l, y)) < m) return true; return false; };
     // ot / kum izi / kar parlamasi / kul benekleri: tek renkli yollar halinde toplu cizim
     var groundDetail = function (count, avoid) {
       var buckets = {}, base = T.g[1];
@@ -186,17 +179,18 @@
     };
     groundDetail(5200, true);
 
-    // ==== 2) ufuk: gokyuzu, gunes, bulut, sisli daglar, agac cizgisi ============
+  }
+  function horizon(g, c) {
+    var W = c.W, top = c.top, T = c.T, kind = c.kind, theme = c.theme, night = theme === 6, i, k, q;
     var sky = g.createLinearGradient(0, 0, 0, top + 10);
     sky.addColorStop(0, T.sky[0]); sky.addColorStop(0.6, T.sky[1]); sky.addColorStop(1, T.sky[2]);
     g.fillStyle = sky; g.fillRect(0, 0, W, top + 10);
     var sg = g.createRadialGradient(W * 0.75, top - 6, 4, W * 0.75, top - 6, 150);
     sg.addColorStop(0, 'rgba(' + T.sun.join(',') + ',1)'); sg.addColorStop(0.25, 'rgba(' + T.sun.join(',') + ',.5)'); sg.addColorStop(1, 'rgba(' + T.sun.join(',') + ',0)');
     g.fillStyle = sg; g.fillRect(0, 0, W, top + 10);
-    g.fillStyle = 'rgba(255,255,255,.7)'; for (i = 0; i < 40; i++) circ(g, hash(i + this.seed) * W, hash(i + 50) * (top - 24), hash(i + 9) * 1.2 + 0.3);
-    var night = theme === 6;
+    g.fillStyle = 'rgba(255,255,255,.7)'; for (i = 0; i < 40; i++) circ(g, hash(i + c.seed) * W, hash(i + 50) * (top - 24), hash(i + 9) * 1.2 + 0.3);
     for (i = 0; i < 7; i++) { // yumusak bulutlar
-      var cx = hash(i * 3 + this.seed) * W, cy = 16 + hash(i * 7 + 2) * (top - 60), cw = 60 + hash(i + 11) * 80;
+      var cx = hash(i * 3 + c.seed) * W, cy = 16 + hash(i * 7 + 2) * (top - 60), cw = 60 + hash(i + 11) * 80;
       for (var q = 0; q < 7; q++) { var qx = cx + (q - 3) * cw * 0.2, qy = cy + Math.sin(q * 1.7 + i) * 6, qr = cw * (0.16 + 0.1 * Math.sin(q * 2.1 + i)); var cg = g.createRadialGradient(qx, qy - qr * 0.2, 1, qx, qy, qr); cg.addColorStop(0, night ? 'rgba(150,170,230,.16)' : 'rgba(255,255,255,.34)'); cg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = cg; circ(g, qx, qy, qr); }
     }
     var mount = function (col, base, amp, seed, step, hiCol) {
@@ -207,9 +201,9 @@
       var sh = g.createLinearGradient(0, base - amp, 0, base + 10); sh.addColorStop(0, 'rgba(255,255,255,.12)'); sh.addColorStop(1, 'rgba(0,0,0,.2)'); g.fillStyle = sh; g.fill();
     };
     var haze = function (a) { var hg = g.createLinearGradient(0, top - 70, 0, top + 24); hg.addColorStop(0, 'rgba(255,255,255,0)'); hg.addColorStop(1, css(norm(T.sky[2]), a)); g.fillStyle = hg; g.fillRect(0, top - 70, W, 100); };
-    mount(T.m1, top + 14, 78, 3 + this.seed, 70, css(norm(T.sky[2]), 0.45)); haze(0.45);
-    mount(T.m2, top + 20, 44, 11 + this.seed, 46, css(norm(T.sky[2]), 0.35)); haze(0.3);
-    if (theme === 2) { g.fillStyle = 'rgba(255,255,255,.85)'; for (i = 0; i < Math.ceil(W / 70); i++) { var px2 = i * 70 + 35, hh = 78 * (0.35 + hash(i + 3 + this.seed) * 0.65); g.beginPath(); g.moveTo(px2 - 12, top + 14 - hh + 19); g.lineTo(px2, top + 14 - hh); g.lineTo(px2 + 12, top + 14 - hh + 19); g.fill(); } }
+    mount(T.m1, top + 14, 78, 3 + c.seed, 70, css(norm(T.sky[2]), 0.45)); haze(0.45);
+    mount(T.m2, top + 20, 44, 11 + c.seed, 46, css(norm(T.sky[2]), 0.35)); haze(0.3);
+    if (theme === 2) { g.fillStyle = 'rgba(255,255,255,.85)'; for (i = 0; i < Math.ceil(W / 70); i++) { var px2 = i * 70 + 35, hh = 78 * (0.35 + hash(i + 3 + c.seed) * 0.65); g.beginPath(); g.moveTo(px2 - 12, top + 14 - hh + 19); g.lineTo(px2, top + 14 - hh); g.lineTo(px2 + 12, top + 14 - hh + 19); g.fill(); } }
     if (kind === 'volcano') {
       [[W * 0.2, 92], [W * 0.7, 118]].forEach(function (cn) {
         var bx = cn[0], hh = cn[1], gy = top + 14 - hh;
@@ -228,11 +222,11 @@
     // ufuk agac / kumul cizgisi
     var tl = T.m2;
     if (kind === 'desert') { // kum tepeleri
-      for (k = 0; k < 2; k++) { g.fillStyle = shade(T.g[1], k ? -0.22 : -0.08); g.beginPath(); g.moveTo(0, top + 36); for (var dx = 0; dx <= W; dx += 12) g.lineTo(dx, top + 22 + k * 5 + Math.sin(dx * 0.012 + k * 2 + this.seed) * 8); g.lineTo(W, top + 40); g.closePath(); g.fill(); }
+      for (k = 0; k < 2; k++) { g.fillStyle = shade(T.g[1], k ? -0.22 : -0.08); g.beginPath(); g.moveTo(0, top + 36); for (var dx = 0; dx <= W; dx += 12) g.lineTo(dx, top + 22 + k * 5 + Math.sin(dx * 0.012 + k * 2 + c.seed) * 8); g.lineTo(W, top + 40); g.closePath(); g.fill(); }
     } else if (kind !== 'volcano') {
       g.fillStyle = shade(tl, -0.35);
       for (var tx = -6; tx < W + 6; tx += 7 + hash(tx) * 5) {
-        var th = 9 + hash(tx * 0.3 + this.seed) * 14;
+        var th = 9 + hash(tx * 0.3 + c.seed) * 14;
         if (kind === 'swamp' || (kind === 'forest' && hash(tx * 1.7) < 0.35)) { g.beginPath(); g.arc(tx, top + 26 - th * 0.55, th * 0.55, 0, TAU); g.fill(); }
         else { g.beginPath(); g.moveTo(tx - th * 0.32, top + 28); g.lineTo(tx, top + 28 - th * 1.5); g.lineTo(tx + th * 0.32, top + 28); g.closePath(); g.fill(); }
       }
@@ -242,6 +236,43 @@
     var fog = g.createLinearGradient(0, top + 6, 0, top + 120); fog.addColorStop(0, css(norm(T.sky[2]), 0.38)); fog.addColorStop(1, css(norm(T.sky[2]), 0));
     g.fillStyle = fog; g.fillRect(0, top + 6, W, 114);
 
+  }
+  function lightGrade(g, c) {
+    var W = c.W, H = c.H, top = c.top, bot = c.bot, ox = c.ox, rnd = c.rnd, T = c.T, kind = c.kind, theme = c.theme, night = theme === 6, i;
+    var shaftA = night ? 0.035 : 0.075;
+    for (i = 0; i < 4; i++) {
+      var sx0 = ox + 40 + i * 190 + rnd() * 30, shg = g.createLinearGradient(sx0, top, sx0 - 150, bot); shg.addColorStop(0, 'rgba(' + T.shaft + ',' + shaftA + ')'); shg.addColorStop(0.7, 'rgba(' + T.shaft + ',' + (shaftA * 0.4) + ')'); shg.addColorStop(1, 'rgba(' + T.shaft + ',0)');
+      g.save(); g.globalCompositeOperation = 'screen'; g.fillStyle = shg; g.beginPath(); g.moveTo(sx0, top); g.lineTo(sx0 + 78, top); g.lineTo(sx0 - 140, bot); g.lineTo(sx0 - 230, bot); g.closePath(); g.fill(); g.restore();
+    }
+    if (kind === 'forest' && !night) for (i = 0; i < 40; i++) { // yaprak arasindan sizan isik lekeleri (yolda ve ormanda)
+      var dx2 = rnd() * W, dy2 = top + 60 + rnd() * (bot - top - 120), dr = 10 + rnd() * 18, dg2 = g.createRadialGradient(dx2, dy2, 0, dx2, dy2, dr);
+      dg2.addColorStop(0, 'rgba(255,250,200,.13)'); dg2.addColorStop(1, 'rgba(255,250,200,0)'); g.fillStyle = dg2; ell(g, dx2, dy2, dr * 1.2, dr * 0.8);
+    }
+    // derinlik: uzak (ust) hafif sisli ve soluk, yakin (alt) daha doygun
+    var df = g.createLinearGradient(0, top, 0, top + 380); df.addColorStop(0, css(norm(T.sky[2]), 0.22)); df.addColorStop(1, css(norm(T.sky[2]), 0)); g.fillStyle = df; g.fillRect(0, top, W, 380);
+    // sinematik renk tonlamasi (soft-light): sicak ust / serin alt
+    g.save(); g.globalCompositeOperation = 'soft-light'; var cgd = g.createLinearGradient(0, 0, 0, H); cgd.addColorStop(0, night ? 'rgba(90,110,200,.35)' : 'rgba(255,190,120,.22)'); cgd.addColorStop(0.55, 'rgba(255,255,255,.0)'); cgd.addColorStop(1, night ? 'rgba(40,60,150,.3)' : 'rgba(70,100,170,.2)'); g.fillStyle = cgd; g.fillRect(0, 0, W, H); g.restore();
+    var vg = g.createRadialGradient(W / 2, H * 0.48, H * 0.28, W / 2, H * 0.48, H * 0.78);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, (kind === 'volcano' || kind === 'swamp') ? 'rgba(0,0,0,.5)' : 'rgba(0,0,0,.32)');
+    g.fillStyle = vg; g.fillRect(0, 0, W, H);
+    if (c.bottomDark !== false) {
+      var dk = g.createLinearGradient(0, bot - 10, 0, H); dk.addColorStop(0, 'rgba(0,0,0,0)'); dk.addColorStop(0.35, 'rgba(0,0,0,.55)'); dk.addColorStop(1, 'rgba(0,0,0,.7)');
+      g.fillStyle = dk; g.fillRect(0, bot - 10, W, H - bot + 10);
+    }
+  }
+
+  function build() {
+    var c = document.createElement('canvas'); c.width = this.canvas.width; c.height = this.canvas.height;
+    var g = c.getContext('2d'), W = this.W, H = this.H, ox = this.ox, i, j, k, T = THEMES[this.theme || 0], rnd = seeded(this.seed || 1), self = this, kind = T.kind, theme = this.theme || 0;
+    this.phase = ((this.seed || 1) % 7) * 0.9;
+    g.setTransform(this.px, 0, 0, this.px, 0, 0);
+    var top = this.eY - CASTLE_H, bot = this.pY + CASTLE_H, px = this.px;
+    var leafy = kind === 'forest' || kind === 'swamp', night = theme === 6;
+
+    // ==== 1) zemin ====
+ var self2 = this; groundLayer(g, { W: W, H: H, top: top, bot: bot, rnd: rnd, T: T, kind: kind, nearRoad: function (x, y, m) { for (var l = 0; l < 3; l++) if (Math.abs(x - self2.roadX(l, y)) < m) return true; return false; } });
+    // ==== 2) ufuk ====
+ horizon(g, { W: W, top: top, T: T, kind: kind, theme: theme, seed: this.seed });
     // ==== 3) yollar arasi golge + yol kenari gozlenmesi ===========================
     var strips = [[0, 54], [186, 294], [426, 534], [666, 720]];
     for (j = 0; j < strips.length; j++) {
@@ -411,30 +442,151 @@
       }
     }
 
-    // ==== 7) isik ve renk: huzmeler, benekli isik, tonlama, vinyet ==================
-    var shaftA = night ? 0.035 : 0.075;
-    for (i = 0; i < 4; i++) {
-      var sx0 = ox + 40 + i * 190 + rnd() * 30, shg = g.createLinearGradient(sx0, top, sx0 - 150, bot); shg.addColorStop(0, 'rgba(' + T.shaft + ',' + shaftA + ')'); shg.addColorStop(0.7, 'rgba(' + T.shaft + ',' + (shaftA * 0.4) + ')'); shg.addColorStop(1, 'rgba(' + T.shaft + ',0)');
-      g.save(); g.globalCompositeOperation = 'screen'; g.fillStyle = shg; g.beginPath(); g.moveTo(sx0, top); g.lineTo(sx0 + 78, top); g.lineTo(sx0 - 140, bot); g.lineTo(sx0 - 230, bot); g.closePath(); g.fill(); g.restore();
-    }
-    if (kind === 'forest' && !night) for (i = 0; i < 40; i++) { // yaprak arasindan sizan isik lekeleri (yolda ve ormanda)
-      var dx2 = rnd() * W, dy2 = top + 60 + rnd() * (bot - top - 120), dr = 10 + rnd() * 18, dg2 = g.createRadialGradient(dx2, dy2, 0, dx2, dy2, dr);
-      dg2.addColorStop(0, 'rgba(255,250,200,.13)'); dg2.addColorStop(1, 'rgba(255,250,200,0)'); g.fillStyle = dg2; ell(g, dx2, dy2, dr * 1.2, dr * 0.8);
-    }
-    // derinlik: uzak (ust) hafif sisli ve soluk, yakin (alt) daha doygun
-    var df = g.createLinearGradient(0, top, 0, top + 380); df.addColorStop(0, css(norm(T.sky[2]), 0.22)); df.addColorStop(1, css(norm(T.sky[2]), 0)); g.fillStyle = df; g.fillRect(0, top, W, 380);
-    // sinematik renk tonlamasi (soft-light): sicak ust / serin alt
-    g.save(); g.globalCompositeOperation = 'soft-light'; var cgd = g.createLinearGradient(0, 0, 0, H); cgd.addColorStop(0, night ? 'rgba(90,110,200,.35)' : 'rgba(255,190,120,.22)'); cgd.addColorStop(0.55, 'rgba(255,255,255,.0)'); cgd.addColorStop(1, night ? 'rgba(40,60,150,.3)' : 'rgba(70,100,170,.2)'); g.fillStyle = cgd; g.fillRect(0, 0, W, H); g.restore();
-    var vg = g.createRadialGradient(W / 2, H * 0.48, H * 0.28, W / 2, H * 0.48, H * 0.78);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, (kind === 'volcano' || kind === 'swamp') ? 'rgba(0,0,0,.5)' : 'rgba(0,0,0,.32)');
-    g.fillStyle = vg; g.fillRect(0, 0, W, H);
-    var dk = g.createLinearGradient(0, bot - 10, 0, H); dk.addColorStop(0, 'rgba(0,0,0,0)'); dk.addColorStop(0.35, 'rgba(0,0,0,.55)'); dk.addColorStop(1, 'rgba(0,0,0,.7)');
-    g.fillStyle = dk; g.fillRect(0, bot - 10, W, H - bot + 10);
+    // ==== 7) isik ve renk ====
+ lightGrade(g, { W: W, H: H, top: top, bot: bot, ox: ox, rnd: rnd, T: T, kind: kind, theme: theme });
     this.bg = c;
+  }
+
+
+  // ---- Kale onu muharebesi arka plani (acik alan): ayni gercekci katmanlar, harita ogelerine gore ----
+  function field() {
+    var b = this.battle, T = THEMES[this.theme || 0], map = b.map, W = this.W, H = this.H, rnd = seeded(this.seed || 1), kind = T.kind, theme = this.theme || 0, px = this.px;
+    var fx = this.fox, fy = this.foy, FW = Z.FW, FH = Z.FH, i, j, k, night = theme === 6;
+    var cv = document.createElement('canvas'); cv.width = this.canvas.width; cv.height = this.canvas.height;
+    var g = cv.getContext('2d'); g.setTransform(px, 0, 0, px, 0, 0);
+    var top = fy - 6;
+    groundLayer(g, { W: W, H: H, top: top, bot: H, rnd: rnd, T: T, kind: kind });
+    horizon(g, { W: W, top: top, T: T, kind: kind, theme: theme, seed: this.seed });
+    var fog0 = g.createLinearGradient(0, top + 6, 0, top + 90); fog0.addColorStop(0, css(norm(T.sky[2]), 0.3)); fog0.addColorStop(1, css(norm(T.sky[2]), 0)); g.fillStyle = fog0; g.fillRect(0, top + 6, W, 84);
+    g.save(); g.translate(fx, fy);
+
+    // -- toprak yol (iki kampi baglar; nehir varsa en yakin gecitten) --
+    var s1 = (rnd() - 0.5) * 140, s2 = (rnd() - 0.5) * 160, mx = 360 + s1, my = FH * 0.5;
+    var pts = [[360, FH + 10], [360 - s1 * 0.5, FH * 0.78], [mx, my], [360 + s2 * 0.5, FH * 0.22], [360, -10]];
+    if (map.river) { var gp = map.river.gaps, gc = gp.map(function (q) { return (q.x0 + q.x1) / 2; }), best = Math.abs(gc[0] - 360) < Math.abs(gc[1] - 360) ? gc[0] : gc[1]; pts[2] = [best, map.river.y]; }
+    var poly = [], q2, tt; // ayni egrinin ornekleri (kenar ot, cakil icin)
+    (function () {
+      var a = pts[0], m;
+      for (q2 = 1; q2 < pts.length; q2++) { m = [(pts[q2 - 1][0] + pts[q2][0]) / 2, (pts[q2 - 1][1] + pts[q2][1]) / 2]; for (tt = 0; tt < 1; tt += 0.05) { var u = 1 - tt; poly.push([u * u * a[0] + 2 * u * tt * pts[q2 - 1][0] + tt * tt * m[0], u * u * a[1] + 2 * u * tt * pts[q2 - 1][1] + tt * tt * m[1]]); } a = m; }
+      poly.push(pts[pts.length - 1]);
+    })();
+    function road(w, col, dx) {
+      dx = dx || 0; g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(pts[0][0] + dx, pts[0][1]);
+      for (var q = 1; q < pts.length; q++) { var m = [(pts[q - 1][0] + pts[q][0]) / 2 + dx, (pts[q - 1][1] + pts[q][1]) / 2]; g.quadraticCurveTo(pts[q - 1][0] + dx, pts[q - 1][1], m[0], m[1]); }
+      g.lineTo(pts[pts.length - 1][0] + dx, pts[pts.length - 1][1]); g.stroke();
+    }
+    road(92, 'rgba(0,0,0,.1)'); road(76, css(T.road[2], 0.35)); road(64, shade(T.road[2], -0.1)); road(58, T.road[1]); road(44, shade(T.road[0], 0.1));
+    g.save(); g.globalCompositeOperation = 'soft-light'; g.globalAlpha = 0.6; road(58, pattern(g, 0.3)); g.globalAlpha = 0.25; road(58, pattern(g, 0.9)); g.restore();
+    g.setLineDash([46 + rnd() * 30, 14, 26, 10]); road(5, 'rgba(0,0,0,.14)', -13); road(5, 'rgba(0,0,0,.14)', 13); g.setLineDash([]); road(1.4, 'rgba(255,245,215,.1)', -8); road(1.4, 'rgba(255,245,215,.1)', 8);
+    var peb = kind === 'volcano' ? ['#3b3030', '#5a4848'] : kind === 'ice' ? ['#8fa3b8', '#d4e2f0'] : kind === 'desert' ? ['#9a7c46', '#c8aa6c'] : ['#7a6a52', '#a89677'];
+    for (k = 0; k < 130; k++) { var pp = poly[Math.floor(rnd() * poly.length)], pxx = pp[0] + (rnd() - 0.5) * 66, py = pp[1] + (rnd() - 0.5) * 8, pr = 0.9 + rnd() * rnd() * 3.4; g.fillStyle = 'rgba(0,0,0,.28)'; ell(g, pxx + pr * 0.4, py + pr * 0.5, pr * 1.05, pr * 0.7); g.fillStyle = peb[rnd() < 0.5 ? 0 : 1]; ell(g, pxx, py, pr, pr * 0.72); g.fillStyle = 'rgba(255,255,255,.22)'; ell(g, pxx - pr * 0.3, py - pr * 0.3, pr * 0.45, pr * 0.3); }
+    for (k = 0; k < poly.length; k++) for (j = -1; j <= 1; j += 2) { // yol kenarinda ot/kum/kar kiyilari
+      var ex = poly[k][0] + j * (36 + rnd() * 10), ey = poly[k][1] + (rnd() - 0.5) * 6;
+      if (kind === 'volcano') { g.fillStyle = css('#3a2c2c', 0.9); ell(g, ex, ey, 2 + rnd() * 3, 1.4 + rnd() * 1.4); }
+      else if (theme === 2) { g.fillStyle = 'rgba(255,255,255,.85)'; ell(g, ex, ey, 3 + rnd() * 4, 1.8 + rnd() * 1.4); }
+      else if (kind === 'desert') { g.strokeStyle = 'rgba(120,90,40,.75)'; g.lineWidth = 1.2; g.beginPath(); for (var bl = 0; bl < 3; bl++) { g.moveTo(ex, ey); g.lineTo(ex + (bl - 1) * 3, ey - 5 - rnd() * 4); } g.stroke(); }
+      else { g.strokeStyle = css(shade(T.g[1], rnd() < 0.5 ? 0.3 : -0.2), 0.95); g.lineWidth = 1.3; g.beginPath(); for (var bl2 = 0; bl2 < 4; bl2++) { g.moveTo(ex + (bl2 - 1.5) * 1.6, ey); g.quadraticCurveTo(ex + (bl2 - 1.5) * 2.4, ey - 4, ex + (bl2 - 1.5) * 3.4 + (rnd() - 0.5) * 3, ey - 7 - rnd() * 5); } g.stroke(); }
+    }
+    // kale onu ve kamp onu ezilmis toprak
+    [[FH - 30, 1], [18, 1]].forEach(function (z) { var zg = g.createRadialGradient(360, z[0], 10, 360, z[0], 300); zg.addColorStop(0, css(T.road[1], 0.55)); zg.addColorStop(1, css(T.road[1], 0)); g.save(); g.translate(360, z[0]); g.scale(1, 0.22); g.translate(-360, -z[0]); g.fillStyle = zg; circ(g, 360, z[0], 300); g.restore(); });
+
+    // -- nehir: derinlik, akis cizgileri, kopuk, kiyi --
+    if (map.river) {
+      var rv = map.river, W4 = waterColsField(kind), y0 = rv.y - rv.hw, y1 = rv.y + rv.hw, segs = [[-30, rv.gaps[0].x0], [rv.gaps[0].x1, rv.gaps[1].x0], [rv.gaps[1].x1, FW + 30]];
+      var wob = function (x, ph) { return Math.sin(x * 0.045 + ph) * 3.2 + Math.sin(x * 0.11 + ph * 2) * 1.6; };
+      segs.forEach(function (sg) {
+        if (sg[1] - sg[0] < 4) return; var x;
+        var bank = function (e, dy, ph) { g.beginPath(); for (x = sg[0]; x <= sg[1]; x += 8) g.lineTo(x, y0 - e + wob(x, ph) + dy); for (x = sg[1]; x >= sg[0]; x -= 8) g.lineTo(x, y1 + e + wob(x, ph + 2) - dy); g.closePath(); };
+        bank(14, 0, 0.5); g.fillStyle = 'rgba(0,0,0,.22)'; g.fill();               // kiyi golgesi
+        bank(9, 0, 0.3); g.fillStyle = kind === 'ice' ? '#e8f1fa' : kind === 'volcano' ? '#2a1a14' : kind === 'desert' ? '#c8aa6c' : '#6b5638'; g.fill();   // islak toprak/kum
+        bank(4, 0, 0.4); g.fillStyle = W4[3]; g.fill();
+        bank(0, 0, 0.5);
+        var wg = g.createLinearGradient(0, y0, 0, y1); wg.addColorStop(0, W4[2]); wg.addColorStop(0.22, W4[1]); wg.addColorStop(0.5, W4[0]); wg.addColorStop(0.78, W4[1]); wg.addColorStop(1, W4[2]); g.fillStyle = wg; g.fill();
+        g.save(); bank(0, 0, 0.5); g.clip();
+        var rf = g.createLinearGradient(0, y0, 0, y0 + (y1 - y0) * 0.55); rf.addColorStop(0, css(norm(T.sky[2]), 0.45)); rf.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rf; g.fillRect(sg[0], y0 - 8, sg[1] - sg[0], (y1 - y0));
+        g.lineCap = 'round'; for (k = 0; k < Math.round((sg[1] - sg[0]) / 14); k++) { var sx = sg[0] + rnd() * (sg[1] - sg[0]), sy = y0 + 4 + rnd() * (y1 - y0 - 8), sl = 14 + rnd() * 34; g.strokeStyle = 'rgba(255,255,255,' + (0.12 + rnd() * 0.22) + ')'; g.lineWidth = 1 + rnd() * 1.2; g.beginPath(); g.moveTo(sx, sy); g.bezierCurveTo(sx + sl * 0.3, sy - 2, sx + sl * 0.7, sy + 2, sx + sl, sy); g.stroke(); }
+        for (k = 0; k < 14; k++) { g.fillStyle = 'rgba(255,255,255,.6)'; ell(g, sg[0] + rnd() * (sg[1] - sg[0]), y0 + rnd() * (y1 - y0), 1.4 + rnd() * 1.6, 0.8); }
+        g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2; g.beginPath(); for (x = sg[0]; x <= sg[1]; x += 6) { var fyy = y0 + 2 + wob(x, 0.5) + Math.sin(x * 0.3) * 0.8; if (x === sg[0]) g.moveTo(x, fyy); else g.lineTo(x, fyy); } g.stroke();
+        g.beginPath(); for (x = sg[0]; x <= sg[1]; x += 6) { var fyy2 = y1 - 2 + wob(x, 2.4) + Math.sin(x * 0.3) * 0.8; if (x === sg[0]) g.moveTo(x, fyy2); else g.lineTo(x, fyy2); } g.stroke();
+        g.restore();
+        if (kind !== 'ice' && kind !== 'volcano') for (k = 0; k < Math.round((sg[1] - sg[0]) / 26); k++) { // kiyida kamis / ot
+          var rx0 = sg[0] + rnd() * (sg[1] - sg[0]), ry0 = (rnd() < 0.5 ? y0 - 9 : y1 + 9) + wob(rx0, 1);
+          g.strokeStyle = kind === 'swamp' ? '#5f7a3a' : kind === 'desert' ? '#8a7a3a' : '#4d7a35'; g.lineWidth = 1.3; g.beginPath(); for (var rd = 0; rd < 4; rd++) { g.moveTo(rx0 + rd * 2, ry0); g.lineTo(rx0 + rd * 2 + (rnd() - 0.5) * 4, ry0 - 8 - rnd() * 7); } g.stroke();
+        }
+      });
+      rv.gaps.forEach(function (gp2) { // gecit: cakillik + basamak taslari + islak kenar
+        var w = gp2.x1 - gp2.x0, sand = g.createLinearGradient(0, y0 - 8, 0, y1 + 8); sand.addColorStop(0, shade(T.road[1], -0.1)); sand.addColorStop(0.5, shade(T.road[0], 0.05)); sand.addColorStop(1, shade(T.road[1], -0.1));
+        g.fillStyle = sand; rrect(g, gp2.x0, y0 - 9, w, y1 - y0 + 18, 9); g.fill();
+        g.save(); g.beginPath(); g.rect(gp2.x0, y0 - 9, w, y1 - y0 + 18); g.clip(); g.globalCompositeOperation = 'soft-light'; g.fillStyle = pattern(g, 0.35); g.fillRect(gp2.x0, y0 - 9, w, y1 - y0 + 18); g.restore();
+        g.fillStyle = 'rgba(0,0,0,.2)'; ell(g, gp2.x0 + 2, rv.y, 6, rv.hw + 5); ell(g, gp2.x1 - 2, rv.y, 6, rv.hw + 5);
+        for (var qq = 0; qq < 18; qq++) { var sx2 = gp2.x0 + 8 + rnd() * (w - 16), sy2 = y0 + 3 + rnd() * (y1 - y0 - 6), sr = 2.5 + rnd() * 3.5; g.fillStyle = 'rgba(0,0,0,.3)'; ell(g, sx2 + 1, sy2 + 1.5, sr * 1.1, sr * 0.75); g.fillStyle = qq % 2 ? '#9a9486' : '#bdb7a8'; ell(g, sx2, sy2, sr, sr * 0.75); g.fillStyle = 'rgba(255,255,255,.3)'; ell(g, sx2 - 1, sy2 - 1, sr * 0.45, sr * 0.3); }
+        g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1.4; for (qq = 0; qq < 5; qq++) { g.beginPath(); g.moveTo(gp2.x0 - 6, y0 + 4 + qq * 8); g.lineTo(gp2.x0 + 3, y0 + 5 + qq * 8); g.moveTo(gp2.x1 - 3, y0 + 4 + qq * 8); g.lineTo(gp2.x1 + 6, y0 + 5 + qq * 8); g.stroke(); }
+      });
+    }
+
+    // -- tepeler: isiga gore golgeli kubbe + ot dokusu + isaret --
+    map.hills.forEach(function (h) {
+      softShadow(g, h.x + h.r * 0.3, h.y + h.r * 0.42, h.r * 1.2, h.r * 0.7, 0.34);
+      for (k = 0; k < 3; k++) {
+        var f = 1 - k * 0.26, hy = h.y - k * 7, hr = h.r * f, col = k % 2 ? T.g[0] : T.g[1];
+        var hg = g.createRadialGradient(h.x - hr * 0.35, hy - hr * 0.4, hr * 0.05, h.x, hy, hr * 1.05);
+        hg.addColorStop(0, shade(col, 0.34)); hg.addColorStop(0.5, col); hg.addColorStop(1, shade(col, -0.4));
+        g.fillStyle = hg; ell(g, h.x, hy, hr, hr * 0.8);
+        g.strokeStyle = 'rgba(0,0,0,.2)'; g.lineWidth = 1.2; g.beginPath(); g.ellipse(h.x, hy, hr, hr * 0.8, 0, 0.2, 2.9); g.stroke();
+        g.strokeStyle = 'rgba(255,255,230,.14)'; g.beginPath(); g.ellipse(h.x, hy, hr, hr * 0.8, 0, 3.5, 5.6); g.stroke();
+      }
+      var ghue = kind === 'desert' ? '#d8be82' : kind === 'ice' ? '#ffffff' : kind === 'volcano' ? '#6a5252' : '#a8c45a'; g.strokeStyle = css(ghue, 0.5); g.lineWidth = 1; g.lineCap = 'round'; g.beginPath();
+      for (k = 0; k < 90; k++) { var ha = rnd() * TAU, hd = Math.sqrt(rnd()) * h.r * 0.85, hx = h.x + Math.cos(ha) * hd, hy2 = h.y - 10 + Math.sin(ha) * hd * 0.7; g.moveTo(hx, hy2); g.lineTo(hx + (rnd() - 0.5) * 3, hy2 - 3 - rnd() * 4); } g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(h.x - 9, h.y - 4); g.lineTo(h.x, h.y - 13); g.lineTo(h.x + 9, h.y - 4); g.stroke();
+    });
+
+    // -- ormanlar: golge + sprite agaclar --
+    var cache = {}, get = function (key, make) { return cache[key] || (cache[key] = make()); };
+    var broadCols = T.leaf || (kind === 'swamp' ? ['#1d4a38', '#2f7a5a', '#6fd1a3'] : ['#25602f', '#3a8a44', '#78b85a']);
+    var conCols = kind === 'ice' ? ['#1f4a52', '#2f6a70', '#4f9a9a'] : [T.tree[0], T.tree[1], T.tree[2] === '#eef6fd' ? '#cfe6f6' : T.tree[2]];
+    var drawSprite = function (sp, x, y, flip) { g.save(); g.translate(x, y); if (flip) g.scale(-1, 1); g.drawImage(sp.cv, -sp.w / 2, -sp.h / 2, sp.w, sp.h); g.restore(); };
+    map.forests.forEach(function (f) {
+      softShadow(g, f.x + 6, f.y + 9, f.r * 1.08, f.r * 0.9, 0.3);
+      var n = Math.round(f.r * f.r / 230), trees = [];
+      for (j = 0; j < n; j++) { var a = rnd() * TAU, d = Math.sqrt(rnd()) * (f.r - 12); trees.push({ x: f.x + Math.cos(a) * d, y: f.y + Math.sin(a) * d, r: 14 + rnd() * 10, t: rnd(), v: Math.floor(rnd() * 4) }); }
+      trees.sort(function (p, q) { return p.y - q.y; });
+      trees.forEach(function (t) { softShadow(g, t.x + t.r * 0.4, t.y + t.r * 0.5, t.r * 1.2, t.r * 0.85, 0.3); });
+      trees.forEach(function (t) {
+        var rq = Math.max(10, Math.round(t.r / 2) * 2), sp, key = kind + t.v + rq + (t.t < 0.7 ? 'a' : 'b');
+        if (kind === 'desert') sp = t.t < 0.5 ? get('pa' + key, function () { return palmSprite(px, rq, ['#2f6a34', '#4a8a3a', '#9ccb5a'], seeded(t.v + rq)); }) : get('ol' + key, function () { return broadleafSprite(px, rq * 0.8, ['#4a5a30', '#6f8044', '#a3b36a'], seeded(t.v + rq + 5)); });
+        else if (kind === 'volcano') sp = t.t < 0.6 ? get('ch' + key, function () { return charredSprite(px, rq, seeded(t.v + rq)); }) : get('rk' + key, function () { return rockSprite(px, rq * 0.85, '#4a3c3c', seeded(t.v + rq + 9), false); });
+        else if (kind === 'swamp') sp = t.t < 0.6 ? get('wl' + key, function () { return willowSprite(px, rq, broadCols, seeded(t.v + rq)); }) : get('bl' + key, function () { return broadleafSprite(px, rq * 0.85, broadCols, seeded(t.v + rq + 3)); });
+        else if (t.t < 0.7) sp = get('cf' + key, function () { return coniferSprite(px, rq, conCols, kind === 'ice', seeded(t.v * 7 + rq)); });
+        else sp = get('bl' + key, function () { return broadleafSprite(px, rq, broadCols, seeded(t.v * 5 + rq)); });
+        drawSprite(sp, t.x, t.y, t.v & 1);
+      });
+    });
+
+    // -- kayalar --
+    var rockBase = kind === 'volcano' ? '#4a3c3c' : kind === 'ice' ? '#b8cfe3' : kind === 'desert' ? '#a68a5e' : '#8b909c';
+    map.rocks.forEach(function (rk) {
+      softShadow(g, rk.x + rk.r * 0.4, rk.y + rk.r * 0.55, rk.r * 1.4, rk.r * 0.85, 0.36);
+      drawSprite(get('rk' + Math.round(rk.r) + kind + (rk.x > 360 ? 1 : 0), function () { return rockSprite(px, rk.r, rockBase, seeded(Math.round(rk.r * 7 + rk.x)), kind === 'forest'); }), rk.x, rk.y, rk.x > 360);
+    });
+
+    // -- kale onu golgeleri: duvar ve cit dibi --
+    var wsh = g.createLinearGradient(0, 40, 0, 96); wsh.addColorStop(0, 'rgba(0,0,0,.38)'); wsh.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = wsh; g.fillRect(0, 40, FW, 56);
+    var csh = g.createLinearGradient(0, FH - 70, 0, FH - 24); csh.addColorStop(0, 'rgba(0,0,0,0)'); csh.addColorStop(1, 'rgba(0,0,0,.28)'); g.fillStyle = csh; g.fillRect(0, FH - 70, FW, 46);
+    g.restore();
+
+    lightGrade(g, { W: W, H: H, top: fy, bot: fy + FH, ox: fx, rnd: rnd, T: T, kind: kind, theme: theme, bottomDark: false });
+    // oyun alani disi: arayuz altinda kalan kenarlari karart
+    var vt = g.createLinearGradient(0, fy - 40, 0, fy + 26); vt.addColorStop(0, 'rgba(6,10,24,.45)'); vt.addColorStop(1, 'rgba(6,10,24,0)'); g.fillStyle = vt; g.fillRect(0, 0, W, fy + 26);
+    var vb = g.createLinearGradient(0, fy + FH - 26, 0, fy + FH + 40); vb.addColorStop(0, 'rgba(6,10,24,0)'); vb.addColorStop(1, 'rgba(6,10,24,.6)'); g.fillStyle = vb; g.fillRect(0, fy + FH - 26, W, H - (fy + FH) + 26);
+    this.bg = cv;
+  }
+  function waterColsField(kind) {
+    return kind === 'volcano' ? ['#8a2a0c', '#e0561a', '#ffb347', '#3a1208'] : kind === 'ice' ? ['#6fa8d6', '#a9d4f2', '#e8f6ff', '#4b7fa8']
+      : kind === 'swamp' ? ['#1f3f35', '#2f6350', '#5fa88a', '#142a22'] : kind === 'desert' ? ['#2f7fa6', '#52a9c9', '#bfe8f2', '#1f5f7e'] : ['#245f94', '#3f8ac4', '#a9dcf5', '#17436b'];
   }
 
   R.buildBg = function () {
     try { build.call(this); } catch (e) { if (typeof console !== 'undefined') console.warn('scenery: basit arka plana donuldu', e); this.buildBgBasic(); }
   };
-  R.Scenery = { build: build };
+  R.Scenery = { build: build, field: field };
 })(globalThis.Z = globalThis.Z || {});
