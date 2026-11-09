@@ -1,6 +1,6 @@
-name: Tarayici surumu (GitHub Pages)
+name: Dokun (GitHub Pages)
 
-# Zafarion: https://<kullanici>.github.io/<depo>/   Dokun: https://<kullanici>.github.io/<depo>/dokun/
+# Dokun!: https://<kullanici>.github.io/<depo>/
 # Bir kez: Settings -> Pages -> Source = "GitHub Actions" secilmeli.
 on:
   push:
@@ -28,20 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Surum bilgisi ve onbellek adi
-        run: |
-          sed -i "s/Z.BUILD = 'dev'/Z.BUILD = '${{ github.run_number }}'/" www/js/version.js
-          sed -i "s/zafarion-dev/zafarion-${{ github.run_number }}/" www/sw.js
-          grep -n "BUILD" www/js/version.js; grep -n "const CACHE" www/sw.js
-
       - uses: actions/configure-pages@v5
 
-      - name: Site klasorunu hazirla (Zafarion kokte, Dokun /dokun/ altinda)
+      - name: Site klasorunu hazirla
         run: |
           mkdir _site
-          cp -r www/. _site/
-          cp -r dokun _site/dokun
-          ls _site _site/dokun
+          cp index.html _site/
 
       - uses: actions/upload-pages-artifact@v3
         with:
