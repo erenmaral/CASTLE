@@ -13,7 +13,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
     const bad = await p.evaluate(() => {
       const txt = document.getElementById('stage').innerText.replace(/⟦[\s\S]*?⟧/g, ' ');
       return txt.split('\n').map(l => l.trim()).filter(l => /[A-Za-zçğıöşüÇĞİÖŞÜ]{2,}/.test(l)); });
-    bad.forEach(b => { if (!/^(SEFER|VAKTİ|SEFER VAKTİ|CAMPAIGN|TIME|CAMPAIGN TIME|Campaign Time|🎉 Campaign Time|Türkçe|English|Español|Português|Русский|简体中文)/.test(b) && !problems.has(b)) problems.set(b, name); }); seenScreens.push(name);
+    bad.forEach(b => { if (!/^(SEFER|VAKTİ|SEFER VAKTİ|CASTLE SIEGE|HISTORY|CASTLE SIEGE: HISTORY|Castle Siege: History|🎉 Castle Siege: History|Türkçe|English|Español|Português|Русский|简体中文)/.test(b) && !problems.has(b)) problems.set(b, name); }); seenScreens.push(name);
   };
   const go = async (code, arg) => { await p.evaluate(code, arg); await p.waitForTimeout(350); };
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.waitForTimeout(1200);

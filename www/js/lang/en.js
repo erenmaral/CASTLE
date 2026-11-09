@@ -1,5 +1,6 @@
 // Sefer Vakti - en dil paketi (scripts/i18n.js build ile uretilir). Kaynak metin: Turkce.
 (globalThis.Z = globalThis.Z || {}).PACK = Object.assign((globalThis.Z.PACK || {}), { "en": {
+ "Kale Kuşatması: Tarih": "Castle Siege: History",
  "Mızrakçı": "Spearman",
  "Ucuz ve dayanıklı ön saf. Süvarilere karşı %60 fazla hasar verir.": "Cheap and sturdy front line. Deals 60% more damage to cavalry.",
  "Okçu": "Archer",
@@ -653,7 +654,7 @@
  "<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması": "<b>Every level is a real historical siege:</b> Orléans, Acre, Kazan, Malta, Vienna, Istanbul… each of the 105 levels is a castle siege that really happened",
  "<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ": "<b>Your side now has a camp:</b> wooden palisade, yurts, campfires and a horsetail standard",
  "<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik": "<b>New siege rules:</b> Moat, Relief Army, Blockade, and a breach when the wall is broken",
- "Oyunun adı artık her dilde <b>Campaign Time</b>": "The game is now called <b>Campaign Time</b> in every language",
+ "Oyunun yeni adı:": "New game name:",
  "İlerlemen korundu.": "Your progress was preserved.",
  "Sefere çıkalım!": "Off to the campaign!",
  "Duraklatıldı": "Paused",

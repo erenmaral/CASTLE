@@ -1,5 +1,6 @@
 // Sefer Vakti - zh dil paketi (scripts/i18n.js build ile uretilir). Kaynak metin: Turkce.
 (globalThis.Z = globalThis.Z || {}).PACK = Object.assign((globalThis.Z.PACK || {}), { "zh": {
+ "Kale Kuşatması: Tarih": "城堡围攻：历史",
  "Mızrakçı": "枪兵",
  "Ucuz ve dayanıklı ön saf. Süvarilere karşı %60 fazla hasar verir.": "廉价耐打的前排。对骑兵伤害提高%60。",
  "Okçu": "弓箭手",
@@ -653,7 +654,7 @@
  "<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması": "<b>每一关都是真实的历史围攻战：</b>奥尔良、阿卡、喀山、马耳他、维也纳、伊斯坦布尔……105个关卡，每一个都是真实发生过的城堡围攻",
  "<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ": "<b>你这边现在有了营地：</b>木栅栏、毡帐、篝火和马尾旗",
  "<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik": "<b>全新围攻规则：</b>护城河、援军、封锁，以及城墙被攻破后的缺口",
- "Oyunun adı artık her dilde <b>Campaign Time</b>": "游戏现在在所有语言中都叫<b>Campaign Time</b>",
+ "Oyunun yeni adı:": "游戏新名称：",
  "İlerlemen korundu.": "你的进度已保留。",
  "Sefere çıkalım!": "出发远征吧！",
  "Duraklatıldı": "已暂停",

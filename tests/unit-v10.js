@@ -7,11 +7,11 @@ const mkSave = () => { const sv = { unitLvl: {}, heroLvl: { aslan: 1 }, castleLv
 const mk = (level, rules, seed) => new Z.Battle({ mode: 'campaign', level, save: mkSave(), deck: ['spear', 'archer'], hero: 'aslan', seed: seed || 5, rules });
 
 // 1) Oyun adi sabit Ingilizce, 105 gercek kusatma: ad + yil, her diyarin patronu bilinen bir kusatma
-{ assert(Z.NAME === 'Campaign Time', 'sabit ad');
+{ assert(Z.NAME === 'Kale Kuşatması: Tarih', 'Turkce ad'); ['en', 'es', 'pt', 'ru', 'zh'].forEach(l => { Z.PACK = {}; require('../www/js/lang/' + l + '.js'); Z.lang = l; assert(Z.NAME && Z.NAME !== 'Kale Kuşatması: Tarih', l + ' adi cevrilmis: ' + Z.NAME); if (l === 'en') assert(Z.NAME === 'Castle Siege: History', 'Ingilizce ad'); }); Z.lang = 'tr';
   assert(Z.REALMS.length === 7 && Z.LEVEL_NAMES.length === 105 && Z.STORIES.length === 105, 'diyar/bolum sayisi');
   Z.LEVEL_NAMES.forEach((nm, i) => { assert(/\d/.test(nm), 'yil yok: ' + nm); assert(!/Seferhan|PATRON/.test(Z.STORIES[i]), 'kurgu kalintisi ' + (i + 1)); });
   assert(Z.LEVEL_NAMES[104] === 'İstanbul 1453' && Z.LEVEL_NAMES[4] === 'Orléans 1429' && Z.LEVEL_NAMES[29] === 'Akka 1291', 'bilinen patronlar');
-  ok('Oyun adı sabit "Campaign Time"; 105 bölümün her biri gerçek bir kuşatma (ad + yıl), kurgu kalıntısı yok'); }
+  ok('Oyun adı dile göre (tr: Kale Kuşatması: Tarih, en: Castle Siege: History, 3 dil daha); 105 bölümün her biri gerçek bir kuşatma (ad + yıl), kurgu kalıntısı yok'); }
 
 // 2) Kurallar: hendek ve yardim ordusu yalnizca kale kusatmasinda; abluka/sagplam surlar yeniden adlandi
 { ['moat', 'relief'].forEach(r => assert(Z.RULES[r] && Z.RULES[r].name && Z.RULES[r].desc, r + ' tanimli'));

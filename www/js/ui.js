@@ -34,7 +34,15 @@
   UI.modalOpen = function () { return !$('modal-layer').classList.contains('hidden'); };
 
   // ---------------------------------------------------------------- baslangic
+  // Oyun adi dile gore: sekme basligi, logolar, ana ekran basligi ("AD:" / "ALT BASLIK")
+  UI.applyName = function () {
+    var nm = Z.NAME, up = nm.toLocaleUpperCase(Z.lang === 'zh' ? 'zh' : Z.lang), m = up.match(/^(.*?[:：])\s*(.*)$/);
+    document.title = nm;
+    var hl = document.querySelector('.hl-name'); if (hl) { hl.textContent = ''; if (m) { hl.appendChild(document.createTextNode(m[1])); hl.appendChild(document.createElement('br')); hl.appendChild(document.createTextNode(m[2])); } else hl.textContent = up; }
+    Array.prototype.forEach.call(document.querySelectorAll('.logo'), function (el) { el.textContent = up; });
+  };
   UI.init = function (game) {
+    UI.applyName();
     UI.game = game;
     $('modal-layer').addEventListener('click', function (e) {
       var el = e.target.closest ? e.target.closest('[data-act]') : null;
@@ -1001,7 +1009,7 @@
       '🏰 ' + $t('<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması') + '<br>' +
       '🏕️ ' + $t('<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ') + '<br>' +
       '⚔️ ' + $t('<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik') + '<br>' +
-      '🌐 ' + $t('Oyunun adı artık her dilde <b>Campaign Time</b>') + '</div>' +
+      '🌐 ' + $t('Oyunun yeni adı:') + ' <b>' + Z.NAME + '</b></div>' +
       '<p class="small">' + $t('İlerlemen korundu.') + '</p>' +
       '<div class="actions"><button class="btn gold" data-act="ok">' + $t('Sefere çıkalım!') + '</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });

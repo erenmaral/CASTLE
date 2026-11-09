@@ -1,6 +1,6 @@
-# ⚔️ Campaign Time (Sefer Vakti)
+# ⚔️ Castle Siege: History (Kale Kuşatması: Tarih)
 
-Oyunun adı **Campaign Time** — "Sefer Vakti"nin İngilizcesi; her dilde sabit kalır (`Z.NAME`, `www/js/version.js`).
+Oyunun adı **dile göre** değişir: Türkçe *Kale Kuşatması: Tarih*, English *Castle Siege: History*, Español *Asedio de Castillos: Historia*, Português *Cerco de Castelos: História*, Русский *Осада замков: История*, 简体中文 *城堡围攻：历史* (`Z.NAME`, `www/js/data.js`; Android uygulama adı `res/values-<dil>/strings.xml`).
 
 **Dikey (portre)** 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
 Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
@@ -11,7 +11,7 @@ Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (t
 
 ## APK nasıl alınır?
 Her `push` sonrası GitHub Actions otomatik APK derler:
-**GitHub → bu depo → Releases** → en yeni `Campaign Time x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
+**GitHub → bu depo → Releases** → en yeni `Castle Siege: History x.y.z.N` sürümündeki `.apk` dosyasını telefonda indirip kur
 (Ayarlar'dan "bilinmeyen kaynaklardan yüklemeye" izin vermek gerekir).
 Tüm sürümler aynı anahtarla imzalandığı için yeni APK eskisinin **üzerine kurulur, kayıtlarınız silinmez**.
 

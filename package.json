@@ -1,8 +1,8 @@
 {
   "name": "seferhan",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "private": true,
-  "description": "Campaign Time (Sefer Vakti) - 2D strateji ve savas oyunu (mobil)",
+  "description": "Castle Siege: History (Sefer Vakti) - 2D strateji ve savas oyunu (mobil)",
   "scripts": {
     "sim": "node tests/sim-balance.js",
     "sync": "cap sync android"

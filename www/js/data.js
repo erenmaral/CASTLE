@@ -3,6 +3,9 @@
   'use strict';
   var $t = Z.t || function (s) { return s; };
 
+  // Oyunun adi dile gore degisir (Turkce kaynak: Kale Kusatmasi: Tarih; Ingilizce: Castle Siege: History)
+  Object.defineProperty(Z, 'NAME', { get: function () { return $t('Kale Kuşatması: Tarih'); }, configurable: true });
+
   // ---- Birlikler -------------------------------------------------------
   // cls: sinif (bonus tablosu icin), int: saldiri araligi (sn), cd: kart bekleme suresi
   Z.UNITS = {

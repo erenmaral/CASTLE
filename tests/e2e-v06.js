@@ -13,7 +13,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   const stars = {}; for (let i = 1; i <= 80; i++) stars[i] = (i % 3) + 1;
   await ctx.addInitScript((st) => { try { if (!localStorage.getItem('zafarion.save.v1')) localStorage.setItem('zafarion.save.v1', JSON.stringify({ v: 1, tutorialDone: true, seenVersion: '0.10', cleared: 80, coins: 5000, gems: 100, stars: st, stats: { totalStars: 160, wins: 80 }, fieldTutDone: true, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } })); } catch (e) {} }, stars);
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.mouse.click(200, 300); await p.waitForTimeout(3500);
-  check(await p.title() === 'Campaign Time' && /CAMPAIGN TIME/.test(await p.locator('#hub-top .logo').innerText()), 'Oyun adı: Campaign Time');
+  check(await p.title() === 'Kale Kuşatması: Tarih' && /KALE KUŞATMASI: TARİH/.test(await p.locator('#hub-top .logo').innerText()), 'Oyun adı (Türkçe): Kale Kuşatması: Tarih');
   check(await p.evaluate(() => !!Z.Game.demo && !document.getElementById('game').classList.contains('hidden') && !document.getElementById('home').classList.contains('hidden') && !document.getElementById('home').classList.contains('opaque')), 'Ana menüde arkada canlı savaş çalışıyor');
   const u0 = await p.evaluate(() => Z.Game.demo.units.length + Z.Game.demo.t); await p.waitForTimeout(2500);
   check(await p.evaluate((u) => Z.Game.demo.units.length + Z.Game.demo.t !== u, u0), 'Menü savaşı ilerliyor (birlikler/zaman değişti)');

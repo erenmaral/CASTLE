@@ -1,5 +1,6 @@
 // Sefer Vakti - pt dil paketi (scripts/i18n.js build ile uretilir). Kaynak metin: Turkce.
 (globalThis.Z = globalThis.Z || {}).PACK = Object.assign((globalThis.Z.PACK || {}), { "pt": {
+ "Kale Kuşatması: Tarih": "Cerco de Castelos: História",
  "Mızrakçı": "Lanceiro",
  "Ucuz ve dayanıklı ön saf. Süvarilere karşı %60 fazla hasar verir.": "Linha de frente barata e resistente. Causa %60 a mais de dano contra cavalaria.",
  "Okçu": "Arqueiro",
@@ -653,7 +654,7 @@
  "<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması": "<b>Cada fase é um cerco histórico real:</b> Orléans, Acre, Cazã, Malta, Viena, Istambul… cada uma das 105 fases é um cerco a um castelo que realmente aconteceu",
  "<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ": "<b>Agora há um acampamento do seu lado:</b> paliçada de madeira, tendas, fogueiras e o estandarte de crina",
  "<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik": "<b>Novas regras de cerco:</b> Fosso, Exército de Socorro, Bloqueio e brecha quando a muralha é rompida",
- "Oyunun adı artık her dilde <b>Campaign Time</b>": "O jogo agora se chama <b>Campaign Time</b> em todos os idiomas",
+ "Oyunun yeni adı:": "Novo nome do jogo:",
  "İlerlemen korundu.": "Seu progresso foi mantido.",
  "Sefere çıkalım!": "Vamos à campanha!",
  "Duraklatıldı": "Pausado",

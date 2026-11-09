@@ -2,6 +2,9 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.10.1 — Oyunun adı: Castle Siege: History
+- 🏷️ Oyunun adı **"Castle Siege: History"** oldu ve **dile göre değişir**: Kale Kuşatması: Tarih (tr), Castle Siege: History (en), Asedio de Castillos: Historia (es), Cerco de Castelos: História (pt), Осада замков: История (ru), 城堡围攻：历史 (zh). Sekme başlığı, logolar, ana ekran başlığı ve Android uygulama adı (telefon diline göre) buna uyar; APK adı `CastleSiegeHistory-…apk`. Paket kimliği aynı: güncelleme üstüne kurulur.
+
 ## 0.10.0 — Campaign Time: gerçek kuşatmalar, kamp, kuşatma kuralları
 - 🏷️ **Oyunun adı sabit "Campaign Time"** ("Sefer Vakti"nin İngilizcesi): her dilde, başlıkta, simgede, APK adında aynı (`Z.NAME`).
 - 🏰 **105 bölümün her biri gerçek bir tarihî kuşatma:** Rochester 1215 → Orléans 1429 → Akka 1291 → Kazan 1552 → Malta 1565 → Bağdat 1258 → Viyana 1683 → İstanbul 1453. Haritada ad + yıl, brifingte kısa tarih notu. Diyarlar bölgelere döndü: Batı Avrupa, Kutsal Topraklar, Kuzey Seferleri, Akdeniz, Alçak Ülkeler, Asya, Anadolu ve Balkanlar (manzara temaları aynı kaldı).

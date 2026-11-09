@@ -114,12 +114,12 @@ jobs:
       - name: APK adini duzenle
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/release/app-release.apk "dist/CampaignTime-${{ steps.ver.outputs.name }}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4
         with:
-          name: CampaignTime-${{ steps.ver.outputs.name }}
+          name: CastleSiegeHistory-${{ steps.ver.outputs.name }}
           path: dist/*.apk
 
       - name: GitHub Release olustur
@@ -128,7 +128,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           MSG=$(git log -1 --pretty=%s)
-          gh release create "build-${{ github.run_number }}" "dist/CampaignTime-${{ steps.ver.outputs.name }}.apk" \
+          gh release create "build-${{ github.run_number }}" "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.apk" \
             --target "${{ github.sha }}" --prerelease \
-            --title "Campaign Time ${{ steps.ver.outputs.name }}" \
+            --title "Castle Siege: History ${{ steps.ver.outputs.name }}" \
             --notes "Otomatik derleme #${{ github.run_number }} — ${MSG}"

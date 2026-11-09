@@ -16,7 +16,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   await p.goto(url); await p.waitForFunction(() => globalThis.Z && Z.ready); await p.evaluate(() => Z.UI.showHub('map')); await p.waitForTimeout(700);
 
   // Yenilikler penceresi (0.3 kaydi ile)
-  check(/Campaign Time 0\.10/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.9 penceresi gösterildi');
+  check(/Kale Kuşatması: Tarih 0\.10/.test(await p.locator('.modal h1').first().innerText()), 'Yenilikler 0.9 penceresi gösterildi');
   await shot('v04-01-whatsnew'); await p.click('[data-act="ok"]'); await p.waitForTimeout(400);
   await p.evaluate(() => { Z.UI.closeModal(); Z.Save.data.daily.claimedToday = true; Z.UI.renderHub(); }); await p.waitForTimeout(300);
   check(await p.evaluate(() => document.querySelectorAll('.node').length === 105), 'Harita 105 bölümü gösteriyor');

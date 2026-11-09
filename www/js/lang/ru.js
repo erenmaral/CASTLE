@@ -1,5 +1,6 @@
 // Sefer Vakti - ru dil paketi (scripts/i18n.js build ile uretilir). Kaynak metin: Turkce.
 (globalThis.Z = globalThis.Z || {}).PACK = Object.assign((globalThis.Z.PACK || {}), { "ru": {
+ "Kale Kuşatması: Tarih": "Осада замков: История",
  "Mızrakçı": "Копейщик",
  "Ucuz ve dayanıklı ön saf. Süvarilere karşı %60 fazla hasar verir.": "Дешёвый и стойкий боец первой линии. Наносит кавалерии на 60% больше урона.",
  "Okçu": "Лучник",
@@ -653,7 +654,7 @@
  "<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması": "<b>Каждый уровень — реальная историческая осада:</b> Орлеан, Акра, Казань, Мальта, Вена, Стамбул… Каждый из 105 уровней — настоящая осада замка",
  "<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ": "<b>На вашей стороне теперь есть лагерь:</b> деревянный частокол, юрты, костры и бунчук",
  "<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik": "<b>Новые правила осады:</b> Ров, Армия подкрепления, Блокада и брешь, когда стена пробита",
- "Oyunun adı artık her dilde <b>Campaign Time</b>": "Игра теперь называется <b>Campaign Time</b> на всех языках",
+ "Oyunun yeni adı:": "Новое название игры:",
  "İlerlemen korundu.": "Прогресс сохранён.",
  "Sefere çıkalım!": "В поход!",
  "Duraklatıldı": "Пауза",
