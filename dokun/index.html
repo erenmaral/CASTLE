@@ -40,6 +40,17 @@
     border:3px solid #fff; left:0; }
   .pct { font-size:clamp(18px,5vmin,30px); margin-top:14px; font-weight:700; }
 
+  .zone .body.fill { height:calc(100% - 34px); }
+  .arena { position:relative; width:100%; height:100%; }
+  .tgt { position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%;
+    background:var(--c); border:4px solid #fff; box-shadow:0 0 0 4px rgba(0,0,0,.25); }
+  .cnt { position:absolute; top:0; left:0; font-size:18px; font-weight:700; opacity:.9; }
+  .grid { display:grid; gap:8px; width:100%; margin:0 auto; align-content:center; height:100%;
+    max-width:min(100%, calc((50dvh - 80px) * var(--ar, 1))); }
+  .cell { display:flex; align-items:center; justify-content:center; aspect-ratio:1; background:rgba(255,255,255,.14);
+    border-radius:12px; font-size:clamp(22px, 6vmin, 36px); font-weight:800; }
+  .cell.done { opacity:.25; }
+
   #hud { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:5; pointer-events:none;
     background:rgba(8,10,20,.85); border:2px solid rgba(255,255,255,.25); border-radius:16px;
     padding:8px 16px; text-align:center; max-width:86vw; font-weight:700; font-size:16px; line-height:1.3; }
@@ -77,12 +88,11 @@
 <script>
 (() => {
   const COLORS = ['#ff5a5f', '#3ddc97', '#4dabf7', '#ffd43b'];
-  const TOTAL_ROUNDS = 9;
   const $ = s => document.querySelector(s);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   const board = $('#board'), hud = $('#hud'), menu = $('#menu');
-  let N = 2, scores = [], zones = [], handler = null;
+  let N = 2, scores = [], zones = [], handler = null, upHandler = null;
 
   // ---------- Arayuz yardimcilari ----------
   function build() {
@@ -96,7 +106,14 @@
       const flipped = N === 2 ? i === 0 : i < 2;       // ust siradaki oyuncular karsidan oynar
       if (flipped) z.classList.add('flip');
       z.innerHTML = '<div class="head"><span>Oyuncu ' + (i + 1) + '</span><span class="score">0</span></div><div class="body"></div>';
-      z.addEventListener('pointerdown', e => { e.preventDefault(); if (handler) handler(i); });
+      z.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        try { z.setPointerCapture(e.pointerId); } catch (_) {}
+        if (handler) handler(i, e);
+      });
+      const up = () => { if (upHandler) upHandler(i); };
+      z.addEventListener('pointerup', up);
+      z.addEventListener('pointercancel', up);
       board.appendChild(z);
       zones.push(z);
     }
@@ -104,7 +121,10 @@
   const body = (i, html) => { zones[i].querySelector('.body').innerHTML = html; };
   const setS = (i, s) => { zones[i].dataset.s = s || ''; };
   const showScores = () => zones.forEach((z, i) => { z.querySelector('.score').textContent = scores[i]; });
-  const resetZones = () => zones.forEach((_, i) => { setS(i, ''); body(i, ''); });
+  const resetZones = () => zones.forEach((z, i) => { setS(i, ''); body(i, ''); z.querySelector('.body').classList.remove('fill'); });
+  const arena = (i, html) => { const b = zones[i].querySelector('.body'); b.classList.add('fill'); b.innerHTML = html; };
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const topScorers = arr => { const m = Math.max(...arr); return m > 0 ? arr.map((v, i) => v === m ? i : -1).filter(i => i >= 0) : []; };
   function say(main, sub) {
     hud.innerHTML = main + (sub ? '<small>' + sub + '</small>' : '');
     hud.classList.remove('hidden');
@@ -191,10 +211,111 @@
     return best < 1 ? [dist.indexOf(best)] : [];
   }
 
+  async function targets() {
+    const GOAL = 6, cnt = Array(N).fill(0);
+    let winner = -1;
+    const place = i => {
+      const t = zones[i].querySelector('.tgt');
+      t.style.left = (15 + Math.random() * 70) + '%';
+      t.style.top = (18 + Math.random() * 65) + '%';
+    };
+    zones.forEach((_, i) => {
+      arena(i, '<div class="arena"><div class="cnt">0/' + GOAL + '</div><div class="tgt"></div></div>');
+      setS(i, 'go'); place(i);
+    });
+    await new Promise(res => {
+      handler = (i, e) => {
+        if (winner >= 0 || !e.target.classList.contains('tgt')) return;
+        cnt[i]++;
+        zones[i].querySelector('.cnt').textContent = cnt[i] + '/' + GOAL;
+        if (cnt[i] >= GOAL) { winner = i; res(); } else place(i);
+      };
+      setTimeout(res, 15000);
+    });
+    handler = null;
+    return winner >= 0 ? [winner] : topScorers(cnt);
+  }
+
+  async function numbers() {
+    const next = Array(N).fill(1);
+    let winner = -1;
+    zones.forEach((_, i) => {
+      arena(i, '<div class="grid" style="--ar:.67;grid-template-columns:repeat(2,1fr)">' +
+        shuffle([1, 2, 3, 4, 5, 6]).map(n => '<div class="cell" data-n="' + n + '">' + n + '</div>').join('') + '</div>');
+      setS(i, 'go');
+    });
+    await new Promise(res => {
+      handler = (i, e) => {
+        if (winner >= 0 || +e.target.dataset.n !== next[i]) return;
+        e.target.classList.add('done');
+        if (++next[i] > 6) { winner = i; res(); }
+      };
+      setTimeout(res, 15000);
+    });
+    handler = null;
+    return winner >= 0 ? [winner] : topScorers(next.map(v => v - 1));
+  }
+
+  async function odd() {
+    const pairs = [['🙂', '🙃'], ['🍎', '🍅'], ['⭐', '🌟'], ['🔵', '🟣'], ['🐱', '🐯'], ['🍋', '🧀']];
+    const [a, b] = pairs[Math.floor(Math.random() * pairs.length)];
+    const lock = Array(N).fill(false);
+    let winner = -1;
+    zones.forEach((_, i) => {
+      const k = Math.floor(Math.random() * 12);
+      let h = '';
+      for (let c = 0; c < 12; c++) h += '<div class="cell" data-odd="' + (c === k ? 1 : 0) + '">' + (c === k ? b : a) + '</div>';
+      arena(i, '<div class="grid" style="--ar:.75;grid-template-columns:repeat(3,1fr)">' + h + '</div>');
+      setS(i, 'go');
+    });
+    await new Promise(res => {
+      handler = (i, e) => {
+        if (winner >= 0 || lock[i] || e.target.dataset.odd === undefined) return;
+        if (e.target.dataset.odd === '1') { winner = i; res(); return; }
+        lock[i] = true; setS(i, 'out');                  // yanlis dokunus: 1,2 sn ceza
+        setTimeout(() => { lock[i] = false; if (winner < 0) setS(i, 'go'); }, 1200);
+      };
+      setTimeout(res, 12000);
+    });
+    handler = null;
+    return winner >= 0 ? [winner] : [];
+  }
+
+  async function hold() {
+    const TARGET = 3000, st = Array(N).fill(null), en = Array(N).fill(null);
+    zones.forEach((_, i) => body(i, 'Basılı tut'));
+    await new Promise(res => {
+      let timer;
+      const done = () => { clearInterval(timer); res(); };
+      handler = i => { if (st[i] === null) { st[i] = performance.now(); setS(i, 'go'); } };
+      upHandler = i => {
+        if (st[i] === null || en[i] !== null) return;
+        en[i] = performance.now(); setS(i, ''); body(i, 'Bıraktın');
+        if (en.every(x => x !== null)) setTimeout(done, 300);
+      };
+      timer = setInterval(() => {
+        const now = performance.now();
+        zones.forEach((_, i) => {
+          if (st[i] !== null && en[i] === null) { const t = now - st[i]; body(i, t < 1000 ? (t / 1000).toFixed(1) + ' sn' : '?'); }
+        });
+      }, 50);
+      setTimeout(done, 10000);
+    });
+    handler = null; upHandler = null;
+    const err = en.map((e, i) => e === null ? Infinity : Math.abs((e - st[i]) - TARGET));
+    zones.forEach((_, i) => body(i, en[i] === null ? '—' : ((en[i] - st[i]) / 1000).toFixed(2) + ' sn'));
+    const best = Math.min(...err);
+    return isFinite(best) ? [err.indexOf(best)] : [];
+  }
+
   const GAMES = [
     { name: 'Tepki', hint: 'Yeşil olunca ilk dokunan kazanır. Erken dokunan elenir!', run: reaction },
     { name: 'Seri Dokun', hint: '5 saniyede en çok dokunan kazanır.', run: spam },
     { name: 'Tam Ortada', hint: 'Top ortaya en yakın durursa kazanırsın.', run: stopbar },
+    { name: 'Hedef Avı', hint: 'Çıkan daireye dokun. 6 hedefe ilk ulaşan kazanır.', run: targets },
+    { name: 'Sayı Sırası', hint: "1'den 6'ya sırayla dokun. İlk bitiren kazanır.", run: numbers },
+    { name: 'Tek Farklı', hint: 'Farklı olanı bul! Yanlış dokunana ceza var.', run: odd },
+    { name: 'Tut ve Bırak', hint: "Basılı tut, 3 saniye dolunca bırak. İlk 1 sn sayaç görünür, sonra gizlenir!", run: hold },
   ];
 
   // ---------- Oyun akisi ----------
@@ -202,10 +323,11 @@
     scores = Array(N).fill(0);
     build();
     menu.classList.add('hidden');
-    for (let r = 1; r <= TOTAL_ROUNDS; r++) {
-      const g = GAMES[(r - 1) % GAMES.length];
+    const deck = shuffle(GAMES);
+    for (let r = 1; r <= deck.length; r++) {
+      const g = deck[r - 1];
       resetZones(); showScores();
-      say(g.name + ' <small>Tur ' + r + '/' + TOTAL_ROUNDS + ' · ' + g.hint + '</small>');
+      say(g.name + ' <small>Tur ' + r + '/' + deck.length + ' · ' + g.hint + '</small>');
       await sleep(2200);
       const winners = await g.run();
       winners.forEach(i => { scores[i]++; setS(i, 'win'); });
@@ -236,7 +358,9 @@
   $('#start').addEventListener('click', play);
 
   // test icin disariya ac
-  window.__dokun = { get scores() { return scores; }, get zones() { return zones; } };
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  window.__dokun = { get scores() { return scores; }, get zones() { return zones; }, GAMES, resetZones,
+    setup(n) { N = n; scores = Array(N).fill(0); build(); menu.classList.add('hidden'); } };
 })();
 </script>
 </body>
