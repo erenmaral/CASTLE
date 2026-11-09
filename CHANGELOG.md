@@ -2,6 +2,13 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.9.2 — Yeni görsel kimlik (frontend-design)
+- 🎨 **Arayüz baştan giydirildi:** konu "Türk bozkır seferi" — keçe kahvesi zemin, kan boyası kırmızısı, turkuaz, yaldız altını ve kemik beyazı (6 renk). Parlak degrade/cam efekti yok; düz yüzey, kalın alt kenar ve **dikiş çizgisi**.
+- 🚩 **Ana menü:** solda sallanan **tuğ** (at kuyruklu sancak) amblemi, "Sefer Vakti" Almendra başlığı, kilim bandı; düğmeler ortalı kartlar yerine ikonlu, sola yaslı satırlar.
+- 🔤 **Yazı:** başlık/düğmelerde Almendra (SIL OFL, `www/fonts/`), sayılar ve HUD için sistem yazısı (okunaklı); Rusça/Çince sistem serif'e düşer.
+- 🧭 Emoji ikonlar yerine **SVG ikonlar** (sekmeler, ana menü, para birimleri, ayarlar), kilim şeritli alt sekme çubuğu, düz madalyon harita düğümleri, kilim şeritli pencereler.
+- Kod: `www/css/theme.css` (style.css'in üstüne biner; seçiciler/ID'ler değişmedi), `sw.js` önbelleği güncellendi.
+
 ## 0.9.1 — Güncelleme çakışması ve ilk açılış
 - 🔑 **APK artık eskisinin üzerine kurulur:** secret tanımlı olmadığında her derleme *farklı geçici anahtarla* imzalanıyordu, Android de "mevcut uygulamayla çakışıyor" diye reddediyordu. CI imza anahtarını ilk derlemede üretip Actions önbelleğine kaydeder, sonraki derlemeler aynı anahtarı kullanır (kalıcı çözüm için README'deki secret'lar). **Bir kez** eski uygulamayı silmek gerekir (önce Ayarlar → Kaydı dışa aktar).
 - 🏠 **İlk açılışta doğrudan ana menü** (arkada canlı savaş + karşılama penceresi); dil cihaz dilinden otomatik seçilir, değiştirmek için Ayarlar → Dil.
