@@ -1,4 +1,4 @@
-package io.github.erenmaral.castlesiege;
+package com.dmdigital.castlesiege;
 
 import android.os.Build;
 import android.os.Bundle;

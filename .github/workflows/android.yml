@@ -128,7 +128,7 @@ jobs:
           cp android/app/build/outputs/bundle/release/app-release.aab "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.aab"
           ls -la dist
           # AAB'nin icinde beklenen paket adi ve surum kodu var mi (Play'e yuklemeden once son kontrol)
-          unzip -p "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.aab" base/manifest/AndroidManifest.xml | strings | grep -c "io.github.erenmaral.castlesiege" || true
+          unzip -p "dist/CastleSiegeHistory-${{ steps.ver.outputs.name }}.aab" base/manifest/AndroidManifest.xml | strings | grep -c "com.dmdigital.castlesiege" || true
 
       - uses: actions/upload-artifact@v4
         with:

@@ -58,7 +58,7 @@ python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
 | `store/` | Google Play mağaza girişi metinleri (6 dil) ve görselleri |
 | `www/privacy.html` | Gizlilik Politikası + Kullanım Şartları |
 
-> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Kayıt anahtarı ve `ZAFARION_*` secret adları ilerleme/imza bozulmasın diye bilerek korundu. **Paket kimliği 0.11.0'da `io.github.erenmaral.castlesiege` oldu** (Google Play için); eski `com.zafarion.game` kurulumu ayrı bir uygulama olarak kalır, ilerleme için Ayarlar → Kaydı dışa aktar / İçe aktar kullanın.
+> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Kayıt anahtarı ve `ZAFARION_*` secret adları ilerleme/imza bozulmasın diye bilerek korundu. **Paket kimliği 0.11.0'da `com.dmdigital.castlesiege` oldu** (Google Play için); eski `com.zafarion.game` kurulumu ayrı bir uygulama olarak kalır, ilerleme için Ayarlar → Kaydı dışa aktar / İçe aktar kullanın.
 
 **Google Play'de yayınlamak için: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)** (uygulama adı, paket adı, varsayılan dil, form cevapları, kontrol listesi).
 

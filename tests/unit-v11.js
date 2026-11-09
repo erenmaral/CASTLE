@@ -4,13 +4,13 @@ const R = (...p) => path.join(__dirname, '..', ...p), read = (...p) => fs.readFi
 const store = {}; globalThis.localStorage = { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); } };
 ['version', 'i18n', 'data', 'save', 'monetize-config', 'monetize'].forEach(f => require(R('www', 'js', f + '.js')));
 const Z = globalThis.Z; let n = 0; const ok = (m) => { n++; console.log('  ✓', m); };
-const PKG = 'io.github.erenmaral.castlesiege';
+const PKG = 'com.dmdigital.castlesiege';
 
 // 1) Paket adi her yerde ayni; eski ad kalmadi; Java paketi dizinle uyumlu
 { assert.strictEqual(JSON.parse(read('capacitor.config.json')).appId, PKG);
   const g = read('android', 'app', 'build.gradle'); assert(g.includes('namespace = "' + PKG + '"') && g.includes('applicationId "' + PKG + '"'), 'gradle');
   const j = read('android', 'app', 'src', 'main', 'java', ...PKG.split('.'), 'MainActivity.java'); assert(j.startsWith('package ' + PKG + ';'), 'MainActivity paketi');
-  assert(!fs.existsSync(R('android', 'app', 'src', 'main', 'java', 'com')), 'eski java dizini yok');
+  assert(!fs.existsSync(R('android', 'app', 'src', 'main', 'java', 'com', 'zafarion')) && !fs.existsSync(R('android', 'app', 'src', 'main', 'java', 'io')), 'eski java dizini yok');
   assert(!/zafarion\.game/.test(read('android', 'app', 'src', 'main', 'res', 'values', 'strings.xml')), 'strings.xml eski ad');
   assert(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(PKG), 'gecerli paket adi bicimi');
   ok('Paket adı ' + PKG + ' (capacitor, gradle, MainActivity, strings) tutarlı'); }
@@ -35,7 +35,7 @@ const PKG = 'io.github.erenmaral.castlesiege';
   ok('Mağaza girişi ' + locs.length + ' yerel için başlık ≤30, kısa ≤80, tam ≤4000; başlık oyun içi adla aynı'); }
 
 // 4) Gizlilik sayfasi ve baglantilar
-{ const h = read('www', 'privacy.html'); ['AdMob', 'Google Play', 'io.github.erenmaral.castlesiege', 'terms-en', 'terms-tr'].forEach(k => assert(h.includes(k), 'gizlilik: ' + k));
+{ const h = read('www', 'privacy.html'); ['AdMob', 'Google Play', 'com.dmdigital.castlesiege', 'terms-en', 'terms-tr'].forEach(k => assert(h.includes(k), 'gizlilik: ' + k));
   assert(/class="tr"/.test(h) && /class="en"/.test(h), 'iki dil');
   const L = Z.MONEY.links; assert(/^https:\/\/.+\/privacy\.html$/.test(L.privacy) && /privacy\.html#terms$/.test(L.terms) && /^https:\/\//.test(L.support), 'baglantilar dolu');
   assert(Z.MONEY.allowTestMode === false, 'yayinda test modu kapali');

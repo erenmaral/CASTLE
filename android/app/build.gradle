@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "io.github.erenmaral.castlesiege"
+    namespace = "com.dmdigital.castlesiege"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.github.erenmaral.castlesiege"
+        applicationId "com.dmdigital.castlesiege"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // CI her derlemede ZAFARION_VERSION_CODE / ZAFARION_VERSION_NAME verir; yerelde varsayilanlar kullanilir.
