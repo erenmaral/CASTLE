@@ -97,3 +97,23 @@ Oyun şu an **istemci tarafında** çalışır: kayıt cihazda saklanır ve makb
 - `www/js/monetize-providers.js` — test ve yerli sağlayıcılar
 - `www/js/ui.js` — Mağaza sekmesi (`renderShop`), sonuç ekranı reklam düğmeleri
 - Testler: `tests/unit-v08.js`, `tests/e2e-v08.js`
+
+
+## Elmas fiyatlandırması (v0.10.2)
+Elmas harcama yerleri, satın alma paketlerine (`Z.MONEY.products`: 80 / 450 / 1000 / 2200 / 6000 💎 + başlangıç paketi 300 💎) göre kurgulandı; ücretsiz kazanç (bölüm/görev/günlük/reklam) ilk kahramana yaklaşık 25-30. bölümde yetişir, sonrakiler satın almaya yönlendirir:
+
+| Ürün | Elmas | Neden bu fiyat |
+|---|---|---|
+| Yıldız Hatun (kahraman 2) | 250 | Başlangıç paketi (300 💎, $1.99) ile hemen alınır; en küçük paketle (80) alınamaz |
+| Demir Bey | 400 | 450'lik paketin içinde |
+| Buz Hatun | 600 | 1000'lik pakete yönlendirir |
+| Ejder Hatun | 900 | 1000'lik paket tek başına yeter |
+| Altın Kesesi / Bonus Çark Hakkı | 25 | En küçük paketin üçte biri |
+| Hazine Hızlandırma | 35 | |
+| Büyük Sandık | 100 | |
+| Hazırlık kartı ×3 (altın / hazır yetenek / kamp çiti) | 75 / 75 / 100 | |
+| Şans çarkı (günlük hak bittikten sonra) | 15 | |
+
+- Fiyatlar `data.js` içinde (`Z.HEROES[..].gems`, `Z.MARKET`, `Z.BOOSTERS`, `Z.WHEEL_COST`); `tests/unit-v10.js` kahraman fiyatlarının artan olduğunu ve paket aralığında kaldığını denetler.
+- Elmas yetmeyince `UI.needGems(fiyat)` eksik miktarı ve gereken en küçük paketi gösterip mağazaya götürür.
+- Ücretsiz elmas kaynakları (ödüller, görevler, reklam: günde en fazla `rewardedPerDay × rewardedGems`) bilerek sınırlı tutuldu; artırmak dönüşümü düşürür.

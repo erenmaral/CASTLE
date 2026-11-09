@@ -41,6 +41,32 @@
     var hl = document.querySelector('.hl-name'); if (hl) { hl.textContent = ''; if (m) { hl.appendChild(document.createTextNode(m[1])); hl.appendChild(document.createElement('br')); hl.appendChild(document.createTextNode(m[2])); } else hl.textContent = up; }
     Array.prototype.forEach.call(document.querySelectorAll('.logo'), function (el) { el.textContent = up; });
   };
+  // Birlik simgesi: oyundaki gercek karakter cizimi (sprite) -> resim; cizim yoksa emoji
+  var iconCache = {};
+  UI.unitImg = function (id, team, h) {
+    var u = Z.UNITS[id], key = id + (team ? 1 : 0), url = iconCache[key];
+    if (url === undefined) {
+      try {
+        var R = Z.Render, o = R.px; R.px = 3; var cv = R.renderSprite(u.cls, team ? 1 : 0, 'i', 0); R.px = o;
+        // golgeyi atip karakterin sinirlarina kirp (ust kisim): saydam olmayan piksellerin kutusu
+        var g = cv.getContext('2d'), w = cv.width, hh = cv.height, px = g.getImageData(0, 0, w, hh).data, x0 = w, y0 = hh, x1 = 0, y1 = 0, xx, yy;
+        for (yy = 0; yy < hh; yy++) for (xx = 0; xx < w; xx++) if (px[(yy * w + xx) * 4 + 3] > 150) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        var pad = 4, cw = Math.max(8, x1 - x0 + 1 + pad * 2), ch = Math.max(8, y1 - y0 + 1 + pad * 2), out = document.createElement('canvas'); out.width = cw; out.height = ch;
+        out.getContext('2d').drawImage(cv, x0 - pad, y0 - pad, cw, ch, 0, 0, cw, ch); url = out.toDataURL('image/png');
+      } catch (e) { url = null; }
+      iconCache[key] = url;
+    }
+    return url ? '<img class="uico" alt="" src="' + url + '" style="height:' + h + 'px">' : u.icon;
+  };
+  // Elmas yetmiyorsa: eksik miktari + eksigi kapatan en kucuk paketi gosterip magazaya yonlendirir
+  UI.needGems = function (price) {
+    var need = Math.max(1, price - (S.data.gems || 0)), packs = ((Z.MONEY && Z.MONEY.products) || []).filter(function (p) { return p.type === 'gems'; }).sort(function (a, b) { return a.gems - b.gems; });
+    var pick = packs.filter(function (p) { return p.gems >= need; })[0] || packs[packs.length - 1];
+    UI.modal('<h1>💎 ' + $t('Elmas yetmiyor') + '</h1><p>' + $t('Bunun için {n} elmas daha gerekiyor.', { n: need }) + '</p>' +
+      (pick ? '<p class="small">' + $t('Önerilen paket') + ': <b style="color:var(--gold)">💎 ' + pick.gems + ' · ' + pick.price + '</b></p>' : '') +
+      '<div class="actions"><button class="btn small" data-act="close">' + $t('Vazgeç') + '</button><button class="btn gold" data-act="shop">💎 ' + $t('Elmas al') + '</button></div>',
+      { close: UI.closeModal, shop: function () { UI.closeModal(); UI.showHub('shop'); var c = $('tab-content'); if (c) c.scrollTop = 0; } });
+  };
   UI.init = function (game) {
     UI.applyName();
     UI.game = game;
@@ -258,11 +284,11 @@
       '<div class="big-stars" style="font-size:54px;margin:0">' + star3(st) + '</div>' +
       '<p class="small" style="margin:0 0 6px">' + (info.type === 'field' ? $t('3 yıldız için ordunun en az %65\'i hayatta kalsın') : $t('3 yıldız için kamp canı %70\'in üstünde kalsın')) + '</p>' +
       boostRow(n) + heroRow(n) +
-      ('<div class="row-lines"><span>' + $t('Düşman') + ': ') + info.tiers.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + '</span>' +
+      ('<div class="row-lines"><span>' + $t('Düşman') + ': ') + info.tiers.map(function (u) { return UI.unitImg(u, 1, 52); }).join(' ') + '</span>' +
       ('<span>' + $t('Ödül') + ': 🪙 ') + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
       ('<p style="margin:10px 0 2px;font-size:22px">' + $t('Önerilen birlik seviyesi') + ': <b>') + rec + ('</b> · ' + $t('Senin ortalaman') + ': <b style="color:') + (ok ? 'var(--green)' : 'var(--red)') + '">' + avg.toFixed(1) + '</b></p>' +
       (ok ? '' : ('<p class="small" style="color:#ffb4b4;margin:0">' + $t('Ordu sekmesinden birliklerini yükseltmek işini kolaylaştırır.') + '</p>')) +
-      '<p style="margin:6px 0">' + d.deck.map(function (u) { return '<span style="font-size:38px">' + Z.UNITS[u].icon + '</span>'; }).join(' ') + '</p>' +
+      '<p style="margin:6px 0">' + d.deck.map(function (u) { return UI.unitImg(u, 0, 62); }).join(' ') + '</p>' +
       ('<div class="actions"><button class="btn small" data-act="close">' + $t('Geri') + '</button><button class="btn small" data-act="army">🛡️ ' + $t('Ordu') + '</button><button class="btn gold" data-act="fight">⚔ ' + $t('SEFERE ÇIK') + '</button></div>'),
       Object.assign({
         close: UI.closeModal,
@@ -294,7 +320,7 @@
     Z.UNIT_ORDER.forEach(function (id) {
       var u = Z.UNITS[id], lvl = d.unitLvl[id], locked = un.indexOf(id) < 0, inDeck = d.deck.indexOf(id) >= 0, s = unitStats(id, lvl);
       var cost = Z.unitUpgradeCost(lvl), maxed = lvl >= Z.MAX_UNIT_LVL;
-      html += '<div class="panel ucard' + (locked ? ' locked' : '') + (inDeck ? ' indeck' : '') + '"><div class="big">' + u.icon + '</div><div class="info">' +
+      html += '<div class="panel ucard' + (locked ? ' locked' : '') + (inDeck ? ' indeck' : '') + '"><div class="big">' + UI.unitImg(id, 0, 84) + '</div><div class="info">' +
         '<h3>' + u.name + (' <span class="lvl">' + $t('Sv.')) + lvl + '</span></h3>' +
         (locked ? '<small>🔒 ' + $t('Bölüm {n} tamamlanınca açılır', { n: Z.UNLOCK_AT[id] }) + '</small>' :
           '<small>❤ ' + s.hp + ' · ⚔ ' + s.dmg + ' · 🪙 ' + u.cost + '</small><div class="small" style="margin-top:4px;line-height:1.2">' + u.desc + '</div>' +
@@ -431,7 +457,9 @@
   function onTabClick(e) {
     var t = e.target, el, d = S.data;
     if ((el = t.closest('[data-buy]'))) {
-      var res = S.buyMarket(el.getAttribute('data-buy'));
+      var mid = el.getAttribute('data-buy'), mi = Z.MARKET.filter(function (x) { return x.id === mid; })[0];
+      if (mi && d.gems < mi.gems) { A.deny(); return UI.needGems(mi.gems); }
+      var res = S.buyMarket(mid);
       if (!res) { A.deny(); return UI.toast($t('Yeterli elmas yok')); }
       if (res.full) { A.deny(); return UI.toast($t('Hazine zaten dolu')); }
       if (res.unused) { A.deny(); return UI.toast($t('Önce bedava çarkı çevir')); }
@@ -447,6 +475,7 @@
     }
     if ((el = t.closest('[data-spin]'))) {
       if (UI.spinning) return;
+      if (!S.wheelFree() && d.gems < Z.WHEEL_COST) { A.deny(); return UI.needGems(Z.WHEEL_COST); }
       var res = S.spin(); if (!res) { A.deny(); return UI.toast($t('Yeterli elmas yok')); }
       UI.spinning = true; A.chest();
       var wheel = $('wheel'), turn = 360 * 6 + (360 - (res.idx * 45 + 22.5));
@@ -484,7 +513,7 @@
     }
     if ((el = t.closest('[data-hbuy]'))) {
       var bid = el.getAttribute('data-hbuy'), h = Z.HEROES[bid];
-      if (d.gems < h.gems) return A.deny();
+      if (d.gems < h.gems) { A.deny(); return UI.needGems(h.gems); }
       d.gems -= h.gems; d.heroOwned[bid] = true; d.hero = bid; S.save(); A.win(); UI.toast(h.name + (' ' + $t('ordunda!'))); return UI.renderHub();
     }
     if ((el = t.closest('[data-castle]'))) {
@@ -700,7 +729,7 @@
     b.deck.forEach(function (id) {
       var u = Z.UNITS[id], el = document.createElement('button');
       el.className = 'card'; el.setAttribute('data-unit', id);
-      el.innerHTML = '<div class="cd"></div><div class="c-ico">' + u.icon + '</div><div class="c-name">' + u.name + '</div><div class="c-cost">🪙 ' + u.cost + '</div>';
+      el.innerHTML = '<div class="cd"></div><div class="c-ico">' + UI.unitImg(id, 0, 66) + '</div><div class="c-name">' + u.name + '</div><div class="c-cost">🪙 ' + u.cost + '</div>';
       wrap.appendChild(el); hud.cards[id] = { el: el, cd: el.firstChild };
     });
     var hero = Z.HEROES[b.heroId];

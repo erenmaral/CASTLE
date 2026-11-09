@@ -307,7 +307,9 @@
     // Sifaci: savasmaz, yarali dostu iyilestirir, dusmana yaklasmaz
     if (u.heal) {
       if (hurt && u.atkCd <= 0) this.healUnit(u, hurt);
-      if (enemyAhead < 130) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * this.moatSlow(u) * dt; u.moving = true; }
+      // dusman kalesinin yakininda durur (onunde dusman kalmayinca kuleyi gecip gitmez)
+      var hBase = u.team === 0 ? (C.EF - u.x) : (u.x - C.PF);
+      if (enemyAhead < 130 || hBase <= 200) { u.moving = false; } else { u.x += dir * u.speed * (this.rl('swift') ? 1.25 : 1) * this.moatSlow(u) * dt; u.moving = true; }
       return;
     }
 
@@ -513,9 +515,12 @@
         defend[u.lane] += u.hp;
       }
     }
+    // Dusman en cok askerimin oldugu koridordan cikar (esitlikte tehdit puani belirler)
+    var mine = [0, 0, 0];
+    for (i = 0; i < this.units.length; i++) { u = this.units[i]; if (!u.dead && u.team === 0) mine[u.lane]++; }
     var bestLane = 0, bestScore = -1e9;
     for (lane = 0; lane < 3; lane++) {
-      var sc = threat[lane] - 0.7 * defend[lane] + rng() * 80;
+      var sc = mine[lane] * 2000 + threat[lane] - 0.7 * defend[lane] + rng() * 80;
       if (sc > bestScore) { bestScore = sc; bestLane = lane; }
     }
     var dom = null, dv = 0;

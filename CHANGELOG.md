@@ -2,6 +2,13 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.10.2 — Gerçek karakter simgeleri, şifacı düzeltmesi, akıllı düşman, elmas fiyatları
+- 🛡️ **Ordu sekmesi, savaş kartları ve brifingde birlik simgeleri artık oyundaki gerçek karakter çizimi** (emoji değil); düşman listesi düşman renginde.
+- 💚 **Şifacı hatası düzeltildi:** önünde düşman kalmayınca düşman kalesini geçip gitmiyor, kalenin 200 birim önünde duruyor (iki taraf için).
+- ⚔️ **Düşman artık en çok askerinin olduğu koridordan çıkıyor** (eşitlikte tehdit puanı). Bu savaşı zorlaştırdığı için kale savaşı düşman ölçeği yeniden kalibre edildi (`Z.SCALE_KNOTS.lane` ≈1.78'e iner; bot kazanma oranı %68).
+- 💎 **Elmas fiyatları satın alma paketlerine göre ayarlandı** (`docs/MONETIZATION.md` → Elmas fiyatlandırması): Yıldız Hatun 250 (başlangıç paketi 300 💎 ile alınır), Demir Bey 400, Buz Hatun 600, Ejder Hatun 900; Pazar: Altın Kesesi 25, Büyük Sandık 100, Hazine Hızlandırma 35, Bonus Çark 25, hazırlık kartı paketleri 75/75/100; çark 15. Elmas yetmeyince **"Elmas yetmiyor"** penceresi eksik miktarı ve eksiği kapatan en küçük paketi gösterip mağazaya götürür.
+- Eski "Seferhan Tahtı" başarım metni düzeltildi.
+
 ## 0.10.1 — Oyunun adı: Castle Siege: History
 - 🏷️ Oyunun adı **"Castle Siege: History"** oldu ve **dile göre değişir**: Kale Kuşatması: Tarih (tr), Castle Siege: History (en), Asedio de Castillos: Historia (es), Cerco de Castelos: História (pt), Осада замков: История (ru), 城堡围攻：历史 (zh). Sekme başlığı, logolar, ana ekran başlığı ve Android uygulama adı (telefon diline göre) buna uyar; APK adı `CastleSiegeHistory-…apk`. Paket kimliği aynı: güncelleme üstüne kurulur.
 

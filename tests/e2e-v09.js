@@ -29,7 +29,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   // pazar: kart satin al
   await p.evaluate(() => { Z.Game.toMenu(); Z.UI.showHub('vault'); }); await p.waitForTimeout(400);
   const g0 = await p.evaluate(() => Z.Save.data.gems); await p.click('[data-buy="b_shield"]'); await p.waitForTimeout(300);
-  check(await p.evaluate(([g]) => Z.Save.data.boost.shield === 3 && Z.Save.data.gems === g - 55, [g0]), 'Pazar: Sur Zırhı ×3 satın alındı'); await shot('v09-04-pazar');
+  check(await p.evaluate(([g]) => Z.Save.data.boost.shield === 3 && Z.Save.data.gems === g - Z.MARKET.filter(m => m.id === 'b_shield')[0].gems, [g0]), 'Pazar: Sur Zırhı ×3 satın alındı'); await shot('v09-04-pazar');
   // acik alan briefingi: komutan ipucu
   await p.evaluate(() => { Z.UI.showHub('map'); Z.UI.levelModal(8); }); await p.waitForTimeout(300); check(/65/.test(await p.locator('.modal').innerText()), 'Açık alan brifingi: ordunun %65\'i hayatta kalsın ipucu');
   await p.click('[data-act="bst_shield"]'); await p.click('[data-act="fight"]'); await p.waitForTimeout(1500);

@@ -59,7 +59,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   check(await p.locator('[data-buy]').count() === 7, 'Pazar: 7 ürün (4 + 3 hazırlık kartı)');
   const bc = await p.evaluate(() => [Z.Save.data.coins, Z.Save.data.gems]);
   await p.locator('[data-buy="coins"]').click(); await p.waitForTimeout(300);
-  check(await p.evaluate(([c, g]) => Z.Save.data.gems === g - 10 && Z.Save.data.coins > c, bc), 'Altın Kesesi alındı (elmas düştü, altın arttı)');
+  check(await p.evaluate(([c, g]) => Z.Save.data.gems === g - Z.MARKET.filter(m => m.id === 'coins')[0].gems && Z.Save.data.coins > c, bc), 'Altın Kesesi alındı (elmas düştü, altın arttı)');
   await p.evaluate(() => { document.getElementById('tab-content').scrollTop = 400; }); await p.waitForTimeout(200); await shot('v04-08-market');
 
   // Kayit tasima

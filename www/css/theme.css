@@ -210,3 +210,10 @@ textarea{border:2px solid var(--line);border-radius:8px;background:rgba(0,0,0,.4
 
 @media (prefers-reduced-motion:reduce){.tug .tails path,.node.cur,.node.cur::after,.flagmark,.chest,.modal{animation:none!important}}
 .card.skill .c-name{color:var(--bone)}
+
+/* birlik simgeleri = oyundaki gercek karakter cizimi */
+.uico{width:auto;max-width:84px;object-fit:contain;display:inline-block;vertical-align:middle;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45));pointer-events:none}
+.ucard .big{display:flex;align-items:center;justify-content:center;width:84px;flex:none}
+.card .c-ico{display:flex;align-items:center;justify-content:center;height:70px;margin-top:-4px}
+.card .uico{max-width:100%}
+.row-lines .uico{margin:0 -6px}

@@ -59,13 +59,13 @@
   Z.HEROES = {
     aslan: { id: 'aslan', name: $t('Aslan Han'), icon: '🦁', skill: $t('Zafer Naraası'), type: 'roar', cd: 28, target: 'none', gems: 0,
              desc: $t('Tüm birliklere 8 sn boyunca %35 hasar ve saldırı hızı verir.') },
-    yildiz: { id: 'yildiz', name: $t('Yıldız Hatun'), icon: '⚡', skill: $t('Yıldırım Fırtınası'), type: 'bolt', cd: 22, target: 'lane', gems: 60,
+    yildiz: { id: 'yildiz', name: $t('Yıldız Hatun'), icon: '⚡', skill: $t('Yıldırım Fırtınası'), type: 'bolt', cd: 22, target: 'lane', gems: 250,
              desc: $t('Seçilen koridorda en öndeki 5 düşmana yıldırım indirir.') },
-    demir: { id: 'demir', name: $t('Demir Bey'), icon: '🪖', skill: $t('Çelik Siper'), type: 'ward', cd: 26, target: 'lane', gems: 120,
+    demir: { id: 'demir', name: $t('Demir Bey'), icon: '🪖', skill: $t('Çelik Siper'), type: 'ward', cd: 26, target: 'lane', gems: 400,
              desc: $t('Seçilen koridordaki dostları %35 iyileştirir, 6 sn yarı hasar alır.') },
-    buz: { id: 'buz', name: $t('Buz Hatun'), icon: '❄️', skill: $t('Don Fırtınası'), type: 'freeze', cd: 24, target: 'lane', gems: 150,
+    buz: { id: 'buz', name: $t('Buz Hatun'), icon: '❄️', skill: $t('Don Fırtınası'), type: 'freeze', cd: 24, target: 'lane', gems: 600,
              desc: $t('Seçilen koridordaki tüm düşmanları 3.5 sn dondurur ve hasar verir.') },
-    ejder: { id: 'ejder', name: $t('Ejder Hatun'), icon: '🐉', skill: $t('Ejder Nefesi'), type: 'dragon', cd: 26, target: 'lane', gems: 200,
+    ejder: { id: 'ejder', name: $t('Ejder Hatun'), icon: '🐉', skill: $t('Ejder Nefesi'), type: 'dragon', cd: 26, target: 'lane', gems: 900,
              desc: $t('Seçilen koridordaki tüm düşmanları 6 sn boyunca yakar: saniyede %5 can kaybederler.') }
   };
   Z.HERO_ORDER = ['aslan', 'yildiz', 'demir', 'buz', 'ejder'];
@@ -270,7 +270,7 @@
   // tests/calibrate.js ile uretilir; ara bolumler dogrusal aradeger. Z.SCALE_OVERRIDE yalnizca kalibrasyon icindir.
   Z.SCALE_OVERRIDE = null;
   Z.SCALE_KNOTS = {
-    lane:  [[1, 1.0], [5, 1.2], [10, 1.5], [15, 1.85], [20, 2.05], [30, 2.17], [45, 2.17], [60, 2.17], [75, 2.17], [90, 2.17], [105, 2.17]],
+    lane:  [[1, 1.0], [5, 1.15], [10, 1.45], [15, 1.65], [20, 1.72], [30, 1.78], [45, 1.78], [60, 1.78], [75, 1.78], [90, 1.78], [105, 1.78]],
     field: [[1, 1.0], [5, 1.15], [10, 1.5], [15, 1.8], [20, 2.0], [30, 2.44], [45, 2.45], [60, 3.0], [75, 3.6], [90, 4.2], [105, 4.46]]
   };
 
@@ -379,7 +379,7 @@
     { coins: 100, w: 22 }, { gems: 3, w: 16 }, { coins: 250, w: 18 }, { gems: 8, w: 8 },
     { coins: 500, w: 9 }, { gems: 5, w: 14 }, { coins: 150, w: 20 }, { gems: 40, w: 1.5 }
   ];
-  Z.WHEEL_COST = 10; // elmas (gunluk bedava hak bittikten sonra)
+  Z.WHEEL_COST = 15; // elmas (gunluk bedava hak bittikten sonra)
 
   // ---- Yildiz odulleri ve basarimlar --------------------------------------
   Z.STAR_MILESTONES = [
@@ -395,7 +395,7 @@
     { id: 'kills2k',  text: $t('2000 düşman yen'),           target: 2000, gems: 15, get: function (d) { return d.stats.kills; } },
     { id: 'lvl10',    text: $t('{n}. bölümü tamamla', { n: 10 }),        target: 10,   gems: 10, get: function (d) { return d.cleared; } },
     { id: 'lvl30',    text: $t('{n}. bölümü tamamla', { n: 30 }),        target: 30,   gems: 25, get: function (d) { return d.cleared; } },
-    { id: 'lvl45',    text: $t('Seferhan Tahtı\'nı ele geçir (45)'), target: 45, gems: 50, get: function (d) { return d.cleared; } },
+    { id: 'lvl45',    text: $t('{n}. bölümü tamamla', { n: 45 }), target: 45, gems: 50, get: function (d) { return d.cleared; } },
     { id: 'stars45',  text: $t('45 yıldız topla'),           target: 45,   gems: 10, get: function (d) { return d.stats.totalStars; } },
     { id: 'stars100', text: $t('100 yıldız topla'),          target: 100,  gems: 25, get: function (d) { return d.stats.totalStars; } },
     { id: 'end10',    text: $t('Sonsuz Kuşatma: 10. dalga'), target: 10,   gems: 8,  get: function (d) { return d.endlessBest; } },
@@ -467,9 +467,9 @@
   // ---- Pazar: elmas harcama yeri ----------------------------------------
   // ---- Sefer hazirlik kartlari (tek kullanimlik, brifingte secilir) ----
   Z.BOOSTERS = {
-    gold:   { id: 'gold',   icon: '💰', name: $t('Altın Hazırlığı'), desc: $t('Savaşa +150 altınla başla (kale önü muharebesinde +120 komuta puanı).'), gems: 15 },
-    skill:  { id: 'skill',  icon: '⚡', name: $t('Kahraman Hazır'),  desc: $t('Kahraman yeteneği savaşın başında hazır gelir.'), gems: 15 },
-    shield: { id: 'shield', icon: '🛡️', name: $t('Kamp Çiti'),       desc: $t('Kamp canı +%30 (kale önü muharebesinde komutan canı +%50).'), gems: 20 }
+    gold:   { id: 'gold',   icon: '💰', name: $t('Altın Hazırlığı'), desc: $t('Savaşa +150 altınla başla (kale önü muharebesinde +120 komuta puanı).'), gems: 25 },
+    skill:  { id: 'skill',  icon: '⚡', name: $t('Kahraman Hazır'),  desc: $t('Kahraman yeteneği savaşın başında hazır gelir.'), gems: 25 },
+    shield: { id: 'shield', icon: '🛡️', name: $t('Kamp Çiti'),       desc: $t('Kamp canı +%30 (kale önü muharebesinde komutan canı +%50).'), gems: 35 }
   };
   Z.BOOSTER_ORDER = ['gold', 'skill', 'shield'];
   Z.BOOST_UNLOCK = 3;   // bu kadar bolum kazanilinca brifingte gorunur
@@ -482,13 +482,13 @@
     return 25.5;
   };
   Z.MARKET = [
-    { id: 'coins',    icon: '👛', name: $t('Altın Kesesi'),       gems: 10, desc: function (d) { return '🪙 ' + (400 + 60 * d.cleared) + (' ' + $t('altın')); } },
-    { id: 'chest',    icon: '🎁', name: $t('Büyük Sandık'),       gems: 40, desc: function (d) { return '🪙 ' + (3000 + 250 * d.cleared) + (' ' + $t('altın')); } },
-    { id: 'treasury', icon: '💰', name: $t('Hazine Hızlandırma'), gems: 15, desc: function () { return $t('Hazine hemen 8 saatlik geliri biriktirir'); } },
-    { id: 'spin',     icon: '🎡', name: $t('Bonus Çark Hakkı'),   gems: 10, desc: function () { return $t('Şans Çarkı\'nı bedava çevir'); } },
-    { id: 'b_gold',   icon: '💰', name: $t('Altın Hazırlığı') + ' ×3', gems: 40, desc: function () { return Z.BOOSTERS.gold.desc; } },
-    { id: 'b_skill',  icon: '⚡', name: $t('Kahraman Hazır') + ' ×3',  gems: 40, desc: function () { return Z.BOOSTERS.skill.desc; } },
-    { id: 'b_shield', icon: '🛡️', name: $t('Kamp Çiti') + ' ×3',       gems: 55, desc: function () { return Z.BOOSTERS.shield.desc; } }
+    { id: 'coins',    icon: '👛', name: $t('Altın Kesesi'),       gems: 25, desc: function (d) { return '🪙 ' + (400 + 60 * d.cleared) + (' ' + $t('altın')); } },
+    { id: 'chest',    icon: '🎁', name: $t('Büyük Sandık'),       gems: 100, desc: function (d) { return '🪙 ' + (3000 + 250 * d.cleared) + (' ' + $t('altın')); } },
+    { id: 'treasury', icon: '💰', name: $t('Hazine Hızlandırma'), gems: 35, desc: function () { return $t('Hazine hemen 8 saatlik geliri biriktirir'); } },
+    { id: 'spin',     icon: '🎡', name: $t('Bonus Çark Hakkı'),   gems: 25, desc: function () { return $t('Şans Çarkı\'nı bedava çevir'); } },
+    { id: 'b_gold',   icon: '💰', name: $t('Altın Hazırlığı') + ' ×3', gems: 75, desc: function () { return Z.BOOSTERS.gold.desc; } },
+    { id: 'b_skill',  icon: '⚡', name: $t('Kahraman Hazır') + ' ×3',  gems: 75, desc: function () { return Z.BOOSTERS.skill.desc; } },
+    { id: 'b_shield', icon: '🛡️', name: $t('Kamp Çiti') + ' ×3',       gems: 100, desc: function () { return Z.BOOSTERS.shield.desc; } }
   ];
 
   // ---- Yardimcilar -----------------------------------------------------

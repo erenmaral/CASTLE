@@ -122,10 +122,10 @@ const still = (b) => b.units.forEach(u => { if (u.team === 1) u.atkCd = 99; });
   const o2 = play(); assert(!o2.dailyFirst && o2.coins === 0 && d.stats.dailyWins === 1, 'ikinci galibiyette odul yok'); ok('Günlük Sefer: aynı gün aynı sefer, 28 günde çeşitli, ödül günde bir kez'); }
 
 // ---- v0.4: pazar ----
-{ Z.Save.reset(); const S = Z.Save, d = S.data; d.cleared = 10; d.gems = 100; d.coins = 0;
-  assert(S.buyMarket('coins') && d.gems === 90 && d.coins === 400 + 600, 'altin kesesi'); assert(S.buyMarket('chest') && d.gems === 50 && d.coins === 1000 + 3000 + 2500, 'buyuk sandik');
-  assert(S.buyMarket('spin').unused, 'bedava hak varken cark satilmamali'); S.spin(); d.gems = 50; /* cark odulu rastgele: elmasi sabitle */ assert(S.buyMarket('spin') && d.wheel.used === false && d.gems === 40, 'bonus cark');
-  d.treasuryLast = Date.now(); assert(S.buyMarket('treasury') && S.treasuryFull() && d.gems === 25, 'hazine hizlandirma'); assert(S.buyMarket('treasury').full, 'dolu hazine satilmamali');
+{ Z.Save.reset(); const S = Z.Save, d = S.data; d.cleared = 10; d.gems = 1000; d.coins = 0; const P = id => Z.MARKET.filter(m => m.id === id)[0].gems;
+  assert(S.buyMarket('coins') && d.gems === 1000 - P('coins') && d.coins === 400 + 600, 'altin kesesi'); assert(S.buyMarket('chest') && d.gems === 1000 - P('coins') - P('chest') && d.coins === 1000 + 3000 + 2500, 'buyuk sandik');
+  assert(S.buyMarket('spin').unused, 'bedava hak varken cark satilmamali'); S.spin(); d.gems = 500; /* cark odulu rastgele: elmasi sabitle */ assert(S.buyMarket('spin') && d.wheel.used === false && d.gems === 500 - P('spin'), 'bonus cark');
+  d.treasuryLast = Date.now(); assert(S.buyMarket('treasury') && S.treasuryFull() && d.gems === 500 - P('spin') - P('treasury'), 'hazine hizlandirma'); assert(S.buyMarket('treasury').full, 'dolu hazine satilmamali');
   d.gems = 5; assert(S.buyMarket('coins') === null && d.gems === 5, 'yetersiz elmas'); assert(d.stats.purchases === 4, 'satin alma sayaci'); ok('Pazar: 4 ürün, elmas düşer, gereksiz alımı engeller'); }
 
 // ---- v0.4: kayit tasima ----

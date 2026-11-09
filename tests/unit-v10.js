@@ -43,4 +43,26 @@ const mk = (level, rules, seed) => new Z.Battle({ mode: 'campaign', level, save:
 // 6) Savas bozulmadan biter: butun kurallarla rastgele botsuz kisa kosu (cokme yok)
 { ['moat', 'relief', 'survive', 'fortress', 'ambush'].forEach(r => { const b = mk(40, [r], 9); for (let i = 0; i < 1200 && !b.over; i++) { if (i % 20 === 0) { b.gold = 999; b.cooldown.spear = 0; b.deploy('spear', i % 3); } b.update(0.05); b.drain(); } assert(Number.isFinite(b.t), r + ' calisti'); });
   ok('Tüm yeni/yeniden adlanan kurallarla savaş döngüsü çökmeden çalışır'); }
+
+// 7) Sifaci dusman kalesini gecip gitmez; onunde dusman yokken kale onunde (200 birim) durur
+{ const b = mk(10, []); const h = b.spawn(0, 'healer', 1); b.units.forEach(e => { if (e !== h) e.dead = true; }); b.base[0].hp = b.base[0].max = 1e9; b.base[1].hp = b.base[1].max = 1e9;
+  for (let i = 0; i < 4000; i++) { h.atkCd = 99; b.stepUnit(h, 0.05); } assert(h.x <= 1110 - 190 && h.x >= 1110 - 215 && !h.moving, 'sifaci kale onunde durdu: x=' + Math.round(h.x));
+  const e = mk(10, []); const eh = e.spawn(1, 'healer', 1); e.units.forEach(u => { if (u !== eh) u.dead = true; }); for (let i = 0; i < 4000; i++) { eh.atkCd = 99; e.stepUnit(eh, 0.05); } assert(eh.x >= 170 + 190 && eh.x <= 170 + 215, 'dusman sifaci da oyuncu kampinin onunde durur: x=' + Math.round(eh.x));
+  ok('Şifacı: önünde düşman kalmayınca kalenin 200 birim önünde durur, kuleyi geçmez (iki taraf için)'); }
+
+// 8) Dusman en cok askerimin oldugu koridordan cikar
+{ [0, 1, 2].forEach(L => { const b = mk(20, []); b.units.length = 0; for (let k = 0; k < 4; k++) { const u = b.spawn(0, 'spear', L); u.x = 600; } b.ai.gold = 1e6; const before = b.units.length;
+    for (let i = 0; i < 12; i++) { b.ai.think = 0; b.ai.pending = null; b.updateAI(0.05); } const spawned = b.units.filter(u => u.team === 1);
+    assert(spawned.length >= 6 && spawned.every(u => u.lane === L), 'dusman ' + L + '. koridordan cikmali: ' + spawned.map(u => u.lane).join('')); });
+  const c = mk(20, []); c.units.length = 0; for (let k = 0; k < 2; k++) c.spawn(0, 'spear', 0).x = 500; for (let k = 0; k < 5; k++) c.spawn(0, 'spear', 2).x = 500; c.ai.gold = 1e6; for (let i = 0; i < 10; i++) { c.ai.think = 0; c.ai.pending = null; c.updateAI(0.05); }
+  assert(c.units.filter(u => u.team === 1).every(u => u.lane === 2), 'en kalabalik koridor secilir');
+  ok('Düşman, en çok askerimin olduğu koridordan çıkar (her koridor için doğrulandı)'); }
+
+// 9) Elmas fiyatlari satin alma paketlerine uyumlu: ilk kahraman baslangic paketiyle (300) alinir, sonrakiler buyuk paketlere yonlendirir
+{ const packs = Z.MONEY.products.filter(p => p.type === 'gems').map(p => p.gems).sort((a, b) => a - b), starter = Z.MONEY.products.filter(p => p.type === 'starter')[0].gems;
+  const hp = Z.HERO_ORDER.filter(h => Z.HEROES[h].gems > 0).map(h => Z.HEROES[h].gems); assert(hp.every((v, i) => i === 0 || v > hp[i - 1]), 'kahraman fiyatlari artar');
+  assert(hp[0] <= starter && hp[0] > packs[0], 'ilk kahraman baslangic paketiyle (' + starter + ') alinir, en kucuk paketle (' + packs[0] + ') alinamaz');
+  hp.forEach(v => assert(v <= packs[packs.length - 1] && v > packs[0], 'kahraman fiyati paket araliginda: ' + v));
+  Z.MARKET.forEach(m => assert(m.gems > 0 && m.gems <= packs[1], 'pazar urunu tek paketle alinabilir: ' + m.id)); assert(Z.WHEEL_COST >= 10 && Z.WHEEL_COST <= 30, 'cark ucreti');
+  ok('Elmas fiyatları: kahramanlar ' + hp.join('/') + ' (ilk kahraman başlangıç paketine uyar), pazar ürünleri tek paketle alınır'); }
 console.log(n + ' test geçti');
