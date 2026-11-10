@@ -7,11 +7,18 @@
   var DW = 720;        // tasarim genisligi (3 koridor x 240)
   var SPR = 1.28;      // birlik cizim olcegi (telefonda okunabilirlik)
   var CASTLE_H = 86;   // kale yuksekligi (mantiksal px)
+  // Tinctures of the style bible (docs/ART_DIRECTION.md section 2): ink = sable, lapis = azure, verm = gules, orp = or, ivo/arg = argent.
+  var INK = '#1E1610', INK2 = '#4B3B2A', IVO = '#F4ECD3', VEL = '#D8D0AB', VEL2 = '#C6B684', ORP = '#E9B62A', LEAF = '#D4A02F',
+    VERM = '#D8391F', MAD = '#9A2018', MAL = '#1F6B4E', VDG = '#3FA58C', PUR = '#5B2E7A', BOLE = '#8C3520', BIS = '#7A5230',
+    ARG = '#CDD2DB', FLESH = '#E7B99C', LAPIS = '#22409A', LAPISD = '#14275F', AZUR = '#4474C0', NIGHT = '#0F1838';
+  // Teams (bible section 7): 0 = host (azure + or, kite shield, cross pattee), 1 = garrison (gules + argent, round shield, saltire).
+  // dev = the colour of the heraldic device. Castle / camp code reads main, dark, trim and cloth from here too.
   var PAL = [
-    { main: '#3b82f6', dark: '#1d3f94', light: '#9cc4ff', trim: '#fbbf24', metal: '#cfd8e6', metalD: '#6f7f99', hi: '#ffffff', cloth: '#2f6fe0' },
-    { main: '#d62d2d', dark: '#6e1414', light: '#ff9d9d', trim: '#c4cad6', metal: '#69748a', metalD: '#272c3a', hi: '#aab4c8', cloth: '#a82020' }
+    { main: LAPIS, dark: LAPISD, light: AZUR, trim: ORP, metal: '#E3E7EE', metalD: '#7E889D', hi: IVO, cloth: LAPISD, dev: ORP },
+    { main: VERM, dark: '#8E1F12', light: '#F0705A', trim: IVO, metal: '#8B94A8', metalD: '#4A5368', hi: IVO, cloth: '#8E1F12', dev: IVO }
   ];
-  var SKIN = '#f2c9a0', OUT = 'rgba(10,14,28,.78)';
+  var SKIN = FLESH, OUT = INK;                 // OUT: the opaque iron-gall ink (was a translucent navy)
+  var INKW = 2.6, HALOW = 2, HEAD = 1.15, HAND = 1.2; // sprite contour (u, by 8-offset dilation), vellum halo (u), head and hand/foot scale
   // Diyar temalari: 0 Yesil Vadi (orman), 1 Kizil Col, 2 Buz Diyari
   var THEMES = [
     { sky: ['#16224f', '#7a4a7a', '#f0a35e'], sun: [255, 240, 190], m1: '#4a3a73', m2: '#2f4a5e', g: ['#3f6f2c', '#37622a', '#264a1f'],
@@ -46,16 +53,137 @@
   }
   function hash(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
   function seeded(seed) { var s = (seed * 9301 + 49297) % 233280; return function () { s = (s * 9301 + 49297) % 233280; return s / 233280; }; }
-  // kontur + dolgu yardimcilari (birlikler icin)
-  function fe(c, col) { c.fillStyle = col; c.fill(); c.stroke(); }
-  function E(c, x, y, rx, ry, col) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, TAU); fe(c, col); }
-  function O(c, x, y, r, col) { c.beginPath(); c.arc(x, y, r, 0, TAU); fe(c, col); }
-  function RR(c, x, y, w, h, r, col) { rrect(c, x, y, w, h, r); fe(c, col); }
-  function poly(c, pts, col) { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.closePath(); fe(c, col); }
-  function outline(c) { c.strokeStyle = OUT; c.lineWidth = 1.3; c.lineJoin = 'round'; c.lineCap = 'round'; }
-  function mgrad(c, x, y, r, p) { // metal parlakligi
-    var g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r * 1.05);
-    g.addColorStop(0, p.hi); g.addColorStop(0.35, p.metal); g.addColorStop(1, p.metalD); return g;
+  // ---- gouache kit (bible section 7): opaque ink line, flat pigment, hard shade crescent, ivory tick - no shading gradient anywhere ----
+  // fe(): the ink line goes down first and the pigment is laid over it, so small parts keep their colour and only the outer half of the line shows
+  function fe(c, col) { c.stroke(); c.fillStyle = col; c.fill(); }
+  function outline(c) { c.strokeStyle = INK; c.lineWidth = 1.6; c.lineJoin = 'round'; c.lineCap = 'round'; } // 1.6u inner strokes
+  // ivory tick: a short catch-light arc on the upper-left rim of a metal or gem surface (x, y, r = centre and radius of the surface)
+  function tick(c, x, y, r) {
+    var ss = c.strokeStyle, lw = c.lineWidth, lc = c.lineCap;
+    c.strokeStyle = IVO; c.lineWidth = Math.max(1, r * 0.2); c.lineCap = 'round';
+    c.beginPath(); c.arc(x, y, r * 0.6, Math.PI * 1.08, Math.PI * 1.46); c.stroke();
+    c.strokeStyle = ss; c.lineWidth = lw; c.lineCap = lc;
+  }
+  // gshape(c, build, col, dk, s, tk): build(p, dx, dy) appends the outline shifted by dx, dy. Without dk it is ink + flat col. With dk (the shade pigment)
+  // the shape is ink, then dk, then col shifted up-left by s and clipped to the shape: what is left of dk is the hard shade crescent (lower right).
+  // tk = [x, y, r] adds the ivory tick.
+  function gshape(c, build, col, dk, s, tk) {
+    c.beginPath(); build(c, 0, 0);
+    if (!dk) { fe(c, col); return; }
+    c.stroke(); c.fillStyle = dk; c.fill();
+    c.save(); c.clip();
+    c.beginPath(); build(c, -s, -s); c.fillStyle = col; c.fill();
+    c.restore();
+    if (tk) tick(c, tk[0], tk[1], tk[2]);
+  }
+  function E(c, x, y, rx, ry, col, dk, tk) {
+    gshape(c, function (p, dx, dy) { p.moveTo(x + dx + rx, y + dy); p.ellipse(x + dx, y + dy, rx, ry, 0, 0, TAU); }, col, dk, Math.max(1.1, Math.min(rx, ry) * 0.3), tk ? [x, y, Math.min(rx, ry)] : 0);
+  }
+  function O(c, x, y, r, col, dk, tk) { E(c, x, y, r, r, col, dk, tk); }
+  function RR(c, x, y, w, h, r, col, dk, tk) {
+    gshape(c, function (p, dx, dy) { rrect(p, x + dx, y + dy, w, h, r); }, col, dk, Math.max(1.1, Math.min(w, h) * 0.2), tk ? [x + w / 2, y + h / 2, Math.min(w, h) / 2] : 0);
+  }
+  function poly(c, pts, col, dk, tk) {
+    var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, i;
+    for (i = 0; i < pts.length; i++) { x0 = Math.min(x0, pts[i][0]); x1 = Math.max(x1, pts[i][0]); y0 = Math.min(y0, pts[i][1]); y1 = Math.max(y1, pts[i][1]); }
+    gshape(c, function (p, dx, dy) { p.moveTo(pts[0][0] + dx, pts[0][1] + dy); for (var j = 1; j < pts.length; j++) p.lineTo(pts[j][0] + dx, pts[j][1] + dy); p.closePath(); }, col, dk,
+      Math.max(1.1, Math.min(x1 - x0, y1 - y0) * 0.2), tk ? [(x0 + x1) / 2, (y0 + y1) / 2, Math.min(x1 - x0, y1 - y0) / 2] : 0);
+  }
+  // mgrad(c, x, y, r, p): was a radial gradient; now paints a flat metal disc with a hard shade crescent (metalD) and an ivory tick
+  function mgrad(c, x, y, r, p) { O(c, x, y, r, p.metal, p.metalD, 1); }
+  // bar: a weapon shaft or beam, drawn as an ink-edged stripe (w = pigment width)
+  function bar(c, x1, y1, x2, y2, w, col) { line(c, x1, y1, x2, y2, w + 2.4, INK); line(c, x1, y1, x2, y2, w, col); }
+  // belt: a trim band across an ellipse (clipped to it) with ink edges
+  function belt(c, x, y, rx, ry, by, bh, col) {
+    c.save(); c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, TAU); c.clip();
+    c.fillStyle = col; c.fillRect(x - rx, by, rx * 2, bh); c.fillStyle = INK; c.fillRect(x - rx, by, rx * 2, 0.9); c.fillRect(x - rx, by + bh - 0.9, rx * 2, 0.9);
+    c.restore();
+  }
+  // device(c, kind, x, y, r, pal, team): the heraldic charge of a team. host = cross pattee or, garrison = saltire argent ('auto'); r = arm length.
+  // Garrison units are drawn mirrored (drawUnit scales y by -1 for team 1), so the device counter-flips for team 1 and reads upright on screen.
+  function device(c, kind, x, y, r, pal, team) {
+    var k = kind && kind !== 'auto' ? kind : (team === 1 ? 'saltire' : 'cross'), a, b;
+    c.save(); c.translate(x, y); if (team === 1) c.scale(1, -1);
+    c.strokeStyle = INK; c.lineWidth = Math.max(1.5, r * 0.3); c.lineJoin = 'round'; c.beginPath();
+    if (k === 'saltire') { // two diagonal bars; stroke then fill hides the inner crossing lines
+      a = r * 0.25; b = r * 1.02;
+      c.save(); c.rotate(Math.PI / 4); c.rect(-b, -a, b * 2, a * 2); c.rotate(-Math.PI / 2); c.rect(-b, -a, b * 2, a * 2); c.restore();
+    } else if (k === 'roundel') { c.arc(0, 0, r * 0.7, 0, TAU); }
+    else { // cross pattee: four arms flaring from a narrow centre
+      a = r * 0.2; b = r * 0.52;
+      c.moveTo(-b, -r); c.lineTo(b, -r); c.lineTo(a, -a); c.lineTo(r, -b); c.lineTo(r, b); c.lineTo(a, a); c.lineTo(b, r); c.lineTo(-b, r); c.lineTo(-a, a); c.lineTo(-r, b); c.lineTo(-r, -b); c.lineTo(-a, -a); c.closePath();
+    }
+    c.stroke(); c.fillStyle = pal && pal.dev ? pal.dev : (team === 1 ? IVO : ORP); c.fill();
+    c.restore();
+  }
+  // shield: host = kite (pointed, tall) carrying the cross; garrison = round with a boss carrying the saltire. s = scale (1 = spearman)
+  function shield(c, x, y, s, pal, team) {
+    if (team === 1) {
+      O(c, x, y, 10.5 * s, pal.dark); O(c, x, y, 8.3 * s, pal.main, pal.dark);
+      device(c, 'auto', x, y, 6.4 * s, pal, team);
+      O(c, x, y, 2.6 * s, pal.metal, pal.metalD);
+    } else {
+      gshape(c, function (p, dx, dy) {
+        var X = x + dx, Y = y + dy;
+        p.moveTo(X - 6.8 * s, Y - 13 * s); p.lineTo(X + 6.8 * s, Y - 13 * s); p.quadraticCurveTo(X + 7.2 * s, Y + 4 * s, X, Y + 14.5 * s); p.quadraticCurveTo(X - 7.2 * s, Y + 4 * s, X - 6.8 * s, Y - 13 * s); p.closePath();
+      }, pal.main, pal.dark, 2.3 * s);
+      device(c, 'auto', x, y - 1.5 * s, 4.9 * s, pal, team);
+    }
+  }
+  // ---- sprite bake plumbing: five scratch canvases reused by every sprite (only the finished sprite is a new canvas) ----
+  var SCR = null, DIR8 = [[1, 0], [0.7071, 0.7071], [0, 1], [-0.7071, 0.7071], [-1, 0], [-0.7071, -0.7071], [0, -1], [0.7071, -0.7071]];
+  function layer(w, h) { var cv = document.createElement('canvas'); cv.width = w; cv.height = h; return { cv: cv, g: cv.getContext('2d') }; }
+  function scratch(w, h) {
+    if (!SCR || SCR.w !== w || SCR.h !== h) SCR = { w: w, h: h, fig: layer(w, h), sil: layer(w, h), ring: layer(w, h), hal: layer(w, h), ov: layer(w, h) };
+    return SCR;
+  }
+  function beginLayer(g, w, h, Sc) { // clean state, then sprite units: origin = ground point at (46, 74) of the 92 x 120 box
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, w, h); g.setLineDash([]);
+    g.setTransform(Sc, 0, 0, Sc, 46 * Sc, 74 * Sc);
+  }
+  function maskTo(g, src, w, h, col) { // g gets src's alpha painted in col
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, w, h); g.drawImage(src, 0, 0);
+    g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, w, h); g.globalCompositeOperation = 'source-over';
+  }
+  function dilate(g, src, r) { // 8-offset dilation: src drawn once in place and at 8 points on a circle of radius r (whole device px keep the edge crisp)
+    g.drawImage(src, 0, 0);
+    for (var k = 0; k < 8; k++) g.drawImage(src, Math.round(DIR8[k][0] * r), Math.round(DIR8[k][1] * r));
+  }
+  // three ink ticks under the feet, where the shadow ellipses used to be: [y of the middle tick, spread] per class (sprite units)
+  var TICKS = { def: [22, 11], cav: [42, 15], cata: [35, 17], golem: [28, 15], commander: [42, 15] };
+  function groundTicks(x, Sc, cls) {
+    var T = TICKS[cls] || TICKS.def, ln = [6.5, 9, 6.5], xs = [-T[1], 0.2 * T[1], T[1] * 1.12], ys = [T[0], T[0] + 2.2, T[0] - 0.6], i;
+    x.save(); x.setTransform(Sc, 0, 0, Sc, 46 * Sc, 74 * Sc); x.strokeStyle = INK; x.lineWidth = 2.2; x.lineCap = 'round';
+    for (i = 0; i < 3; i++) { x.beginPath(); x.moveTo(xs[i] - ln[i] / 2, ys[i] + 0.7); x.quadraticCurveTo(xs[i], ys[i] - 1.1, xs[i] + ln[i] / 2, ys[i] + 0.7); x.stroke(); }
+    x.restore();
+  }
+  // banner text face: Texturina (Rub) for words, EB Garamond (Hand) when there are digits (Texturina digits are old-style and proportional)
+  function bandFont(text, size) {
+    var num = /[0-9]/.test(text || '');
+    return (num ? '600 ' : '700 ') + size + 'px ' + (num ? 'Hand' : 'Rub') + ',Hand,"Noto Serif CJK SC","Source Han Serif SC","Songti SC",serif';
+  }
+  // banderole ground by announcement colour: alarms = madder with ivory text, frost = argent, the rest = or (ink text on or, 9:1)
+  function bannerStyle(col) {
+    var k = String(col || '').toLowerCase();
+    if (k === '#ff6b6b' || k === '#ff9f6b' || k === '#ffb347') return { fill: MAD, ink: IVO, rule: IVO, under: INK2 };
+    if (k === '#9bd7ff') return { fill: ARG };
+    return { fill: ORP };
+  }
+  // flat swallow-tail banderole (ink border 3u, ground, ink text): c = context, (x, y) = centre. o: fill, ink (text), size
+  function banderole(c, x, y, w, h, text, o) {
+    o = o || {};
+    var n = Math.min(h * 0.4, 24), x0 = x - w / 2, x1 = x + w / 2, y0 = y - h / 2, y1 = y + h / 2, fill = o.fill || VEL, size = o.size || Math.round(h * 0.56);
+    c.save(); c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(x0 + 8, y1 - 2); c.lineTo(x0 - 14, y1 + 12); c.lineTo(x0 + 2, y1 + 12 - h * 0.18); c.lineTo(x0 + 8, y1 - 8); c.closePath(); c.stroke(); c.fillStyle = o.under || VEL2; c.fill(); // back fold
+    c.beginPath(); c.moveTo(x1 - 8, y1 - 2); c.lineTo(x1 + 14, y1 + 12); c.lineTo(x1 - 2, y1 + 12 - h * 0.18); c.lineTo(x1 - 8, y1 - 8); c.closePath(); c.stroke(); c.fill();
+    c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y0); c.lineTo(x1 - n, y); c.lineTo(x1, y1); c.lineTo(x0, y1); c.lineTo(x0 + n, y); c.closePath(); c.stroke(); c.fillStyle = fill; c.fill();
+    c.strokeStyle = o.rule || INK2; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x0 + n + 8, y0 + 7); c.lineTo(x1 - n - 8, y0 + 7); c.moveTo(x0 + n + 8, y1 - 7); c.lineTo(x1 - n - 8, y1 - 7); c.stroke();
+    if (text) {
+      c.font = bandFont(text, size); c.textAlign = 'center'; c.textBaseline = 'middle';
+      var tw = c.measureText(text).width, mw = w - 2 * n - 28; if (tw > mw) c.font = bandFont(text, Math.max(16, Math.floor(size * mw / tw)));
+      c.fillStyle = o.ink || INK; c.fillText(text, x, y + 1);
+    }
+    c.restore();
   }
   function star(c, x, y, r1, r2, n, rot) {
     c.beginPath();
@@ -378,18 +506,18 @@
             if (e.unit.team === 0) A.spawn(e.unit.cls);
             break;
           case 'hit':
-            this.sparks(ex, ey - 6, e.strong ? 7 : 3, e.strong ? '#ffd166' : '#ffffff');
+            this.sparks(ex, ey - 6, e.strong ? 7 : 3, e.strong ? ORP : IVO);
             if (this.fx.length < 40) this.fx.push({ k: 'slash', x: ex + (Math.random() - 0.5) * 14, y: ey - 6, a: Math.random() * TAU, t: 0.18, max: 0.18, big: e.strong });
-            if (this.texts.length < 26 && (e.strong || e.dmg > 40)) this.text(ex + 18, ey - 40, String(Math.round(e.dmg)), e.team === 1 ? (e.strong ? '#ffd166' : '#ffffff') : '#ff8b8b', e.strong ? 26 : 20);
+            if (this.texts.length < 26 && (e.strong || e.dmg > 40)) this.text(ex + 18, ey - 40, String(Math.round(e.dmg)), e.team === 1 ? (e.strong ? R.DMG.crit : R.DMG.dealt) : R.DMG.taken, e.strong ? 26 : 20);
             A.hit();
             break;
           case 'death':
-            this.puff(ex, ey, e.boss ? 24 : 10, e.team === 0 ? '#9ec5ff' : '#ff9d9d');
+            this.puff(ex, ey, e.boss ? 24 : 10, e.team === 0 ? AZUR : '#F0705A');
             if (this.fx.length < 60) this.fx.push({ k: 'decal', x: ex, y: ey, t: 4, max: 4, big: e.boss });
             A.death();
             if (e.boss) { this.shake = 14; A.boom(); }
             break;
-          case 'coin': this.text(ex, ey - 46, '+' + e.v, '#ffd23f', 24); A.coin(); break;
+          case 'coin': this.text(ex, ey - 46, '+' + e.v, ORP, 24); A.coin(); break;
           case 'shoot': A.shoot(); break;
           case 'tower':
             this.fx.push({ k: 'arrow', x1: ex, y1: e.team === 0 ? this.pY : this.eY, x2: ex, y2: ey, t: 0.18, max: 0.18 }); A.shoot(); break;
@@ -399,8 +527,8 @@
             this.shake = Math.max(this.shake, e.cls === 'cata' ? 5 : 2); A.boom();
             break;
           case 'heal':
-            if (this.parts.length < 380) for (var hq = 0; hq < 5; hq++) this.parts.push({ x: ex + (Math.random() - 0.5) * 26, y: ey - 8, vx: (Math.random() - 0.5) * 20, vy: -44 - Math.random() * 30, life: 0.8, max: 0.8, size: 3, col: '#6ee7b7', g: -10, shrink: true });
-            if (this.texts.length < 26) this.text(ex, ey - 40, '+' + Math.round(e.v), '#6ee7b7', 20);
+            if (this.parts.length < 380) for (var hq = 0; hq < 5; hq++) this.parts.push({ x: ex + (Math.random() - 0.5) * 26, y: ey - 8, vx: (Math.random() - 0.5) * 20, vy: -44 - Math.random() * 30, life: 0.8, max: 0.8, size: 3, col: VDG, g: -10, shrink: true });
+            if (this.texts.length < 26) this.text(ex, ey - 40, '+' + Math.round(e.v), R.DMG.heal, 20);
             if (e.team === 0) A.heal();
             break;
           case 'freeze':
@@ -429,7 +557,7 @@
           case 'breach': this.banner = { text: $t('SUR YARILDI! GEDİKTEN YÜKLEN!'), col: '#ffd166', t: 1.8 }; this.shake = 12; A.boom(); for (var bi = 0; bi < 4; bi++) this.puff(this.ox + 100 + Math.random() * 520, this.eY - 24, 7, '#cfc6b4'); break;
           case 'reliefWarn': this.banner = { text: $t('YARDIM ORDUSU YAKLAŞIYOR!'), col: '#ff9f6b', t: 2.2 }; A.boom(); break;
           case 'relief': this.banner = { text: $t('YARDIM ORDUSU GELDİ!'), col: '#ff6b6b', t: 1.8 }; this.shake = 10; A.boom(); break;
-          case 'mine': this.text(this.ox + 360, this.H - 330, $t('Maden Sv.') + e.level + '!', '#ffd23f', 30); A.click(); break;
+          case 'mine': this.text(this.ox + 360, this.H - 330, $t('Maden Sv.') + e.level + '!', ORP, 30); A.click(); break;
           case 'win': A.win(); break;
           case 'lose': A.lose(); break;
         }
@@ -492,13 +620,7 @@
         c.globalAlpha = a; c.fillStyle = p.col; circ(c, p.x, p.y, p.shrink ? p.size * (0.4 + a * 0.6) : p.size);
       }
       c.globalAlpha = 1;
-      for (i = 0; i < this.texts.length; i++) {
-        var tx = this.texts[i], ta = Math.min(1, tx.t / 0.35);
-        c.globalAlpha = ta; c.font = '900 ' + tx.size + 'px system-ui'; c.textAlign = 'center';
-        c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(tx.s, tx.x, tx.y);
-        c.fillStyle = tx.col; c.fillText(tx.s, tx.x, tx.y);
-      }
-      c.globalAlpha = 1;
+      this.drawTexts(c);
       c.restore();
 
       // atmosfer: yaprak / kum tozu / kar
@@ -532,14 +654,7 @@
         vg.addColorStop(0, 'rgba(255,210,80,0)'); vg.addColorStop(1, 'rgba(255,200,60,' + pulse + ')');
         c.fillStyle = vg; c.fillRect(0, 0, W, H);
       }
-      if (this.banner) {
-        var bn = this.banner, ba = Math.min(1, bn.t / 0.4);
-        c.save(); c.globalAlpha = ba; c.translate(W / 2, this.eY + 160);
-        c.font = '900 54px system-ui'; var bw = c.measureText(bn.text).width; if (bw > W - 40) c.font = '900 ' + Math.max(24, Math.floor(54 * (W - 40) / bw)) + 'px system-ui'; c.textAlign = 'center'; c.lineWidth = 9; c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineJoin = 'round';
-        c.strokeText(bn.text, 0, 0);
-        var tg = c.createLinearGradient(0, -40, 0, 8); tg.addColorStop(0, '#ffffff'); tg.addColorStop(0.45, bn.col); tg.addColorStop(1, bn.col);
-        c.fillStyle = tg; c.fillText(bn.text, 0, 0); c.restore();
-      }
+      if (this.banner) this.drawBannerCard(c, W / 2, this.eY + 142, this.banner);
     },
 
     updateFx: function (dt) {
@@ -579,7 +694,7 @@
           c.fillStyle = 'rgba(180,220,255,.5)'; circ(c, f.x, f.y, 26 * (1 - k * 0.5));
         } else if (f.k === 'arrow') {
           c.globalAlpha = 1; var ay = f.y1 + (f.y2 - f.y1) * k;
-          line(c, f.x1, ay - 10, f.x1, ay + 4, 2.6, '#f1e3b0');
+          bar(c, f.x1, ay - 10, f.x1, ay + 4, 1.8, IVO);
         } else if (f.k === 'slash') { // kilic darbesi yayi
           c.globalAlpha = (1 - k) * 0.9; c.strokeStyle = f.big ? '#ffe08a' : '#ffffff'; c.lineWidth = f.big ? 4 : 2.6; c.lineCap = 'round';
           c.beginPath(); c.arc(f.x, f.y, (f.big ? 20 : 14) * (0.6 + k * 0.5), f.a, f.a + 1.9); c.stroke();
@@ -591,19 +706,23 @@
     drawProj: function (c, p) {
       var y = this.Y(p.x), x = this.roadX(p.lane, y) + (p.team === 0 ? 10 : -10), d = p.team === 0 ? -1 : 1; // d: ekrandaki hareket yonu
       var tot = Math.max(1, Math.abs(p.tx - p.fromX)), prog = Math.min(1, Math.abs(p.x - p.fromX) / tot), h = Math.sin(prog * Math.PI);
-      if (p.kind === 'arrow') {
-        c.fillStyle = 'rgba(0,0,0,.25)'; ell(c, x + 5, y + 5, 2, 7);
-        var tg = c.createLinearGradient(0, y - d * 26, 0, y); tg.addColorStop(0, 'rgba(255,255,255,0)'); tg.addColorStop(1, 'rgba(255,245,200,.7)');
-        c.strokeStyle = tg; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y - d * 26); c.lineTo(x, y); c.stroke();
-        line(c, x, y - d * 11, x, y + d * 3, 2.6, '#f1e3b0'); c.fillStyle = '#e8edf5'; circ(c, x, y + d * 5, 2.2);
-      } else if (p.kind === 'bolt') {
-        c.fillStyle = 'rgba(0,0,0,.2)'; ell(c, x + 3, y + 6, 7, 4);
-        for (var q = 3; q >= 1; q--) { c.fillStyle = 'rgba(192,132,252,' + (0.18 * (4 - q)) + ')'; circ(c, x, y - 10 * h - d * q * 9, 9 - q); }
-        c.fillStyle = 'rgba(192,132,252,.45)'; circ(c, x, y - 10 * h, 13); c.fillStyle = '#f1e4ff'; circ(c, x, y - 10 * h, 6.5);
+      this.projShape(c, p.kind, x, y, d, h, 1, 0);
+    },
+    // flat projectile art shared with the field renderer: kind, ground point (x, y), d = travel direction (+-1 along y), h = arc height 0..1, k = scale
+    // trail: dir (radians) for the field renderer (arrows and bolts point along it), 0 in the lane view
+    projShape: function (c, kind, x, y, d, h, k, dir) {
+      if (kind === 'arrow') {
+        c.globalAlpha = 0.28; c.fillStyle = INK; ell(c, x + 5, y + 5, 2, 7); c.globalAlpha = 1;
+        c.globalAlpha = 0.5; line(c, x, y - d * 26, x, y - d * 8, 1.6, IVO); c.globalAlpha = 1;             // motion streak: a flat hairline, no gradient
+        bar(c, x, y - d * 11, x, y + d * 3, 1.8, IVO); circ(c, x, y + d * 5, 3.5); c.fillStyle = INK; c.fill(); circ(c, x, y + d * 5, 2.2); c.fillStyle = ARG; c.fill();
+      } else if (kind === 'bolt') {
+        c.globalAlpha = 0.25; c.fillStyle = INK; ell(c, x + 3, y + 6, 7, 4); c.globalAlpha = 1;
+        for (var q = 3; q >= 1; q--) { c.globalAlpha = 0.18 * (4 - q); c.fillStyle = PUR; circ(c, x, y - 10 * h - d * q * 9, 9 - q); }
+        c.globalAlpha = 1; c.fillStyle = INK; circ(c, x, y - 10 * h, 11.5); c.fillStyle = PUR; circ(c, x, y - 10 * h, 9.2); c.fillStyle = IVO; circ(c, x, y - 10 * h, 4.4);
       } else {
         var ry = y - h * 50;
-        c.fillStyle = 'rgba(0,0,0,.3)'; ell(c, x + 2, y + 5, 10, 5.5);
-        c.fillStyle = '#4a4a54'; circ(c, x, ry, 8.5 + h * 3.5); c.fillStyle = '#6a6a76'; circ(c, x - 2, ry - 2, 4); c.fillStyle = '#ff9f43'; circ(c, x + 3, ry + 2, 2.6);
+        c.globalAlpha = 0.3; c.fillStyle = INK; ell(c, x + 2, y + 5, 10, 5.5); c.globalAlpha = 1;
+        c.fillStyle = INK; circ(c, x, ry, 11 + h * 3.5); c.fillStyle = INK2; circ(c, x, ry, 8.6 + h * 3.5); c.fillStyle = ARG; circ(c, x - 2.4, ry - 2.4, 3.2); c.fillStyle = ORP; circ(c, x + 3.4, ry + 2.6, 2.2);
       }
     },
 
@@ -845,38 +964,81 @@
     // ---- Birlikler (kusbakisi; oyuncu yukari, dusman asagi bakar) ---------
     // Performans: her sinif x takim x durum (bekle/yuru/saldir) kareleri bir kez cizilip onbellege alinir,
     // her karede yalnizca drawImage ile basilir. Sade efektler (donma, parlama, kalkan) uste canli cizilir.
+    // Look (bible section 7): flat gouache + opaque ink. renderSprite draws the figure flat (1.6u inner ink lines, stroke-then-fill), then bakes the
+    // 2.6u ink contour by 8-offset dilation, a 2u vellum halo at alpha .45 and three ink ground ticks (halo + ticks off when R.icoMode is true).
     SN: { i: 6, m: 8, a: 4 },
+    icoMode: false, // true: renderSprite skips the vellum halo and the ground ticks (UI.unitImg portraits, drag ghosts)
     getSprite: function (cls, team, st, idx) {
       var cache = this.sprites || (this.sprites = {}), key = cls + team + st + idx;
       return cache[key] || (cache[key] = this.renderSprite(cls, team, st, idx));
     },
-    renderSprite: function (cls, team, st, idx) {
-      var Sc = this.px * SPR, cv = document.createElement('canvas');
-      cv.width = Math.ceil(92 * Sc); cv.height = Math.ceil(120 * Sc);
-      var g = cv.getContext('2d'), pal = PAL[team], walk = 0, atk = 0, lunge = 0, ph = 0, age = 0, t = 0;
-      g.setTransform(Sc, 0, 0, Sc, 46 * Sc, 74 * Sc);
+    // makeSprite: shared entry for every figure (also the field commander). fn(g, pal, walk, atk, lunge, age, t) draws the flat figure on g
+    // (sprite units, origin = ground point, forward = -y); g.ov is a second layer without contour for hairlines (bowstring, heal pulse).
+    makeSprite: function (cls, team, st, idx, fn) {
+      var Sc = this.px * SPR, w = Math.ceil(92 * Sc), h = Math.ceil(120 * Sc), S = scratch(w, h), g = S.fig.g, go = S.ov.g;
+      var pal = PAL[team], walk = 0, atk = 0, lunge = 0, ph = 0, age = 0, t = 0;
+      beginLayer(g, w, h, Sc); beginLayer(go, w, h, Sc); g.ov = go;
       if (st === 'm') { ph = idx / this.SN.m * TAU; walk = Math.sin(ph); t = ph; age = ph / 7; }
       else if (st === 'i') { t = idx / this.SN.i * TAU; }
       else { atk = [0.85, 0.6, 0.35, 0.12][idx]; lunge = Math.sin((1 - atk) * Math.PI); }
-      var shw = cls === 'cav' ? [16, 26] : cls === 'cata' ? [24, 26] : [13, 10];
-      g.fillStyle = 'rgba(0,0,0,.22)'; ell(g, 3, 6, shw[0] + 3, shw[1] + 2); g.fillStyle = 'rgba(0,0,0,.2)'; ell(g, 3, 6, shw[0], shw[1]);
-      outline(g);
-      g.rotate(walk * 0.05);
-      switch (cls) {
-        case 'spear': this.dSpear(g, pal, team, walk, lunge, t); break;
-        case 'archer': this.dArcher(g, pal, team, walk, atk, t); break;
-        case 'cav': this.dCav(g, pal, team, walk, lunge, age, t); break;
-        case 'knight': this.dKnight(g, pal, team, walk, lunge, t); break;
-        case 'mage': this.dMage(g, pal, team, walk, atk, t); break;
-        case 'cata': this.dCata(g, pal, idx * 6, atk, t); break;
-        case 'healer': this.dHealer(g, pal, team, walk, atk, t); break;
-        case 'banner': this.dBanner(g, pal, team, walk, lunge, t); break;
-        case 'assassin': this.dAssassin(g, pal, team, walk, lunge, t); break;
-        case 'golem': this.dGolem(g, pal, team, walk, lunge, t); break;
-        case 'flamer': this.dFlamer(g, pal, team, walk, atk, t); break;
-      }
-      return cv;
+      outline(g); outline(go);
+      g.rotate(walk * 0.05); go.rotate(walk * 0.05);
+      fn.call(this, g, pal, walk, atk, lunge, age, t);
+      return this.bakeSprite(S, w, h, Sc, cls);
     },
+    bakeSprite: function (S, w, h, Sc, cls) {
+      var out = document.createElement('canvas'), x, sg = S.sil.g, rg = S.ring.g, hg = S.hal.g;
+      out.width = w; out.height = h; x = out.getContext('2d');
+      maskTo(sg, S.fig.cv, w, h, INK);                                         // the figure as a flat ink silhouette
+      rg.setTransform(1, 0, 0, 1, 0, 0); rg.globalCompositeOperation = 'source-over'; rg.clearRect(0, 0, w, h);
+      dilate(rg, S.sil.cv, INKW * Sc);                                          // 2.6u opaque contour: 8 offsets around the silhouette
+      if (!this.icoMode) {
+        hg.setTransform(1, 0, 0, 1, 0, 0); hg.globalCompositeOperation = 'source-over'; hg.clearRect(0, 0, w, h);
+        dilate(hg, S.ring.cv, HALOW * Sc);                                       // 2u beyond the contour
+        hg.globalCompositeOperation = 'source-in'; hg.fillStyle = VEL; hg.fillRect(0, 0, w, h); hg.globalCompositeOperation = 'source-over';
+        x.globalAlpha = 0.45; x.drawImage(S.hal.cv, 0, 0); x.globalAlpha = 1;    // vellum halo, alpha <= .45 (stays under the alpha > 150 portrait crop)
+        groundTicks(x, Sc, cls);
+      }
+      x.drawImage(S.ring.cv, 0, 0); x.drawImage(S.fig.cv, 0, 0); x.drawImage(S.ov.cv, 0, 0);
+      return out;
+    },
+    renderSprite: function (cls, team, st, idx) {
+      return this.makeSprite(cls, team, st, idx, function (g, pal, walk, atk, lunge, age, t) {
+        switch (cls) {
+          case 'spear': this.dSpear(g, pal, team, walk, lunge, t); break;
+          case 'archer': this.dArcher(g, pal, team, walk, atk, t); break;
+          case 'cav': this.dCav(g, pal, team, walk, lunge, age, t); break;
+          case 'knight': this.dKnight(g, pal, team, walk, lunge, t); break;
+          case 'mage': this.dMage(g, pal, team, walk, atk, t); break;
+          case 'cata': this.dCata(g, pal, team, idx * 6, atk, t); break;
+          case 'healer': this.dHealer(g, pal, team, walk, atk, t); break;
+          case 'banner': this.dBanner(g, pal, team, walk, lunge, t); break;
+          case 'assassin': this.dAssassin(g, pal, team, walk, lunge, t); break;
+          case 'golem': this.dGolem(g, pal, team, walk, lunge, t); break;
+          case 'flamer': this.dFlamer(g, pal, team, walk, atk, t); break;
+        }
+      });
+    },
+    // baked --ink2 silhouette at alpha .45 for units the player does not own yet (UI.unitImg(cls, team, "ghost")). The canvas carries .bbox (device px,
+    // from the opaque sprite) because the silhouette itself never reaches the alpha > 150 the portrait crop looks for.
+    ghostSprite: function (cls, team) {
+      var key = cls + (team ? 1 : 0) + '@' + this.px, cache = this._ghost || (this._ghost = {});
+      if (cache[key]) return cache[key];
+      var oi = this.icoMode, cv, out, x, w, h, d, xx, yy, x0, x1, y0, y1;
+      this.icoMode = true;
+      try { cv = this.renderSprite(cls, team ? 1 : 0, 'i', 0); } finally { this.icoMode = oi; }
+      w = cv.width; h = cv.height; out = document.createElement('canvas'); out.width = w; out.height = h; x = out.getContext('2d');
+      x.drawImage(cv, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = INK2; x.fillRect(0, 0, w, h);
+      x.globalCompositeOperation = 'destination-in'; x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'source-over';
+      try {
+        d = cv.getContext('2d').getImageData(0, 0, w, h).data; x0 = w; y0 = h; x1 = 0; y1 = 0;
+        for (yy = 0; yy < h; yy++) for (xx = 0; xx < w; xx++) if (d[(yy * w + xx) * 4 + 3] > 150) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        out.bbox = { x0: x0, y0: y0, x1: x1, y1: y1 };
+      } catch (e) { out.bbox = null; }
+      return (cache[key] = out);
+    },
+    scratchFigure: function () { return SCR ? SCR.fig.cv : null; }, // the last flat figure before the contour was baked (gallery / margin checks)
+
     drawUnit: function (c, u) {
       var y = this.Y(u.x), x = this.roadX(u.lane, y) + (u._ox || 0), dirY = u.team === 0 ? 1 : -1, s = (u.boss ? 1.55 : 1) * SPR;
       if (u.age < 0.3) { var q = u.age / 0.3; s *= 0.5 + 0.5 * (1 - Math.pow(1 - q, 3)); }
@@ -886,212 +1048,262 @@
       else { st = 'i'; idx = Math.floor(((this.time * 0.55 + u.id * 0.137) % 1) * this.SN.i); }
       var img = this.getSprite(u.cls, u.team, st, idx), k = s / SPR;
 
-      if (u.aura) { // sancak aurasi (yer duzleminde)
-        c.save(); c.translate(x, y); c.fillStyle = 'rgba(255,210,77,' + (0.08 + 0.03 * Math.sin(this.time * 3)) + ')'; ell(c, 0, 0, 100, 160 * this.s);
-        c.strokeStyle = 'rgba(255,210,77,.22)'; c.lineWidth = 2; c.setLineDash([8, 8]); c.beginPath(); c.ellipse(0, 0, 100, 160 * this.s, 0, 0, TAU); c.stroke(); c.restore();
-      }
+      if (u.aura) this.auraRing(c, x, y, 100, 160 * this.s, 0); // banner aura: a dashed ink-and-or ring on the ground
       c.save();
       c.translate(x, y); if (dirY < 0) c.scale(1, -1);
-      if (u.boss) { var ag = c.createRadialGradient(0, 0, 4, 0, 0, 40); ag.addColorStop(0, 'rgba(255,70,70,' + (0.4 + 0.15 * Math.sin(this.time * 6)) + ')'); ag.addColorStop(1, 'rgba(255,70,70,0)'); c.fillStyle = ag; circ(c, 0, 0, 40); }
+      if (u.boss) { c.fillStyle = VERM; c.globalAlpha = 0.16 + 0.05 * Math.sin(this.time * 6); circ(c, 0, 0, 46); c.globalAlpha = 0.22 + 0.05 * Math.sin(this.time * 6); circ(c, 0, 0, 30); c.globalAlpha = 1; } // two flat discs
       c.drawImage(img, -46 * s, -74 * s, 92 * s, 120 * s);
       c.scale(s, s);
-      if (u.stunUntil > this.battle.t) { // donmus: buz kabugu
-        c.fillStyle = 'rgba(170,220,255,.6)'; rrect(c, -17, -32, 34, 56, 10); c.fill();
-        c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 2; c.beginPath(); c.moveTo(-11, -24); c.lineTo(-4, -8); c.moveTo(10, -28); c.lineTo(4, -12); c.moveTo(-9, 12); c.lineTo(0, 0); c.moveTo(8, 6); c.lineTo(13, 18); c.stroke();
-      }
-      if (u.burnUntil > this.battle.t) { // yaniyor: titresen alevler
-        var bt = this.time * 14 + u.id;
-        for (var bk = 0; bk < 4; bk++) { c.fillStyle = bk % 2 ? 'rgba(255,205,70,.92)' : 'rgba(255,100,30,.92)'; ell(c, -10 + bk * 7, -6 - Math.abs(Math.sin(bt + bk * 2)) * 9, 3.4, 6 + Math.sin(bt + bk) * 2); }
-      }
-      if (u.flash > 0) { c.globalAlpha = Math.min(0.75, u.flash * 6); c.fillStyle = '#fff'; ell(c, 0, -4, 16, 22); c.globalAlpha = 1; }
-      if (u.wardUntil > this.battle.t) { c.strokeStyle = 'rgba(110,231,183,.9)'; c.lineWidth = 2.5; c.beginPath(); c.arc(0, -2, 25, 0, TAU); c.stroke(); c.fillStyle = 'rgba(110,231,183,.14)'; c.fill(); }
+      this.unitFx(c, u);
       c.restore();
 
       var ext = { spear: 54, archer: 30, cav: 58, knight: 36, mage: 38, cata: 42, healer: 34, banner: 58, assassin: 30, golem: 42, flamer: 38 }[u.cls] || 40;
       var rear = { cav: 36, cata: 30, banner: 20 }[u.cls] || 20;
-      var top = y - (u.team === 0 ? ext : rear) * s - 6;
-      if (u.boss) { c.fillStyle = '#ffd23f'; c.strokeStyle = OUT; c.lineWidth = 1.2; var cy = top - 12; c.beginPath(); c.moveTo(x - 10, cy + 10); c.lineTo(x - 10, cy); c.lineTo(x - 5, cy + 6); c.lineTo(x, cy - 4); c.lineTo(x + 5, cy + 6); c.lineTo(x + 10, cy); c.lineTo(x + 10, cy + 10); c.closePath(); c.fill(); c.stroke(); }
-      if (u.hp < u.max) { // can cubugu
-        var bw = 38 * Math.min(k, 1.4), f = Math.max(0, u.hp / u.max);
-        c.fillStyle = 'rgba(0,0,0,.7)'; rrect(c, x - bw / 2 - 2, top - 2, bw + 4, 9, 4.5); c.fill();
-        var hg = c.createLinearGradient(0, top, 0, top + 5);
-        if (u.team === 0) { hg.addColorStop(0, '#8cf5b0'); hg.addColorStop(1, '#2dbd6a'); } else { hg.addColorStop(0, '#ff9a9a'); hg.addColorStop(1, '#d33a3a'); }
-        c.fillStyle = hg; rrect(c, x - bw / 2, top, Math.max(1, bw * f), 5, 2.5); c.fill();
+      var top = y - (u.team === 0 ? ext : rear) * s - 9;
+      if (u.boss) this.crown(c, x, top - 16, 1.15);
+      if (u.hp < u.max) this.hpBar(c, x, top, 38 * Math.min(k, 1.4), Math.max(0, u.hp / u.max), u.team, 4.5);
+    },
+    // live status marks over a unit, in sprite units (context already scaled by s): frozen shell, flames, hit flash, ward ring. All flat, ink edged.
+    unitFx: function (c, u) {
+      var bt = this.battle.t, k, ft;
+      if (u.stunUntil > bt) { // frozen: argent shell with ink cracks
+        c.globalAlpha = 0.66; c.fillStyle = ARG; rrect(c, -17, -32, 34, 56, 10); c.fill(); c.globalAlpha = 1;
+        c.strokeStyle = INK; c.lineWidth = 2; c.lineJoin = 'round'; c.lineCap = 'round'; rrect(c, -17, -32, 34, 56, 10); c.stroke();
+        c.beginPath(); c.moveTo(-11, -24); c.lineTo(-4, -8); c.moveTo(10, -28); c.lineTo(4, -12); c.moveTo(-9, 12); c.lineTo(0, 0); c.moveTo(8, 6); c.lineTo(13, 18); c.stroke();
       }
+      if (u.burnUntil > bt) { // burning: flat flames, vermilion and or
+        ft = this.time * 14 + u.id; c.strokeStyle = INK; c.lineWidth = 1.2;
+        for (k = 0; k < 4; k++) { c.beginPath(); c.ellipse(-10 + k * 7, -6 - Math.abs(Math.sin(ft + k * 2)) * 9, 3.4, 6 + Math.sin(ft + k) * 2, 0, 0, TAU); c.fillStyle = k % 2 ? ORP : VERM; c.fill(); c.stroke(); }
+      }
+      if (u.flash > 0) { c.globalAlpha = Math.min(0.75, u.flash * 6); c.fillStyle = IVO; ell(c, 0, -4, 16, 22); c.globalAlpha = 1; }
+      if (u.wardUntil > bt) { // ward: malachite ring with an ink edge
+        c.beginPath(); c.arc(0, -2, 25, 0, TAU); c.strokeStyle = INK; c.lineWidth = 4.6; c.stroke(); c.strokeStyle = VDG; c.lineWidth = 2.6; c.stroke();
+        c.globalAlpha = 0.14; c.fillStyle = VDG; c.fill(); c.globalAlpha = 1;
+      }
+    },
+    // flat ink ribbon (bible: 3u ink border, ally --mal, enemy --verm, vellum trough, no gradient); x = centre, top = y of the trough
+    hpBar: function (c, x, top, bw, f, team, bh) {
+      var B = 3, x0 = x - bw / 2;
+      bh = bh || 4.5;
+      c.fillStyle = INK; c.fillRect(x0 - B, top - B, bw + B * 2, bh + B * 2);
+      c.fillStyle = VEL; c.fillRect(x0, top, bw, bh);
+      c.fillStyle = team === 0 ? MAL : VERM; c.fillRect(x0, top, Math.max(1.5, bw * f), bh);
+    },
+    crown: function (c, x, y, s) { // boss / commander crown: or with an ink contour (stroke then fill)
+      c.save(); c.translate(x, y); c.scale(s, s); c.strokeStyle = INK; c.lineWidth = 2.6; c.lineJoin = 'round';
+      c.beginPath(); c.moveTo(-9, 10); c.lineTo(-9, 0); c.lineTo(-4.5, 5); c.lineTo(0, -5); c.lineTo(4.5, 5); c.lineTo(9, 0); c.lineTo(9, 10); c.closePath(); c.stroke(); c.fillStyle = ORP; c.fill();
+      c.restore();
+    },
+    auraRing: function (c, x, y, rx, ry, off) { // banner aura on the ground: a dashed ring, ink then or (flat, no glow); ry === rx draws a circle
+      c.save(); c.translate(x, y); c.setLineDash([10, 8]); c.lineDashOffset = off || -this.time * 12; c.beginPath(); c.ellipse(0, 0, rx, ry, 0, 0, TAU);
+      c.strokeStyle = INK2; c.globalAlpha = 0.55; c.lineWidth = 4; c.stroke(); c.strokeStyle = ORP; c.globalAlpha = 0.9; c.lineWidth = 2; c.stroke();
+      c.setLineDash([]); c.restore();
+    },
+    drawTexts: function (c) { // combat numbers: system-ui 900, 6u ink stroke (dealt ivory, crit or, taken coral, heal mint: see R.DMG)
+      var i, tx;
+      c.textAlign = 'center'; c.lineJoin = 'round'; c.strokeStyle = INK; c.lineWidth = 6;
+      for (i = 0; i < this.texts.length; i++) {
+        tx = this.texts[i]; c.globalAlpha = Math.min(1, tx.t / 0.35); c.font = '900 ' + tx.size + 'px system-ui';
+        c.strokeText(tx.s, tx.x, tx.y); c.fillStyle = tx.col; c.fillText(tx.s, tx.x, tx.y);
+      }
+      c.globalAlpha = 1;
+    },
+    // flat swallow-tail banderole with ink text, for announcements and any banner placed by the castle / camp code.
+    // drawBanderole(c, x, y, w, h, text, o): (x, y) = centre; o = { fill, ink, rule, under, size }. Draws at the current alpha and transform.
+    drawBanderole: function (c, x, y, w, h, text, o) { banderole(c, x, y, w, h, text, o); },
+    // the announcement in this.banner = { text, col, t } as a banderole centred at (cx, cy), fading in over 0.4 s
+    drawBannerCard: function (c, cx, cy, bn) {
+      var st = bannerStyle(bn.col), size = 44, w, h = 82, tw;
+      c.save(); c.globalAlpha = Math.min(1, bn.t / 0.4);
+      c.font = bandFont(bn.text, size); tw = c.measureText(bn.text).width; w = Math.min(this.W - 56, Math.max(300, tw + 150));
+      st.size = size; banderole(c, cx, cy, w, h, bn.text, st);
+      c.restore();
     },
 
-    // yerel koordinat: orijin = birligin zemin noktasi, ON = -y. Konturlar outline() ile.
-    feet: function (c, walk, col) { E(c, -5, 9 + walk * 3.5, 3.8, 4.8, col); E(c, 5, 9 - walk * 3.5, 3.8, 4.8, col); },
-    helmet: function (c, x, y, r, p, team) {
-      if (team === 1) { // dusman: boynuzlu karanlik miğfer
-        poly(c, [[x - r * 0.6, y - r * 0.5], [x - r * 1.5, y - r * 1.9], [x - r * 0.2, y - r * 0.9]], '#d9d0b8');
-        poly(c, [[x + r * 0.6, y - r * 0.5], [x + r * 1.5, y - r * 1.9], [x + r * 0.2, y - r * 0.9]], '#d9d0b8');
+    // coordinates: origin = the unit's ground point, forward = -y, helmets and heads look up the screen. Everything is flat: ink line, pigment, crescent.
+    feet: function (c, walk, col) { E(c, -5, 9 + walk * 3.5, 3.8 * HAND, 4.8 * HAND, col); E(c, 5, 9 - walk * 3.5, 3.8 * HAND, 4.8 * HAND, col); },
+    hand: function (c, x, y) { O(c, x, y, 3.6 * HAND, SKIN); },
+    // host: flat-top great helm (kind 'great') or kettle hat ('kettle'); garrison: conical nasal helm, never horned. r = head radius (already x1.15)
+    helmet: function (c, x, y, r, p, team, kind) {
+      if (team === 1) {
+        gshape(c, function (q, dx, dy) {
+          var X = x + dx, Y = y + dy;
+          q.moveTo(X, Y - r * 1.62); q.bezierCurveTo(X + r * 0.62, Y - r * 1.05, X + r, Y - r * 0.55, X + r, Y); q.arc(X, Y, r, 0, Math.PI, false);
+          q.bezierCurveTo(X - r, Y - r * 0.55, X - r * 0.62, Y - r * 1.05, X, Y - r * 1.62); q.closePath();
+        }, p.metal, p.metalD, Math.max(1.1, r * 0.28), [x, y - r * 0.2, r]);
+        c.fillStyle = INK; c.fillRect(x - 0.95, y - r * 1.52, 1.9, r * 1.35);                                   // nasal bar
+        c.strokeStyle = p.main; c.lineWidth = 2.6; c.lineCap = 'butt'; c.beginPath(); c.arc(x, y, r * 0.84, Math.PI * 0.12, Math.PI * 0.88); c.stroke(); outline(c); // brow band
+      } else if (kind === 'great') {
+        E(c, x, y + r * 1.0, r * 0.45, r * 0.78, p.main);                                                       // plume behind
+        RR(c, x - r, y - r, r * 2, r * 2.04, r * 0.44, p.metal, p.metalD, 1);
+        c.fillStyle = INK; c.fillRect(x - r * 0.62, y - r * 0.52, r * 1.24, r * 0.3); c.fillRect(x - r * 0.1, y - r * 0.52, r * 0.2, r * 1.3);   // eye slit + breaths
+      } else {
+        O(c, x, y, r * 1.34, p.metal, p.metalD, 1);                                                             // kettle hat: broad brim
+        E(c, x, y, r * 0.68, r * 0.84, p.metal, p.metalD, 1);                                                   // crown, longer front to back
+        c.strokeStyle = INK; c.lineWidth = 1.1; c.beginPath(); c.moveTo(x, y - r * 0.8); c.lineTo(x, y + r * 0.8); c.stroke(); outline(c);   // ridge
       }
-      c.beginPath(); c.arc(x, y, r, 0, TAU); fe(c, mgrad(c, x, y, r, p));
-      c.strokeStyle = p.metalD; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x, y - r); c.lineTo(x, y + r * 0.2); c.stroke(); outline(c);
-      if (team === 0) { c.beginPath(); c.ellipse(x, y - r * 0.15, r * 0.3, r * 1.05, 0, 0, TAU); fe(c, p.main); } // takim tuyu
-      else { c.fillStyle = p.main; c.fillRect(x - r * 0.3, y - r * 0.9, r * 0.6, r * 1.2); }
     },
     dSpear: function (c, pal, team, walk, lunge, t) {
-      var ext = lunge * 13;
-      c.beginPath(); c.moveTo(-8, 3); c.quadraticCurveTo(-10 + Math.sin(t * 7) * 2, 16, 0, 20); c.quadraticCurveTo(10 + Math.sin(t * 7) * 2, 16, 8, 3); c.closePath(); fe(c, pal.cloth);   // pelerin
-      this.feet(c, walk, '#2b2f3a');
-      E(c, 0, 2, 11.5, 9.5, mgrad(c, 0, 2, 11, pal));                                                                    // zirh
-      RR(c, -5.5, -5, 11, 19, 3, pal.main); c.fillStyle = pal.trim; c.fillRect(-5.5, 5, 11, 2.6); c.fillRect(-1.2, -5, 2.4, 19);  // tabard
-      O(c, -11.5, -1, 5.2, mgrad(c, -11.5, -1, 5, pal)); O(c, 11.5, -1, 5.2, mgrad(c, 11.5, -1, 5, pal));                // omuzluk
-      O(c, -14, -5, 10, pal.metalD); O(c, -14, -5, 8, pal.main);                                                         // kalkan
-      c.fillStyle = pal.dark; c.beginPath(); c.moveTo(-14, -5); c.arc(-14, -5, 8, 0, Math.PI / 2); c.closePath(); c.fill(); c.beginPath(); c.moveTo(-14, -5); c.arc(-14, -5, 8, Math.PI, Math.PI * 1.5); c.closePath(); c.fill();
-      O(c, -14, -5, 2.8, pal.trim);
-      line(c, 12.5, 13, 12.5, -36 - ext, 3, '#7a5530'); line(c, 12.5, 13, 12.5, -36 - ext, 1, '#b08a58');               // mizrak
-      poly(c, [[12.5, -55 - ext], [16.5, -41 - ext], [12.5, -37 - ext], [8.5, -41 - ext]], '#eef2f8');
-      c.beginPath(); c.moveTo(12.5, -39 - ext); c.lineTo(24 + Math.sin(t * 9) * 3, -35 - ext); c.lineTo(12.5, -31 - ext); c.closePath(); fe(c, pal.main);  // flama
-      this.helmet(c, 0, -8, 7.6, pal, team);
+      var ext = lunge * 12, sw = Math.sin(t * 7) * 2;
+      c.beginPath(); c.moveTo(-8, 3); c.quadraticCurveTo(-10 + sw, 16, 0, 20); c.quadraticCurveTo(10 + sw, 16, 8, 3); c.closePath(); fe(c, pal.cloth);   // cloak
+      this.feet(c, walk, BIS);
+      E(c, 0, 2, 11.5, 9.5, pal.main, pal.dark);                                                                  // tabard
+      belt(c, 0, 2, 11.5, 9.5, 6.2, 2.8, pal.trim); device(c, 'auto', 0, -0.4, 5, pal, team);
+      mgrad(c, -11.5, -1, 5.2, pal); mgrad(c, 11.5, -1, 5.2, pal);                                                // pauldrons
+      shield(c, -14.5, -3, 1, pal, team);
+      bar(c, 12.5, 13, 12.5, -32 - ext, 3, BIS);                                                                  // shaft
+      poly(c, [[12.5, -52 - ext], [16.8, -40 - ext], [12.5, -35 - ext], [8.2, -40 - ext]], pal.metal, pal.metalD, 1); // leaf blade
+      poly(c, [[12.5, -39 - ext], [25 + Math.sin(t * 9) * 3, -35.5 - ext], [12.5, -30 - ext]], pal.main);        // pennon
+      this.hand(c, 12.5, 2);
+      this.helmet(c, 0, -8, 7.6 * HEAD, pal, team, 'kettle');
     },
     dArcher: function (c, pal, team, walk, atk, t) {
-      RR(c, 2, 3, 6, 15, 2.5, '#7a5230'); c.fillStyle = pal.light; c.fillRect(3, 0, 1.8, 5); c.fillStyle = '#ffffff'; c.fillRect(5.6, -1, 1.8, 6);   // sadak
-      c.beginPath(); c.moveTo(-6, 0); c.quadraticCurveTo(-12, 12, 0, 18); c.quadraticCurveTo(12, 12, 6, 0); c.closePath(); fe(c, pal.dark);   // pelerin
-      this.feet(c, walk, '#3d3322');
-      E(c, 0, 2, 9.5, 8, pal.main); c.fillStyle = '#5b4426'; c.fillRect(-9, 3, 18, 2.4);                                  // yelek + kemer
-      O(c, -10, -3, 3.6, SKIN); O(c, 10, -6, 3.6, SKIN);
-      var pull = atk > 0 ? (1 - atk) * 10 : 3;
-      c.strokeStyle = '#6b4a2a'; c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.arc(0, -4, 19, Math.PI * 1.12, Math.PI * 1.88); c.stroke();
-      c.strokeStyle = '#c9a36a'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, -4, 19, Math.PI * 1.12, Math.PI * 1.88); c.stroke();
-      var ax = 19 * Math.cos(Math.PI * 1.12), ay = -4 + 19 * Math.sin(Math.PI * 1.12), bx = 19 * Math.cos(Math.PI * 1.88);
-      c.strokeStyle = '#f4f4f4'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(ax, ay); c.lineTo(0, -4 + pull * 0.5 - 1); c.lineTo(bx, ay); c.stroke(); outline(c);
-      if (atk === 0 || atk < 0.6) { line(c, 0, -3 + pull * 0.5, 0, -32, 2, '#efe3b8'); poly(c, [[0, -37], [2.6, -31], [-2.6, -31]], '#e8edf5'); c.fillStyle = pal.light; c.fillRect(-2, -5 + pull * 0.5, 4, 4); }
-      c.beginPath(); c.moveTo(-3, 0); c.lineTo(0, 10); c.lineTo(3, 0); c.closePath(); fe(c, pal.main);                         // kapuson kuyrugu
-      O(c, 0, -7, 7, pal.main); O(c, 0, -6, 3.8, pal.dark);
-      if (team === 1) { poly(c, [[-5, -10], [-9, -17], [-2, -12]], '#d9d0b8'); poly(c, [[5, -10], [9, -17], [2, -12]], '#d9d0b8'); }
+      var o = c.ov || c, pull = atk > 0 ? (1 - atk) * 10 : 3, ax = 19 * Math.cos(Math.PI * 1.12), ay = -4 + 19 * Math.sin(Math.PI * 1.12), bx = 19 * Math.cos(Math.PI * 1.88);
+      RR(c, 2, 3, 6.4, 15, 2.5, BIS, INK2); c.fillStyle = IVO; c.fillRect(3.4, 0.2, 2, 4); c.fillRect(5.4, -0.6, 2, 4.6);   // quiver and fletching
+      c.beginPath(); c.moveTo(-6, 0); c.quadraticCurveTo(-12, 12, 0, 18); c.quadraticCurveTo(12, 12, 6, 0); c.closePath(); fe(c, pal.dark);                // cloak
+      this.feet(c, walk, BIS);
+      E(c, 0, 2, 9.5, 8, pal.main, pal.dark); belt(c, 0, 2, 9.5, 8, 5.4, 2.6, BIS); device(c, 'auto', 0, -0.8, 4.3, pal, team);
+      this.hand(c, -10, -3); this.hand(c, 10, -6);
+      c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 5.8; c.beginPath(); c.arc(0, -4, 19, Math.PI * 1.12, Math.PI * 1.88); c.stroke();   // bow
+      c.strokeStyle = BIS; c.lineWidth = 3.4; c.stroke(); outline(c);
+      if (atk === 0 || atk < 0.6) {                                                                                 // arrow
+        bar(c, 0, -3 + pull * 0.5, 0, -29, 2, IVO); poly(c, [[0, -39], [3.6, -29], [-3.6, -29]], pal.metal, pal.metalD);
+        c.fillStyle = pal.light; c.fillRect(-2.4, -5 + pull * 0.5, 4.8, 4.2);
+      }
+      o.strokeStyle = INK; o.lineWidth = 1.2; o.lineCap = 'round'; o.beginPath(); o.moveTo(ax, ay); o.lineTo(0, -4 + pull * 0.5 - 1); o.lineTo(bx, ay); o.stroke();   // bowstring: a hairline over the contour
+      this.helmet(c, 0, -7, 7 * HEAD, pal, team, 'kettle');
     },
     dCav: function (c, pal, team, walk, lunge, age, t) {
-      var coat = team === 0 ? '#ece5d6' : '#3b3034', coatD = team === 0 ? '#bdb199' : '#1f181b', g = Math.sin(age * 14) * (walk !== 0 ? 1 : 0.1);
-      [[-9, -12], [9, -12], [-9, 13], [9, 13]].forEach(function (L, i) { E(c, L[0], L[1] + g * (i % 2 ? 5.5 : -5.5), 3.2, 6.6, coatD); });
-      c.beginPath(); c.moveTo(0, 22); c.quadraticCurveTo(-7 + Math.sin(t * 6) * 2, 34, -2, 38); c.quadraticCurveTo(5, 34, 0, 22); fe(c, '#2a2018');                                       // kuyruk
-      E(c, 0, 2, 12.5, 22.5, coat);                                                                                   // govde
-      c.fillStyle = 'rgba(255,255,255,.2)'; ell(c, -4, -2, 4, 15);
-      E(c, 0, -23, 6.6, 10.5, coat); E(c, 0, -32, 4.2, 5.2, coatD);                                                   // boyun + burun
-      c.strokeStyle = '#2a2018'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, -30); c.lineTo(0, -14); c.stroke(); outline(c);   // yele
-      c.strokeStyle = '#c0392b'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-4.4, -27); c.lineTo(4.4, -27); c.stroke(); outline(c);   // dizgin
-      poly(c, [[-5, -16], [-8, -22], [-3, -19]], coatD); poly(c, [[5, -16], [8, -22], [3, -19]], coatD);              // kulaklar
-      RR(c, -11.5, -6, 23, 17, 5, pal.main); c.fillStyle = pal.trim; c.fillRect(-11.5, 1, 23, 2.6); c.fillRect(-11.5, 8, 23, 2);   // eyer ortusu
-      c.beginPath(); c.moveTo(-7, 2); c.lineTo(7, 2); c.lineTo(5 + Math.sin(t * 8) * 2, 18); c.lineTo(-5 + Math.sin(t * 8) * 2, 18); c.closePath(); fe(c, pal.cloth);   // binici pelerini
-      E(c, 0, -1, 8.4, 7, mgrad(c, 0, -1, 8, pal)); O(c, -8.4, -2, 3.6, mgrad(c, -8.4, -2, 3.6, pal)); O(c, 8.4, -2, 3.6, mgrad(c, 8.4, -2, 3.6, pal));
-      var ext = lunge * 11;
-      line(c, 10, 12, 10, -48 - ext, 3.2, '#7a5530'); line(c, 10, 12, 10, -48 - ext, 1, '#b08a58');
-      poly(c, [[10, -62 - ext], [13.6, -48 - ext], [6.4, -48 - ext]], '#eef2f8');
-      c.beginPath(); c.moveTo(10, -44 - ext); c.lineTo(24 + Math.sin(t * 9) * 3, -39 - ext); c.lineTo(10, -33 - ext); c.closePath(); fe(c, pal.main);
-      this.helmet(c, 0, -7, 6.8, pal, team);
+      var host = team === 0, coat = host ? IVO : BIS, coatD = host ? VEL2 : INK2, g = Math.sin(age * 14) * (walk !== 0 ? 1 : 0.1), ext = lunge * 10, wv = Math.sin(t * 8) * 2;
+      [[-12, -12], [12, -12], [-12, 14], [12, 14]].forEach(function (L, i) { E(c, L[0], L[1] + g * (i % 2 ? 5.5 : -5.5), 3.8, 7.4, coatD); });   // legs show beside the barrel
+      c.beginPath(); c.moveTo(0, 22); c.quadraticCurveTo(-7 + Math.sin(t * 6) * 2, 33, -2, 37); c.quadraticCurveTo(5, 33, 0, 22); fe(c, INK2);              // tail
+      E(c, 0, 2, 12.5, 22.5, coat, coatD);                                                                          // barrel
+      E(c, 0, -23, 6.6, 10.5, coat, coatD); E(c, 0, -31.5, 4.6, 6, coatD);                                          // neck and muzzle
+      c.strokeStyle = INK2; c.lineWidth = 3; c.beginPath(); c.moveTo(0, -30); c.lineTo(0, -13); c.stroke(); outline(c);   // mane
+      poly(c, [[-5, -16], [-8.5, -23], [-2.6, -19.5]], coatD); poly(c, [[5, -16], [8.5, -23], [2.6, -19.5]], coatD);       // ears
+      RR(c, -13.8, -2, 27.6, 27, 6, pal.main, pal.dark);                                                            // caparison (horse cloth) over the croup, behind the rider
+      c.save(); rrect(c, -13.8, -2, 27.6, 27, 6); c.clip(); c.fillStyle = pal.trim; c.fillRect(-15, 19.4, 30, 4); c.fillStyle = INK; c.fillRect(-15, 19.4, 30, 0.9); c.fillRect(-15, 22.5, 30, 0.9); c.restore();
+      device(c, 'auto', 0, 9.6, 6.6, pal, team);
+      c.beginPath(); c.moveTo(-6, -7); c.lineTo(6, -7); c.lineTo(4.6 + wv, 7); c.lineTo(-4.6 + wv, 7); c.closePath(); fe(c, pal.cloth);   // rider's cloak
+      E(c, 0, -9, 8.4, 7, pal.metal, pal.metalD, 1); mgrad(c, -8.6, -10, 3.9, pal); mgrad(c, 8.6, -10, 3.9, pal);
+      bar(c, 10.5, 4, 10.5, -44 - ext, 3.2, BIS);                                                                   // lance
+      poly(c, [[10.5, -58 - ext], [14.4, -44 - ext], [6.6, -44 - ext]], pal.metal, pal.metalD);
+      poly(c, [[10.5, -43 - ext], [25 + Math.sin(t * 9) * 3, -38.5 - ext], [10.5, -33 - ext]], pal.main);
+      this.hand(c, 10.5, -4);
+      this.helmet(c, 0, -15, 6.8 * HEAD, pal, team, 'great');
     },
     dKnight: function (c, pal, team, walk, lunge, t) {
-      var sw = lunge * 13;
-      this.feet(c, walk, '#3f4654');
-      line(c, 16, 9, 16, -36 - sw, 4.2, '#2c3140'); line(c, 16, 9, 16, -36 - sw, 3, '#eef2f8'); line(c, 15.2, 6, 15.2, -34 - sw, 1, '#ffffff');   // kilic
-      line(c, 10, -2, 22, -2, 3.8, '#c79a2c'); O(c, 16, 12, 2.6, '#c79a2c');
-      E(c, 0, 2, 16, 12.5, mgrad(c, 0, 2, 15, pal));                                                                   // zirh
-      RR(c, -6, -7, 12, 24, 3, pal.main); c.fillStyle = pal.trim; c.fillRect(-1.4, -7, 2.8, 24); c.fillRect(-6, 4, 12, 2.6);
-      O(c, -16, -1, 8, mgrad(c, -16, -1, 8, pal)); O(c, 16, -1, 8, mgrad(c, 16, -1, 8, pal));                          // omuzluk
-      c.fillStyle = pal.hi; circ(c, -18.4, -3.6, 1.6); circ(c, 13.6, -3.6, 1.6);
-      poly(c, [[-31, -16], [-19, -16], [-19, 6], [-25, 18], [-31, 6]], pal.dark); poly(c, [[-29, -13], [-21, -13], [-21, 5], [-25, 13], [-29, 5]], pal.main);   // kalkan
-      c.fillStyle = pal.trim; c.fillRect(-26, -13, 2, 24); c.fillRect(-29, -6, 8, 2.4);
-      if (team === 0) { c.beginPath(); c.ellipse(0, -2, 3.6, 12, 0, 0, TAU); fe(c, pal.main); }                       // uzun tuy
-      this.helmet(c, 0, -9, 9, pal, team);
-      c.fillStyle = '#0d1018'; c.fillRect(-5.8, -16, 11.6, 2.8);                                                       // goz yarigi
+      var sw = lunge * 12;
+      this.feet(c, walk, INK2);
+      poly(c, [[13.4, 8], [18.6, 8], [18.6, -33 - sw], [16, -40 - sw], [13.4, -33 - sw]], pal.metal, pal.metalD);   // blade
+      c.strokeStyle = IVO; c.lineWidth = 1; c.beginPath(); c.moveTo(15.2, 4); c.lineTo(15.2, -30 - sw); c.stroke(); outline(c);
+      bar(c, 8.5, -2, 23.5, -2, 3.6, pal.trim); O(c, 16, 12.5, 3, pal.trim);                                        // cross-guard and pommel
+      E(c, 0, 2, 16, 12.5, pal.metal, pal.metalD, 1);                                                               // plate
+      RR(c, -7, -7, 14, 24, 3.5, pal.main, pal.dark); c.fillStyle = pal.trim; c.fillRect(-7, 7.4, 14, 2.6); c.fillStyle = INK; c.fillRect(-7, 7.4, 14, 0.9); c.fillRect(-7, 9.1, 14, 0.9);
+      device(c, 'auto', 0, 0.2, 6.2, pal, team);
+      mgrad(c, -16, -1, 8.2, pal); mgrad(c, 16, -1, 8.2, pal);
+      if (team === 1) shield(c, -24, 2, 1.28, pal, team); else shield(c, -25, 1, 1.3, pal, team);
+      this.helmet(c, 0, -9, 9 * HEAD, pal, team, 'great');
     },
     dMage: function (c, pal, team, walk, atk, t) {
-      E(c, 0, 2, 14, 11.5, pal.dark); E(c, 0, 2, 9.4, 8, pal.main);                                                    // cüppe
-      c.fillStyle = '#ffd86b'; for (var k = 0; k < 7; k++) circ(c, Math.cos(k * 0.9 + 0.4) * 11.8, 2 + Math.sin(k * 0.9 + 0.4) * 9.6, 1.3);
-      O(c, -11.5, -3, 3.8, pal.dark); O(c, 13, -6, 3, SKIN);
-      line(c, 14.5, 12, 14.5, -33, 3.2, '#6b4a2a'); line(c, 14.5, 12, 14.5, -33, 1, '#a07a4a');
-      var gl = 5.4 + (atk > 0 ? 6 * atk : 0) + Math.sin(t * 6) * 0.6;
-      var og = c.createRadialGradient(14.5, -37, 1, 14.5, -37, gl + 8); og.addColorStop(0, 'rgba(240,220,255,.95)'); og.addColorStop(0.5, 'rgba(192,132,252,.5)'); og.addColorStop(1, 'rgba(192,132,252,0)');
-      c.fillStyle = og; circ(c, 14.5, -37, gl + 8); O(c, 14.5, -37, gl, '#e9d5ff'); c.fillStyle = '#fff'; circ(c, 13, -38.5, 2);
-      for (var s2 = 0; s2 < 3; s2++) { var a = t * 3 + s2 * 2.1; c.fillStyle = '#fff'; circ(c, 14.5 + Math.cos(a) * (gl + 6), -37 + Math.sin(a) * (gl + 6) * 0.6, 1.5); }
-      O(c, 0, -6, 10.5, pal.dark); O(c, 0, -7, 6.6, pal.main);                                                         // genis siperli sapka
-      c.strokeStyle = pal.trim; c.lineWidth = 2; c.beginPath(); c.arc(0, -6, 8.4, 0, TAU); c.stroke(); outline(c);
-      O(c, 0, -7.5, 2.3, pal.trim); c.fillStyle = 'rgba(255,255,255,.28)'; circ(c, -2, -9.4, 1.8);
+      var gl = 5.4 + (atk > 0 ? 6 * atk : 0) + Math.sin(t * 6) * 0.6, i, a;
+      E(c, 0, 3, 14.5, 12.5, pal.main, pal.dark);                                                                   // robe
+      c.fillStyle = ORP; for (i = 0; i < 7; i++) circ(c, Math.cos(i * 0.9 + 0.4) * 11.8, 3 + Math.sin(i * 0.9 + 0.4) * 10.2, 1.5);
+      device(c, 'auto', 0, 8, 4.6, pal, team);
+      this.hand(c, -12, -2); this.hand(c, 13, -6);
+      bar(c, 14.5, 12, 14.5, -31, 3.2, BIS);                                                                        // staff
+      O(c, 14.5, -37, gl + 2.6, PUR); O(c, 14.5, -37, gl * 0.6, IVO); tick(c, 14.5, -37, gl + 2.6);                // orb: two flat discs
+      for (i = 0; i < 3; i++) { a = t * 3 + i * 2.1; c.fillStyle = IVO; circ(c, 14.5 + Math.cos(a) * (gl + 7), -37 + Math.sin(a) * (gl + 7) * 0.6, 1.7); }
+      O(c, 0, -6, 11.8, pal.cloth);                                                                                 // hat: brim
+      gshape(c, function (q, dx, dy) { q.moveTo(-6.8 + dx, -7 + dy); q.quadraticCurveTo(-4.4 + dx, -21 + dy, 3.6 + dx, -34 + dy); q.quadraticCurveTo(5.4 + dx, -20 + dy, 6.8 + dx, -7 + dy); q.closePath(); }, pal.main, pal.dark, 2.2);   // cone
+      c.save(); c.beginPath(); c.moveTo(-6.8, -7); c.quadraticCurveTo(-4.4, -21, 3.6, -34); c.quadraticCurveTo(5.4, -20, 6.8, -7); c.closePath(); c.clip();
+      c.fillStyle = pal.trim; c.fillRect(-9, -13.4, 18, 3.4); c.fillStyle = INK; c.fillRect(-9, -13.4, 18, 0.9); c.fillRect(-9, -10.9, 18, 0.9); c.restore();                             // band
+      O(c, 3.6, -34, 2.2, pal.trim);
     },
-    dCata: function (c, pal, ux, atk, t) {
-      var rot = Math.floor((ux * 0.16) % 3), sweep = atk > 0 ? (1 - atk) : 0;
-      RR(c, -18.5, -23, 37, 51, 6, '#8b6a3c'); c.strokeStyle = 'rgba(60,40,20,.45)'; c.lineWidth = 1.2;
-      for (var k = 0; k < 6; k++) { c.beginPath(); c.moveTo(-18, -18 + k * 8); c.lineTo(18, -18 + k * 8); c.stroke(); } outline(c);
-      RR(c, -14, -14, 28, 6, 2, '#6b4f2a'); RR(c, -14, 9, 28, 6, 2, '#6b4f2a');
-      [[-23, -8], [23, -8], [-23, 14], [23, 14]].forEach(function (w) {
-        RR(c, w[0] - 4.8, w[1] - 10, 9.6, 20, 3.5, '#4a3720');
-        c.strokeStyle = '#8a6a40'; c.lineWidth = 1.6; for (var q = 0; q < 3; q++) { var yy = w[1] - 7 + ((q * 7 + rot * 2.3) % 14); c.beginPath(); c.moveTo(w[0] - 4.6, yy); c.lineTo(w[0] + 4.6, yy); c.stroke(); } outline(c);
+    dCata: function (c, pal, team, ux, atk, t) {
+      var rot = Math.floor((ux * 0.16) % 3), sweep = atk > 0 ? (1 - atk) : 0, k, by = 20 - sweep * 62 + (sweep === 0 ? 0 : -2);
+      RR(c, -18.5, -23, 37, 51, 6, BIS, INK2);                                                                      // frame
+      c.strokeStyle = INK2; c.lineWidth = 1.2; for (k = 0; k < 6; k++) { c.beginPath(); c.moveTo(-17.5, -18 + k * 8); c.lineTo(17.5, -18 + k * 8); c.stroke(); } outline(c);
+      [[-23, -8], [23, -8], [-23, 14], [23, 14]].forEach(function (w) {                                             // wheels
+        RR(c, w[0] - 4.8, w[1] - 10, 9.6, 20, 3.5, INK2);
+        c.strokeStyle = BIS; c.lineWidth = 1.8; for (var q = 0; q < 3; q++) { var yy = w[1] - 7 + ((q * 7 + rot * 2.3) % 14); c.beginPath(); c.moveTo(w[0] - 4, yy); c.lineTo(w[0] + 4, yy); c.stroke(); } outline(c);
       });
-      var by = 20 - sweep * 62 + (sweep === 0 ? 0 : -2);                                                                // kova: geride -> one savrulur
-      line(c, 0, -2, 0, by, 5.2, '#2c1f10'); line(c, 0, -2, 0, by, 3.8, '#9a7442');
-      O(c, 0, -2, 4.6, '#4a3720'); O(c, 0, by, 8, '#5a4326'); if (atk === 0) O(c, 0, by, 5.2, '#6f6f7a');
-      c.strokeStyle = '#d9c9a0'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-14, 24); c.lineTo(14, 6); c.moveTo(14, 24); c.lineTo(-14, 6); c.stroke(); outline(c);   // halat
-      poly(c, [[-18, 30], [-32, 24 + Math.sin(t * 5) * 1.5], [-18, 18]], pal.main);
+      RR(c, -15, -21, 30, 13, 3, pal.main, pal.dark); device(c, 'auto', 0, -14.6, 5, pal, team);                   // front screen carrying the device
+      RR(c, -15, -3, 30, 6, 2, INK2);                                                                               // axle beam
+      bar(c, 0, -1, 0, by, 5.2, BIS);                                                                               // throwing arm, bucket, stone
+      O(c, 0, -1, 4.6, INK2); O(c, 0, by, 8, BIS, INK2); if (atk === 0) O(c, 0, by, 5.2, ARG, '#7E889D');
+      bar(c, -19, 31, -19, 13, 2.2, BIS); poly(c, [[-19, 27], [-34, 23 + Math.sin(t * 5) * 1.5], [-19, 18]], pal.main);  // pennon
     },
     dHealer: function (c, pal, team, walk, atk, t) {
-      this.feet(c, walk, '#cbd5e1');
-      E(c, 0, 2, 12, 10.5, '#f6f8fb'); c.strokeStyle = '#e0b84a'; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 2, 11, 9.5, 0, 0, TAU); c.stroke(); outline(c);
-      c.fillStyle = '#16a34a'; c.fillRect(-2, 0, 4, 12); c.fillRect(-6.4, 4, 12.8, 4);
-      O(c, -11, -2, 3.4, '#f6f8fb'); O(c, 13, -6, 3, SKIN);
-      line(c, 14, 12, 14, -31, 3, '#8a6a3a'); line(c, 14, 12, 14, -31, 1, '#c8a266');
-      var gl = 1 + (atk > 0 ? 0.5 * atk : 0), cg = c.createRadialGradient(14, -36, 1, 14, -36, 15 * gl); cg.addColorStop(0, 'rgba(180,255,220,.9)'); cg.addColorStop(1, 'rgba(110,231,183,0)');
-      c.fillStyle = cg; circ(c, 14, -36, 15 * gl); poly(c, [[14, -45], [19.5, -36], [14, -27], [8.5, -36]], '#7ef0bd'); c.fillStyle = 'rgba(255,255,255,.6)'; circ(c, 12.4, -39, 1.8);
-      if (atk > 0) { c.strokeStyle = 'rgba(126,240,189,' + atk + ')'; c.lineWidth = 2.4; c.beginPath(); c.arc(0, -2, 20 + (1 - atk) * 12, 0, TAU); c.stroke(); outline(c); }
-      O(c, 0, -7, 7.4, '#f6f8fb'); O(c, 0, -6.4, 3.8, '#dfe6ee'); c.fillStyle = '#16a34a'; c.fillRect(-1.2, -12.4, 2.4, 7); c.fillRect(-3.8, -10, 7.6, 2.4);
-      c.strokeStyle = '#e0b84a'; c.lineWidth = 1.6; c.beginPath(); c.arc(0, -7, 8.4, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); outline(c);
+      var gl = atk > 0 ? 1 + 0.5 * atk : 1, o = c.ov || c;
+      this.feet(c, walk, VEL2);
+      E(c, 0, 2, 12, 10.5, IVO, VEL2);                                                                              // robe
+      RR(c, -4.9, -4, 9.8, 19, 3, pal.main, pal.dark); device(c, 'auto', 0, 4.4, 4.2, pal, team);                   // team scapular
+      this.hand(c, -11, -2); this.hand(c, 13, -6);
+      bar(c, 14, 12, 14, -28, 3, BIS);
+      poly(c, [[14, -45 - (gl - 1) * 4], [19.8, -36], [14, -27 + (gl - 1) * 3], [8.2, -36]], VDG, MAL, 1);          // gem
+      if (atk > 0) { o.strokeStyle = VDG; o.globalAlpha = atk; o.lineWidth = 2.4; o.beginPath(); o.arc(0, -2, 20 + (1 - atk) * 12, 0, TAU); o.stroke(); o.globalAlpha = 1; }
+      O(c, 0, -7, 7.4 * HEAD, IVO, VEL2);                                                                           // coif
+      c.strokeStyle = pal.main; c.lineWidth = 2.8; c.lineCap = 'butt'; c.beginPath(); c.arc(0, -7, 7.4, Math.PI * 1.08, Math.PI * 1.92); c.stroke(); outline(c);
+      c.fillStyle = MAL; c.fillRect(-1.4, -12.6, 2.8, 8.8); c.fillRect(-4.4, -9.4, 8.8, 2.8);                       // the green cross of the healers
     },
     dAssassin: function (c, pal, team, walk, lunge, t) {
-      var cloak = team === 0 ? '#1b2a4a' : '#22141a', body = team === 0 ? '#243b6b' : '#3a1c24', L = lunge * 10;
-      c.beginPath(); c.moveTo(-9, 2); c.quadraticCurveTo(-13 + Math.sin(t * 5) * 3, 18, -2, 27 + Math.sin(t * 6) * 2); c.quadraticCurveTo(13 + Math.sin(t * 5) * 3, 18, 9, 2); c.closePath(); fe(c, cloak);
-      this.feet(c, walk, '#14161e');
-      E(c, 0, 2, 9.6, 8.6, body); c.fillStyle = pal.trim; c.fillRect(-9, 3, 18, 2.2);
-      poly(c, [[10, -2], [13.4, -2], [12.8, -27 - L], [9, -20 - L]], '#e8edf5'); line(c, 11.7, 3, 11.7, -2, 3.2, '#5b3d22');
-      poly(c, [[-10, -2], [-13.4, -2], [-12.8, -27 - L], [-9, -20 - L]], '#e8edf5'); line(c, -11.7, 3, -11.7, -2, 3.2, '#5b3d22');
-      poly(c, [[3, -2], [9.5, 6 + Math.sin(t * 6) * 2], [4, 11]], pal.main);
-      O(c, 0, -7, 7.2, cloak); c.fillStyle = '#080a12'; ell(c, 0, -9.4, 3.8, 2.5);
-      c.fillStyle = team === 0 ? '#9cc4ff' : '#ff6b6b'; circ(c, -1.8, -9.8, 1.1); circ(c, 1.8, -9.8, 1.1);
+      var L = lunge * 10, cl = pal.dark;
+      c.beginPath(); c.moveTo(-9, 2); c.quadraticCurveTo(-13 + Math.sin(t * 5) * 3, 18, -2, 27 + Math.sin(t * 6) * 2); c.quadraticCurveTo(13 + Math.sin(t * 5) * 3, 18, 9, 2); c.closePath(); fe(c, cl);   // cloak
+      this.feet(c, walk, INK2);
+      E(c, 0, 2, 9.6, 8.6, pal.main, pal.dark); belt(c, 0, 2, 9.6, 8.6, 4.8, 2.4, pal.trim); device(c, 'auto', 0, -1, 3.8, pal, team);
+      poly(c, [[9.8, -2], [13.8, -2], [13.2, -26 - L], [9.2, -19 - L]], pal.metal, pal.metalD); bar(c, 11.8, 4, 11.8, -1, 3.4, BIS);     // twin daggers
+      poly(c, [[-9.8, -2], [-13.8, -2], [-13.2, -26 - L], [-9.2, -19 - L]], pal.metal, pal.metalD); bar(c, -11.8, 4, -11.8, -1, 3.4, BIS);
+      poly(c, [[3, -2], [9.5, 6 + Math.sin(t * 6) * 2], [4, 11]], pal.main);                                         // sash end
+      O(c, 0, -7, 7.2 * HEAD, cl, INK2);                                                                             // hood
+      E(c, 0, -10.2, 4.6, 3, INK); c.fillStyle = pal.light; circ(c, -2, -10.4, 1.2); circ(c, 2, -10.4, 1.2);
     },
     dGolem: function (c, pal, team, walk, lunge, t) {
-      var g1 = c.createRadialGradient(-6, -4, 2, 0, 2, 26); g1.addColorStop(0, '#cbc9be'); g1.addColorStop(1, '#6b6963');
-      var g2 = c.createRadialGradient(-2, -2, 1, 0, 0, 10); g2.addColorStop(0, '#c2c0b6'); g2.addColorStop(1, '#6e6c66');
-      var fy = lunge * 16;
-      E(c, -9, 13 + walk * 3, 6.4, 6.6, '#5d5b56'); E(c, 9, 13 - walk * 3, 6.4, 6.6, '#5d5b56');
-      E(c, -19, 1, 7, 9, '#8d8b84'); E(c, 19, 1, 7, 9, '#8d8b84');
-      E(c, 0, 2, 21, 16.5, g1);
-      c.strokeStyle = 'rgba(40,38,34,.7)'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-10, -8); c.lineTo(-6, 0); c.lineTo(-11, 8); c.moveTo(12, -6); c.lineTo(8, 3); c.lineTo(13, 10); c.stroke(); outline(c);
-      var rg = c.createRadialGradient(0, 2, 1, 0, 2, 11); rg.addColorStop(0, team === 0 ? 'rgba(160,210,255,.95)' : 'rgba(255,140,120,.95)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = rg; circ(c, 0, 2, 11);
-      c.fillStyle = pal.main; circ(c, 0, 2, 3); c.fillStyle = pal.light; circ(c, -0.8, 1.2, 1.2);
-      O(c, -24, -8 - fy, 9.4, g2); O(c, 24, -8 - fy, 9.4, g2);
-      c.fillStyle = 'rgba(0,0,0,.25)'; circ(c, -22, -6 - fy, 3); circ(c, 26, -6 - fy, 3);
-      O(c, 0, -14, 8.6, '#a19f97'); c.fillStyle = team === 0 ? '#bfe0ff' : '#ff9a8a'; circ(c, -3.2, -17, 1.9); circ(c, 3.2, -17, 1.9);
-      c.fillStyle = '#5f8a4a'; ell(c, -13, -4, 4.4, 2.5); ell(c, 14, 6, 3.8, 2.2);
+      var fy = lunge * 16, ST = ARG, SD = '#7E889D';
+      E(c, -9, 13 + walk * 3, 7.4, 7.6, SD, INK2); E(c, 9, 13 - walk * 3, 7.4, 7.6, SD, INK2);                       // feet
+      E(c, -19, 1, 7.4, 9.4, ST, SD); E(c, 19, 1, 7.4, 9.4, ST, SD);                                                 // shoulders
+      E(c, 0, 2, 21, 16.5, ST, SD, 1);                                                                               // torso
+      c.strokeStyle = INK; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-13, -8); c.lineTo(-9, 0); c.lineTo(-14, 7); c.moveTo(13.5, -7); c.lineTo(10.5, 2); c.lineTo(15, 9); c.stroke(); outline(c);   // cracks
+      E(c, -13, -4, 3.6, 2.2, MAL); E(c, 15.4, 8, 3.2, 1.9, MAL);                                                    // moss
+      poly(c, [[-7.6, -5], [7.6, -5], [7.6, 5], [0, 14.5], [-7.6, 5]], pal.main, pal.dark);                          // painted shield: the team mark
+      device(c, 'auto', 0, 1.6, 5.1, pal, team);
+      O(c, -24, -8 - fy, 9.8, ST, SD, 1); O(c, 24, -8 - fy, 9.8, ST, SD, 1);                                         // fists
+      O(c, 0, -14, 8.6 * HEAD, ST, SD, 1);                                                                           // head
+      c.fillStyle = INK; c.fillRect(-6, -19, 4.6, 2.4); c.fillRect(1.4, -19, 4.6, 2.4); c.fillStyle = pal.light; c.fillRect(-4.6, -18.6, 2, 1.6); c.fillRect(2.6, -18.6, 2, 1.6);
     },
     dFlamer: function (c, pal, team, walk, atk, t) {
-      RR(c, -7.5, 3, 15, 19, 5.5, '#b8452a'); c.fillStyle = '#e8855a'; c.fillRect(-5.5, 5, 3, 13); c.fillStyle = '#4a3a30'; c.fillRect(-7.5, 10, 15, 2.6);
-      c.strokeStyle = '#2a2420'; c.lineWidth = 2.6; c.beginPath(); c.moveTo(0, 6); c.quadraticCurveTo(14, 4, 10, -8); c.stroke(); outline(c);
-      this.feet(c, walk, '#3a3028');
-      E(c, 0, 2, 10.2, 8.8, pal.main); c.fillStyle = '#3a3430'; c.fillRect(-6, -2, 12, 10);
-      O(c, -10, -3, 3.8, '#3a3430'); O(c, 10, -8, 3.8, '#3a3430');
-      line(c, 10, -6, 10, -27, 4.4, '#2a2a30'); line(c, 10, -6, 10, -27, 2.6, '#6b6b75'); RR(c, 6.6, -34, 6.8, 9, 2.4, '#2a2a30');
-      if (atk > 0) { var Lf = 12 + (1 - atk) * 26; poly(c, [[10, -34], [1, -34 - Lf * 0.78], [10, -34 - Lf], [19, -34 - Lf * 0.78]], '#ff7a2a'); poly(c, [[10, -34], [5, -34 - Lf * 0.5], [10, -34 - Lf * 0.78], [15, -34 - Lf * 0.5]], '#ffc04a'); }
-      else { c.fillStyle = '#ffb04a'; ell(c, 10, -37, 2.6, 4 + Math.sin(t * 6) * 1.2); }
-      this.helmet(c, 0, -8, 7.2, pal, team);
-      c.fillStyle = '#10131c'; c.fillRect(-5.6, -12.8, 11.2, 3.6); c.fillStyle = '#7bd7ff'; circ(c, -2.7, -11, 1.6); circ(c, 2.7, -11, 1.6);
+      var Lf;
+      RR(c, -7.5, 3, 15, 19, 5.5, BIS, INK2); c.save(); rrect(c, -7.5, 3, 15, 19, 5.5); c.clip(); c.fillStyle = LEAF; c.fillRect(-8, 9, 16, 3.2); c.fillStyle = INK; c.fillRect(-8, 9, 16, 0.9); c.fillRect(-8, 11.5, 16, 0.9); c.restore();   // fire-pot on the back
+      c.strokeStyle = INK; c.lineWidth = 5.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 6); c.quadraticCurveTo(14, 4, 10, -8); c.stroke(); c.strokeStyle = INK2; c.lineWidth = 3; c.stroke(); outline(c);   // hose
+      this.feet(c, walk, BIS);
+      E(c, 0, 2, 10.2, 8.8, pal.main, pal.dark); belt(c, 0, 2, 10.2, 8.8, 5, 2.4, pal.trim); device(c, 'auto', 0, -1.2, 4, pal, team);
+      O(c, -10, -3, 4.3, INK2); O(c, 10, -8, 4.3, INK2);
+      bar(c, 10, -6, 10, -26, 4.4, '#4A5368'); RR(c, 6.6, -34, 6.8, 9, 2.4, INK2);                                    // nozzle
+      if (atk > 0) { Lf = 12 + (1 - atk) * 26; poly(c, [[10, -34], [1, -34 - Lf * 0.78], [10, -34 - Lf], [19, -34 - Lf * 0.78]], VERM); poly(c, [[10, -34], [5.4, -34 - Lf * 0.5], [10, -34 - Lf * 0.78], [14.6, -34 - Lf * 0.5]], ORP); }
+      else E(c, 10, -38, 3, 4.4 + Math.sin(t * 6) * 1.2, ORP);
+      this.helmet(c, 0, -8, 7.2 * HEAD, pal, team, 'kettle');
     },
     dBanner: function (c, pal, team, walk, lunge, t) {
       var w = Math.sin(t * 4) * 4;
       c.beginPath(); c.moveTo(-8, 3); c.quadraticCurveTo(-10, 15, 0, 19); c.quadraticCurveTo(10, 15, 8, 3); c.closePath(); fe(c, pal.cloth);
-      this.feet(c, walk, '#3a3a4a');
-      E(c, -1, 3, 12.5, 10, mgrad(c, -1, 3, 12, pal)); RR(c, -5, -4, 10, 17, 3, pal.main); c.fillStyle = pal.trim; c.fillRect(-5, 5, 10, 2.4);
-      O(c, -12, -1, 5, mgrad(c, -12, -1, 5, pal)); O(c, 10, -1, 5, mgrad(c, 10, -1, 5, pal));
-      line(c, 12, 8, 12, -8 - lunge * 8, 2.8, '#2c3140'); line(c, 12, 8, 12, -8 - lunge * 8, 1.6, '#e5e9f0');
-      line(c, 0, 14, 0, -54, 3.4, '#6b4a2a'); line(c, 0, 14, 0, -54, 1.2, '#a07a4a');
-      c.beginPath(); c.moveTo(0, -52); c.lineTo(36 + w, -47); c.lineTo(31 + w * 0.6, -37); c.lineTo(37 + w, -27); c.lineTo(0, -24); c.closePath(); fe(c, pal.main);
-      c.strokeStyle = pal.trim; c.lineWidth = 1.8; c.beginPath(); c.moveTo(2, -49); c.lineTo(32 + w, -45); c.moveTo(2, -27); c.lineTo(33 + w, -29); c.stroke(); outline(c);
-      O(c, 18, -38, 6.4, pal.trim); O(c, 18, -38, 3.2, pal.dark);
-      for (var q = 0; q < 3; q++) { c.strokeStyle = pal.trim; c.lineWidth = 1.6; c.beginPath(); c.moveTo(8 + q * 10, -25); c.lineTo(8 + q * 10 + w * 0.2, -19); c.stroke(); } outline(c);
-      O(c, 0, -57, 3.6, pal.trim);
-      this.helmet(c, -1, -7, 7.2, pal, team);
+      this.feet(c, walk, BIS);
+      E(c, -1, 3, 12.5, 10, pal.metal, pal.metalD, 1); RR(c, -5, -4, 10, 17, 3, pal.main, pal.dark); c.fillStyle = pal.trim; c.fillRect(-5, 8.2, 10, 2.4); c.fillStyle = INK; c.fillRect(-5, 8.2, 10, 0.9); c.fillRect(-5, 9.7, 10, 0.9);
+      device(c, 'auto', 0, 1.4, 3.9, pal, team);
+      mgrad(c, -12, -1, 5.2, pal); mgrad(c, 10, -1, 5.2, pal);
+      bar(c, 12, 8, 12, -8 - lunge * 8, 2.8, pal.metal);
+      bar(c, 0, 14, 0, -54, 3.4, BIS);                                                                               // pole
+      poly(c, [[0, -52], [35 + w, -47.5], [30 + w * 0.6, -38], [35 + w, -28.5], [0, -25]], pal.main, pal.dark);      // swallow-tail flag
+      c.strokeStyle = pal.trim; c.lineWidth = 2.4; c.beginPath(); c.moveTo(2, -49.4); c.lineTo(31 + w, -45.6); c.moveTo(2, -27.6); c.lineTo(31 + w, -30.6); c.stroke(); outline(c);
+      device(c, 'auto', 15.5, -38.5, 7.2, pal, team);
+      O(c, 0, -57, 3.8, pal.trim);
+      this.helmet(c, -1, -7, 7.2 * HEAD, pal, team, 'great');
     }
   };
   // Acik alan cizicisi (fieldrender.js) icin ortak yardimcilar
   R.THEMES = THEMES; R.PAL = PAL; R.SPR = SPR; R.OUT = OUT;
-  R.util = { ell: ell, circ: circ, rrect: rrect, line: line, seeded: seeded, hash: hash, star: star, E: E, O: O, RR: RR, poly: poly, outline: outline, mgrad: mgrad, TAU: TAU };
+  R.DMG = { dealt: IVO, crit: ORP, taken: '#FF8A70', heal: '#7FD6B8' }; // combat number tinctures (bible section 7)
+  R.TOK = { ink: INK, ink2: INK2, ivo: IVO, vel: VEL, vel2: VEL2, orp: ORP, leaf: LEAF, verm: VERM, mad: MAD, mal: MAL, vdg: VDG, pur: PUR, bole: BOLE, bis: BIS, arg: ARG, flesh: FLESH, lapis: LAPIS, lapisd: LAPISD, azur: AZUR, night: NIGHT };
+  R.bannerStyle = bannerStyle;
+  R.util = { ell: ell, circ: circ, rrect: rrect, line: line, seeded: seeded, hash: hash, star: star, E: E, O: O, RR: RR, poly: poly, outline: outline, mgrad: mgrad, TAU: TAU,
+    fe: fe, gshape: gshape, tick: tick, bar: bar, belt: belt, device: device, shield: shield, banderole: banderole };
 })(globalThis.Z = globalThis.Z || {});
