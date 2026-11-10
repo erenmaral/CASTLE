@@ -11,13 +11,27 @@
   //          (2) veri tabanli yerler (kahraman, kural, kademe, hedef, savas turu, yetenek, hazirlik karti, pazar, paket): emoji data.js'te kalir, simge Z.Icons.by tablosundan
   //              anahtarla aranir (UI.heroIco ... UI.packIco); belirsiz emojiler (kalkan, kilic, altin kese...) Z.ICO'da yalniz tek bir varsayilana gider.
   var IC = Z.Icons || null;
-  function icoId(id, fb, cls) { return IC && IC.has(id) ? IC.svg(id, cls) : (fb || ''); }
+  // hediye sandigi (ic-cur-coffer / -open / ic-nav-coffer) .gift sinifi alir: theme.css lapis zeminde zincifre kapak, zincifre / altin zeminde asil lapis (lapis uzerine lapis batiyordu)
+  // yuvarlak muhur ve kalkan ailesi (ic-act / ic-rule / ic-perk / ic-hero) .rd sinifi alir: theme.css satir icinde 19 css px'in altina indirmez (sembol kutunun ~17/32'si: 15-17 px'te secilemez)
+  var COFFER = /^ic-(?:cur-coffer|cur-coffer-open|nav-coffer)$/, ROUND = /^ic-(?:act|rule|perk|hero)-/, SWAPPED = /<svg class="i"( aria-hidden="true"><use href="#(ic-[a-z-]+)"\/>)/g;
+  function icoId(id, fb, cls) { id = id || ''; if (COFFER.test(id)) cls = (cls ? cls + ' ' : '') + 'gift'; if (ROUND.test(id)) cls = (cls ? cls + ' ' : '') + 'rd'; return IC && IC.has(id) ? IC.svg(id, cls) : (fb || ''); }
   function icoBy(tab, key, fb, cls) { var t = IC && IC.by && IC.by[tab]; return icoId(t && t[key], fb, cls); }
   function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  function zi(html) { return Z.ico ? Z.ico(html) : html; }
+  function zi(html) {
+    if (!Z.ico) return html;
+    return Z.ico(html).replace(SWAPPED, function (m, rest, id) { return '<svg class="i' + (COFFER.test(id) ? ' gift' : '') + (ROUND.test(id) ? ' rd' : '') + '"' + rest; });
+  }
+  // simge + sayi cifti (para, can, sure) satir sararken AYRILMAZ: "[simge]300", "[simge] 5", "80 [simge]" nowrap kapsayiciya alinir. Satir ici simge (resim gibi) her zaman bir kirma firsatidir:
+  // birlestirici karakterler (U+2060 / NBSP) onu engellemez (olculdu), yalniz nowrap kapsayici engeller. Kapsayici flex / grid ogesi olursa ayri oge olup bosluk (gap) acar (.btn / .chip inline-flex:
+  // "(+998 [simge])" -> "(+ 998 [simge] )"), bu yuzden yalniz akis kapsayicilarina (UI.setIco: toast, rozet, hint, sayac) uygulanir; modal / sekme metinlerinde elle nw() ile sarilir.
+  var SVGI = '<svg class="i[^"]*" aria-hidden="true"><use href="#[^"]+"\\/><\\/svg>';
+  var GLUE_IN = new RegExp('(' + SVGI + ')( ?[+\\-]?\\d[\\d.,]*%?)', 'g'), GLUE_NI = new RegExp('(\\d[\\d.,]* ?' + SVGI + ')(?! ?[+\\-]?\\d)', 'g');
+  function glue(html) { return html.replace(GLUE_IN, '<span class="nw">$1$2</span>').replace(GLUE_NI, '<span class="nw">$1</span>'); }
+  // elle sarma (yazi ve simge karisik kume: "[ok] [para] 55", "[kalp] 1500 -> 1680"): glue() yalniz bitisik simge + sayi ciftlerini sarar
+  function nw(s) { return '<span class="nw">' + s + '</span>'; }
   UI.ico = function (str) { return zi(esc(str)); };
   // twin: gorunmez ikiz (.vh): testlerin okudugu simge karakteri (yalniz #info-title, #rule-chip, #skill-ico); harf icermez (genislik / i18n denetimi degismez)
-  UI.setIco = function (el, str, twin) { el.innerHTML = zi(esc(str)) + (twin ? '<span class="vh" aria-hidden="true">' + esc(twin) + '</span>' : ''); };
+  UI.setIco = function (el, str, twin) { el.innerHTML = glue(zi(esc(str))) + (twin ? '<span class="vh" aria-hidden="true">' + esc(twin) + '</span>' : ''); };
   // kahraman kalkani: size S (<= 20 css px, duz siluet) | M | L (96-128u, ayrintili); owned = turuncu bordur (--f2), sahipsiz = cls 'ud' (bos)
   UI.heroIco = function (id, size, cls) {
     var h = Z.HEROES[id], t = IC && IC.by && IC.by.hero, base = t && t[id], v = size === 'S' ? '-s' : size === 'L' ? '-l' : '';
@@ -30,7 +44,17 @@
   UI.perkIco = function (id, cls) { var p = Z.PERKS[id]; return icoBy('perk', id, p ? p.icon : '', cls); };
   UI.boosterIco = function (id, cls) { var b = Z.BOOSTERS[id]; return icoBy('booster', id, b ? b.icon : '', cls); };
   UI.marketIco = function (m, cls) { return icoBy('market', m.id, m.icon, cls); };
-  UI.packIco = function (i, cls) { var t = IC && IC.by && IC.by.pack; return icoId(t && t[i % t.length], '💎', cls); };
+  // elmas paketi simgesi: paket buyudukce kucuk bir elmas YIGINI (1 / 2 / 3 / 5 kabosyon: oyun ici elmas kimligi = ayni yesil elmas), en buyuk paket = elmasli tac (by.pack).
+  // Altin kese ve sandik Pazar'da altin urunlerinin simgesi: elmas paketlerinde tekrar kullanilmaz (elmas mi altin mi satin alindigi belirsizdi; paket 1 ve 2 de ayniydi).
+  // Her satir [sol, ust, boyut] (128x112u kutu icinde, arka siradan one dogru cizilir)
+  var GEMS = [[[22, 14, 84]], [[2, 36, 66], [48, 14, 72]], [[34, 2, 60], [2, 48, 60], [66, 48, 60]], [[20, 12, 48], [60, 12, 48], [0, 56, 48], [40, 56, 48], [80, 56, 48]]];
+  UI.packIco = function (i, cls) {
+    var g = GEMS[i], t = IC && IC.by && IC.by.pack;
+    if (!g || !IC || !IC.has('ic-cur-cabochon')) return icoId(t && t[i % t.length], '💎', cls);
+    return '<span class="gc" aria-hidden="true">' + g.map(function (q) { return '<svg class="i" style="left:' + q[0] + 'px;top:' + q[1] + 'px;width:' + q[2] + 'px;height:' + q[2] + 'px"><use href="#ic-cur-cabochon"/></svg>'; }).join('') + '</span>';
+  };
+  // gorev / basarim metinlerinin sonundaki savas turu emojisi (cadir / kale): baska her yerdeki gibi by.battle muhuru (UI.battleIco), duz kamp / kule simgesi degil
+  function battleTxt(s) { return String(s).replace(/\uD83C\uDFD5\uFE0F?/g, UI.battleIco('field')).replace(/\uD83C\uDFF0\uFE0F?/g, UI.battleIco('castle')); }
   function star3(n) { var s = '', i; for (i = 1; i <= 3; i++) s += '<span class="' + (i <= n ? 'on' : 'off') + '">' + (i <= n ? icoId('ic-cur-mullet', '★') : icoId('ic-cur-mullet-empty', '★')) + '</span>'; return '<span class="stars">' + s + '</span>'; }
   function unitStats(id, lvl) {
     var u = Z.UNITS[id];
@@ -70,24 +94,48 @@
     Array.prototype.forEach.call(document.querySelectorAll('.logo'), function (el) { el.textContent = up; });
   };
   // Birlik simgesi: oyundaki gercek karakter cizimi (sprite) -> resim. Portre = halesiz, zemin cizgisiz (R.icoMode + R.px = 3; resim bir kez pisirilir, onbellekte).
-  // ghost: oyuncunun henuz sahip olmadigi birlik = R.ghostSprite (--ink2 silueti .45, bos/underdrawn). Cizim yoksa: sinifin karsi-zincir simgesi (varsa) ya da bos (emoji gosterilmez).
+  // ghost: oyuncunun henuz sahip olmadigi birlik = ALT CIZIM (underdrawn): yalniz spritein murekkep cizgisi (ghostArt), dolgu yok; .45'lik duz kahve leke (R.ghostSprite) hangi birlik oldugunu
+  // soylemiyordu (sovalye / buyucu / mancinik ayirt edilemiyordu). Cizim yoksa: sinifin karsi-zincir simgesi (varsa) ya da bos (emoji gosterilmez).
   var iconCache = {};
+  // en yakin 'mask = 1' pikseline yatay + dikey r piksel icindeki tum pikseller 1 (ayrilabilir maksimum suzgeci)
+  function dilate(m, w, h, r) {
+    var t = new Uint8Array(w * h), o = new Uint8Array(w * h), x, y, k, v, hi;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) { v = 0; hi = Math.min(w - 1, x + r); for (k = Math.max(0, x - r); k <= hi && !v; k++) if (m[y * w + k]) v = 1; t[y * w + x] = v; }
+    for (x = 0; x < w; x++) for (y = 0; y < h; y++) { v = 0; hi = Math.min(h - 1, y + r); for (k = Math.max(0, y - r); k <= hi && !v; k++) if (t[k * w + x]) v = 1; o[y * w + x] = v; }
+    return o;
+  }
+  // Sprite (R.px = 3, portre kipi) -> alt cizim resmi (dataURL): kenara ya da renk degisimine 4 px icindeki KOYU (murekkep) pikseller kalir (kontur + koyu ayrintilar; koyu dolgunun ici dusar),
+  // 2 px kalinlastirilir (portre 84u'ya kuculurken cizgi kaybolmasin), --ink2 tonunda; kirpma kutusu cizgiden.
+  function ghostArt(cls) {
+    var R = Z.Render, op = R.px, oi = R.icoMode, cv, w, h, d, n, i, mx, near, th, out, od, ctx, x0, y0, x1, y1, x, y, light, line, pad = 4;
+    try { R.px = 3; R.icoMode = true; cv = R.renderSprite(cls, 0, 'i', 0); } finally { R.px = op; R.icoMode = oi; }
+    w = cv.width; h = cv.height; d = cv.getContext('2d').getImageData(0, 0, w, h).data; n = w * h; light = new Uint8Array(n); line = new Uint8Array(n);
+    for (i = 0; i < n; i++) { mx = Math.max(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); light[i] = (d[i * 4 + 3] < 60 || mx >= 70) ? 1 : 0; } // murekkep = alfa dolu ve en parlak kanal < 70 (lapis / ten / metal degil)
+    near = dilate(light, w, h, 4); for (i = 0; i < n; i++) line[i] = !light[i] && near[i] ? 1 : 0;
+    th = dilate(line, w, h, 2); out = document.createElement('canvas'); out.width = w; out.height = h; ctx = out.getContext('2d'); od = ctx.createImageData(w, h);
+    x0 = w; y0 = h; x1 = 0; y1 = 0;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) { i = y * w + x; if (th[i]) { od.data[i * 4] = 75; od.data[i * 4 + 1] = 59; od.data[i * 4 + 2] = 42; od.data[i * 4 + 3] = 235; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    if (x1 < x0) return null; // cizgi yok (cizim hic uretmedi)
+    ctx.putImageData(od, 0, 0);
+    var cw = x1 - x0 + 1 + pad * 2, ch = y1 - y0 + 1 + pad * 2, o2 = document.createElement('canvas'); o2.width = cw; o2.height = ch;
+    o2.getContext('2d').drawImage(out, x0 - pad, y0 - pad, cw, ch, 0, 0, cw, ch); return o2.toDataURL('image/png');
+  }
   UI.unitImg = function (id, team, h, ghost) {
     var u = Z.UNITS[id], key = id + (team ? 1 : 0) + (ghost ? 'g' : ''), url = iconCache[key];
     if (url === undefined) {
-      var R = Z.Render, o = R.px, oi = R.icoMode;
-      try {
-        R.px = 3; R.icoMode = true;
-        var cv = ghost ? R.ghostSprite(u.cls, team ? 1 : 0) : R.renderSprite(u.cls, team ? 1 : 0, 'i', 0), w = cv.width, hh = cv.height, x0 = w, y0 = hh, x1 = 0, y1 = 0, xx, yy;
-        if (ghost && cv.bbox) { x0 = cv.bbox.x0; y0 = cv.bbox.y0; x1 = cv.bbox.x1; y1 = cv.bbox.y1; } // silueti saydam: kutu ghostSprite'tan gelir
-        else { // golgeyi atip karakterin sinirlarina kirp (ust kisim): saydam olmayan piksellerin kutusu
-          var px = cv.getContext('2d').getImageData(0, 0, w, hh).data;
+      if (ghost) { try { url = ghostArt(u.cls); } catch (e) { url = null; } }
+      else {
+        var R = Z.Render, o = R.px, oi = R.icoMode;
+        try {
+          R.px = 3; R.icoMode = true;
+          var cv = R.renderSprite(u.cls, team ? 1 : 0, 'i', 0), w = cv.width, hh = cv.height, x0 = w, y0 = hh, x1 = 0, y1 = 0, xx, yy;
+          var px = cv.getContext('2d').getImageData(0, 0, w, hh).data; // golgeyi atip karakterin sinirlarina kirp (ust kisim): saydam olmayan piksellerin kutusu
           for (yy = 0; yy < hh; yy++) for (xx = 0; xx < w; xx++) if (px[(yy * w + xx) * 4 + 3] > 150) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
-        }
-        var pad = 4, cw = Math.max(8, x1 - x0 + 1 + pad * 2), ch = Math.max(8, y1 - y0 + 1 + pad * 2), out = document.createElement('canvas'); out.width = cw; out.height = ch;
-        out.getContext('2d').drawImage(cv, x0 - pad, y0 - pad, cw, ch, 0, 0, cw, ch); url = out.toDataURL('image/png');
-      } catch (e) { url = null; }
-      R.px = o; R.icoMode = oi;
+          var pad = 4, cw = Math.max(8, x1 - x0 + 1 + pad * 2), ch = Math.max(8, y1 - y0 + 1 + pad * 2), out = document.createElement('canvas'); out.width = cw; out.height = ch;
+          out.getContext('2d').drawImage(cv, x0 - pad, y0 - pad, cw, ch, 0, 0, cw, ch); url = out.toDataURL('image/png');
+        } catch (e) { url = null; }
+        R.px = o; R.icoMode = oi;
+      }
       iconCache[key] = url;
     }
     return url ? '<img class="uico' + (ghost ? ' ghost' : '') + '" alt="" src="' + url + '" style="height:' + h + 'px">' : icoBy('unit', id, '');
@@ -132,11 +180,12 @@
   // kadro birimleri ana menu bosken, her biri ayri gorevde pisirilir (haritanin ilk acilisi bunu beklemez, yalnizca hazirsa kazanir).
   UI.prewarmUnits = function () {
     if (UI.unitsWarm || !S.data || !S.data.deck) return; UI.unitsWarm = true;
-    var q = S.data.deck.slice(), i = 0;
+    var un = S.unlockedUnits(), q = S.data.deck.map(function (id) { return [id, false]; }), i = 0;
+    Z.UNIT_ORDER.forEach(function (id) { if (un.indexOf(id) < 0) q.push([id, true]); }); // kilitli birliklerin alt cizimleri de (Ordu sekmesi ilk acilista takilmasin)
     (function next() {
       if (i >= q.length) return;
-      try { UI.unitImg(q[i++], 0, 40); } catch (e) { /* onbellek isitma isteye bagli */ }
-      setTimeout(next, 60);
+      try { UI.unitImg(q[i][0], 0, 40, q[i][1]); } catch (e) { /* onbellek isitma isteye bagli */ }
+      i++; setTimeout(next, 60);
     })();
   };
 
@@ -275,7 +324,8 @@
     html += '<div class="starrow">';
     Z.STAR_MILESTONES.forEach(function (m) {
       var can = S.starClaimable(m), got = d.starClaimed[m.n];
-      html += '<div class="smile' + (can ? ' can' : '') + (got ? ' got' : '') + '"><span class="sn">⭐ ' + m.n + '</span><span>🪙' + m.coins + ' 💎' + m.gems + '</span>' +
+      // oduller alt alta, her biri simge + sayi cifti (icon bir satirda, sayisi sonrakinde kalmaz; tum karolar ayni yukseklikte)
+      html += '<div class="smile' + (can ? ' can' : '') + (got ? ' got' : '') + '"><span class="sn">⭐ ' + m.n + '</span><span class="rw">' + nw('🪙 ' + m.coins) + nw('💎 ' + m.gems) + '</span>' +
         (got ? '<span>✔</span>' : can ? '<button class="btn gold" data-star="' + m.n + ('">' + $t('Al') + '</button>') : '<span class="mut">🔒</span>') + '</div>';
     });
     html += '</div>' + dailyCard(d) + '<div class="mode-row">' +
@@ -314,6 +364,9 @@
     if (d.cleared < N) html += '<div class="flagmark' + (Z.isBoss(upto) ? ' boss' : '') + (upto > 1 && pts[upto - 2][0] > pts[upto - 1][0] ? ' l' : ' r') + '" style="left:' + (pts[upto - 1][0] / 7.2).toFixed(2) + '%;top:' + pts[upto - 1][1] + 'px">' + icoId('ic-mar-pennon', '🚩') + '</div>';
     html += '</div>';
     c.innerHTML = html;
+    // yildiz seridi yatay kayar (10 karo ~1600u): ilk alinmamis (alinabilir / siradaki) karo solda baslasin, sonrakiler kenardan gorunsun (alinmislar geriye kaydirinca)
+    var sr = c.querySelector('.starrow'), nx = sr && sr.querySelector('.smile:not(.got)');
+    if (sr && nx) { var sc3 = UI.game.stage.scale || 1; sr.scrollLeft = Math.max(0, (nx.getBoundingClientRect().left - sr.getBoundingClientRect().left) / sc3 + sr.scrollLeft - 6); }
     // uzun etiketler (Mont-Saint-Michel 1424) harita kenarindan tasmasin: once tum olculer okunur, sonra kaydirma yazilir (tek yerlesim)
     var mt = c.querySelector('#maptrack'), mb = mt.getBoundingClientRect(), labs = mt.querySelectorAll('.nm'), sc2 = UI.game.stage.scale || 1, sh = [], li, lr;
     if (mb.width > 10) {
@@ -396,7 +449,7 @@
       '<p class="small">' + (field ? $t('3 yıldız için ordunun en az %65\'i hayatta kalsın') : $t('3 yıldız için kamp canı %70\'in üstünde kalsın')) + '</p></div>' +
       (bro || hro ? '<div>' + bro + hro + '</div>' : '') +
       ('<div><div class="row-lines"><span>' + $t('Düşman') + ': ') + info.tiers.map(function (u) { return UI.unitImg(u, 1, 52); }).join(' ') + '</span>' +
-      ('<span>' + $t('Ödül') + ': 🪙 ') + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
+      ('<span>' + $t('Ödül') + ': ') + nw('🪙 ' + info.rewardCoins * D.coin + '+') + ' · ' + nw('💎 ' + info.rewardGems) + '</span></div>' +
       ('<p>' + $t('Önerilen birlik seviyesi') + ': <b>') + rec + ('</b> · ' + $t('Senin ortalaman') + ': <b class="') + (ok ? 'ok' : 'bad') + '">' + avg.toFixed(1) + '</b></p>' +
       (ok ? '' : ('<p class="small warn">' + $t('Ordu sekmesinden birliklerini yükseltmek işini kolaylaştırır.') + '</p>')) + '</div></div>' +
       '<p class="deck">' + d.deck.map(function (u) { return UI.unitImg(u, 0, 56); }).join(' ') + '</p>' +
@@ -436,9 +489,9 @@
       html += '<div class="panel ucard' + (locked ? ' locked' : '') + (inDeck ? ' indeck' : '') + '"><div class="big">' + UI.unitImg(id, 0, 84, locked) + '</div><div class="info">' +
         '<h3>' + u.name + (' <span class="lvl">' + $t('Sv.')) + lvl + '</span></h3>' +
         (locked ? '<small>🔒 ' + $t('Bölüm {n} tamamlanınca açılır', { n: Z.UNLOCK_AT[id] }) + '</small>' :
-          '<div class="qz"><small>❤ ' + s.hp + ' · ⚔ ' + s.dmg + ' · 🪙 ' + u.cost + '</small><div class="small">' + u.desc + '</div></div>' +
+          '<div class="qz"><small>' + nw('❤ ' + s.hp) + ' · ' + nw('⚔ ' + s.dmg) + ' · ' + nw('🪙 ' + u.cost) + '</small><div class="small">' + u.desc + '</div></div>' +
           '<div class="row" style="margin-top:10px;gap:10px">' +
-          '<button class="btn small ' + (maxed ? 'off' : gilt(d.coins >= cost)) + '" data-upg="' + id + '">' + (maxed ? $t('MAKS') : '⬆ 🪙 ' + Z.fmt(cost)) + '</button>' +
+          '<button class="btn small ' + (maxed ? 'off' : gilt(d.coins >= cost)) + '" data-upg="' + id + '">' + (maxed ? $t('MAKS') : nw('⬆ 🪙 ' + Z.fmt(cost))) + '</button>' +
           '<button class="btn small ' + (inDeck ? 'green' : '') + '" data-deck="' + id + '">' + (inDeck ? ('✔ ' + $t('Kadroda')) : $t('Kadroya ekle')) + '</button></div>') +
         '</div></div>';
     });
@@ -448,15 +501,15 @@
       html += '<div class="panel ucard' + (sel ? ' indeck' : '') + '"><div class="big">' + UI.heroIco(id, 'L', owned ? 'own' : 'ud') + '</div><div class="info"><h3>' + h.name + (owned ? (' <span class="lvl">' + $t('Sv.')) + lvl + '</span>' : '') + '</h3>' +
         '<div class="qz"><small><b style="color:var(--gold)">' + h.skill + '</b> · ' + h.cd + (' ' + $t('sn') + '</small><div class="small">') + h.desc + '</div></div>' +
         '<div class="row" style="margin-top:10px;gap:10px">' +
-        (owned ? (lvl >= Z.MAX_HERO_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + gilt(d.coins >= cost) + '" data-hup="' + id + '">⬆ 🪙 ' + Z.fmt(cost) + '</button>') +
+        (owned ? (lvl >= Z.MAX_HERO_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + gilt(d.coins >= cost) + '" data-hup="' + id + '">' + nw('⬆ 🪙 ' + Z.fmt(cost)) + '</button>') +
           '<button class="btn small ' + (sel ? 'green' : '') + '" data-hsel="' + id + '">' + (sel ? ('✔ ' + $t('Seçili')) : $t('Seç')) + '</button>'
-          : '<button class="btn small ' + gilt(d.gems >= h.gems) + '" data-hbuy="' + id + '">💎 ' + h.gems + (' ' + $t('ile aç') + '</button>')) +
+          : '<button class="btn small ' + gilt(d.gems >= h.gems) + '" data-hbuy="' + id + '">' + nw('💎 ' + h.gems) + (' ' + $t('ile aç') + '</button>')) +
         '</div></div></div>';
     });
     var cc = Z.castleUpgradeCost(d.castleLvl); gt = 0;
     html += ('</div><div class="sect">' + $t('Kamp') + '</div><div class="panel ucard"><div class="big">🏕️</div><div class="info"><h3>' + $t('Kamp Tahkimatı') + ' <span class="lvl">' + $t('Sv.')) + d.castleLvl + '</span></h3>' +
-      ('<div class="qz"><small>' + $t('Kamp canı') + ': ❤ ') + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1) + '</small></div></div>' +
-      (d.castleLvl >= Z.MAX_CASTLE_LVL ? ('<button class="btn off">' + $t('MAKS') + '</button>') : '<button class="btn ' + gilt(d.coins >= cc) + '" data-castle="1">⬆ 🪙 ' + Z.fmt(cc) + '</button>') + '</div>';
+      ('<div class="qz"><small>' + $t('Kamp canı') + ': ') + nw('❤ ' + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1)) + '</small></div></div>' +
+      (d.castleLvl >= Z.MAX_CASTLE_LVL ? ('<button class="btn off">' + $t('MAKS') + '</button>') : '<button class="btn ' + gilt(d.coins >= cc) + '" data-castle="1">' + nw('⬆ 🪙 ' + Z.fmt(cc)) + '</button>') + '</div>';
     c.innerHTML = zi(html);
   }
 
@@ -469,11 +522,12 @@
       '<div class="bar green"><i id="vault-bar" style="width:' + Math.min(100, 100 * pend / cap) + '%"></i></div>' +
       '<small id="vault-sub">' + $t('Saatte {rate} altın · en çok {h} saat birikir', { rate: Z.fmt(Z.treasuryRate(d.treasuryLvl, d.cleared)), h: Z.TREASURY_CAP_H }) + (S.treasuryFull() ? (' · <b style="color:var(--red)">' + $t('DOLU!</b>')) : '') + '</small></div>' +
       ('<div style="display:flex;flex-direction:column;gap:10px"><button class="btn gold" data-collect="1" id="vault-btn">' + $t('Topla') + '</button>') +
-      (d.treasuryLvl >= Z.MAX_TREASURY_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + (d.coins >= uc ? '' : 'off') + ('" data-tup="1">⬆ ' + $t('Sv.')) + d.treasuryLvl + ' · 🪙 ' + Z.fmt(uc) + '</button>') + '</div></div></div>';
+      (d.treasuryLvl >= Z.MAX_TREASURY_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + (d.coins >= uc ? '' : 'off') + ('" data-tup="1">⬆ ' + $t('Sv.')) + d.treasuryLvl + ' · ' + nw('🪙 ' + Z.fmt(uc)) + '</button>') + '</div></div></div>';
     var free = S.wheelFree(), wl = '', gm = 0;
-    // cark dilimlerinin renkleri theme.css .wheel'de (palet jetonlari); etiket dilimle doner ama kendi ekseninde geri doner: sayilar hep dik okunur
+    // cark dilimlerinin renkleri theme.css .wheel'de (palet jetonlari); etiket dilimle doner ama kendi ekseninde geri doner: sayilar hep dik okunur.
+    // Dilim i, i*45 derecede ORTALANIR (gradyanlar -22.5deg'den baslar): isaretci dururken de bir dilimin ortasini gosterir, sinirini degil
     Z.WHEEL.forEach(function (sg, i) {
-      var a = i * 45 + 22.5;
+      var a = i * 45;
       wl += '<span style="transform:rotate(' + a + 'deg) translateY(-104px) rotate(' + (-a) + 'deg)">' + (sg.gems ? '💎' + sg.gems : '🪙' + sg.coins) + '</span>';
     });
     html += ('<div class="sect">' + $t('Şans Çarkı') + '</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">' + icoBy('ui', 'wheelPointer', '▼') + '</div>') +
@@ -482,7 +536,7 @@
       '<button class="btn gold" data-spin="1" id="spin-btn">' + (free ? ('🎡 ' + $t('Bedava Çevir')) : ('🎡 ' + $t('Çevir') + ' · ') + Z.WHEEL_COST + ' 💎') + '</button></div></div></div>';
     html += ('<div class="sect">' + $t('Pazar') + '</div>');
     Z.MARKET.forEach(function (m) {
-      html += '<div class="panel mrow"><span class="big">' + UI.marketIco(m) + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? (gm++ ? '' : 'gold') : 'off') + '" data-buy="' + m.id + '">💎 ' + m.gems + '</button></div>';
+      html += '<div class="panel mrow"><span class="big">' + UI.marketIco(m) + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? (gm++ ? '' : 'gold') : 'off') + '" data-buy="' + m.id + '">' + nw('💎 ' + m.gems) + '</button></div>';
     });
     html += ('<div class="sect">' + $t('Günlük Giriş Ödülü') + '</div><div class="panel"><div class="daily">');
     var idx = S.dailyIndex();
@@ -508,15 +562,15 @@
     // ucretsiz oduller
     html += '<div class="sect">🎁 ' + $t('Ücretsiz Ödüller') + '</div><div class="panel shop-free">';
     var can = M.canRewarded(), left = M.rewardedLeft();
-    html += '<div class="free-row"><button class="btn gold shopbtn' + (can ? '' : ' soft') + '" data-ad="gems"><span>🎬</span> +' + cfgA.rewardedGems + ' 💎</button>' +
-      '<button class="btn shopbtn' + (can ? '' : ' soft') + '" data-ad="coins"><span>🎬</span> +' + cfgA.rewardedCoins + ' 🪙</button></div>' +
+    html += '<div class="free-row"><button class="btn gold shopbtn' + (can ? '' : ' soft') + '" data-ad="gems"><span>🎬</span> ' + nw('+' + cfgA.rewardedGems + ' 💎') + '</button>' +
+      '<button class="btn shopbtn' + (can ? '' : ' soft') + '" data-ad="coins"><span>🎬</span> ' + nw('+' + cfgA.rewardedCoins + ' 🪙') + '</button></div>' +
       '<p class="small" style="margin:8px 0 0">' + (M.adsOn() ? ($t('Bugün kalan') + ': <b>' + left + ' / ' + cfgA.rewardedPerDay + '</b> · ' + $t('Kısa bir reklam izle, ödülü kap.')) : $t('Reklam ödülleri yakında.')) + '</p></div>';
     // elmas paketleri
     html += '<div class="sect">💎 ' + $t('Elmas Paketleri') + '</div><div class="shop-grid">';
     var gi = 0;
     Z.MONEY.products.forEach(function (p) {
       if (p.type !== 'gems') return;
-      html += '<div class="panel pack"><span class="pk-ico">' + UI.packIco(gi, 'pk' + (gi++ % 5)) + '</span><b class="pk-gems">' + Z.fmt(p.gems) + ' 💎</b>' +
+      html += '<div class="panel pack"><span class="pk-ico">' + UI.packIco(gi, 'pk' + (gi++ % 5)) + '</span><b class="pk-gems">' + nw(Z.fmt(p.gems) + ' 💎') + '</b>' +
         (p.badge ? '<span class="pk-badge">' + p.badge + '</span>' : '') +
         '<button class="btn small gold' + (M.iapOn() ? '' : ' soft') + '" data-iap="' + p.id + '">' + (M.iapOn() ? M.price(p) : $t('Yakında')) + '</button></div>';
     });
@@ -526,7 +580,7 @@
     Z.MONEY.products.forEach(function (p) {
       if (p.type === 'gems') return;
       var owned = M.owned(p), title = p.type === 'starter' ? ('🎖️ ' + $t('Başlangıç Paketi')) : ('🚫 ' + $t('Reklamları Kaldır'));
-      var desc = p.type === 'starter' ? (p.gems + ' 💎 + ' + Z.fmt(p.coins) + ' 🪙 · ' + $t('tek seferlik')) : $t('Geçiş reklamları ve banner kalkar. Ödüllü reklamlar isteğe bağlı kalır.');
+      var desc = p.type === 'starter' ? (nw(p.gems + ' 💎') + ' + ' + nw(Z.fmt(p.coins) + ' 🪙') + ' · ' + $t('tek seferlik')) : $t('Geçiş reklamları ve banner kalkar. Ödüllü reklamlar isteğe bağlı kalır.');
       html += '<div class="panel offer"><div class="grow"><h3>' + title + '</h3><small>' + desc + '</small></div><button class="btn small ' + (owned ? 'off' : 'gold') + (!owned && !M.iapOn() ? ' soft' : '') + '" data-iap="' + p.id + '">' + (owned ? '✔ ' + $t('Alındı') : (M.iapOn() ? M.price(p) : $t('Yakında'))) + '</button></div>';
     });
     // diger
@@ -543,8 +597,8 @@
     var d = S.data, html = ('<h2>' + $t('Günlük Görevler') + '</h2>');
     function qrow(q, i, kind) {
       var def = S.questDef(q.id), done = q.prog >= def.target;
-      return '<div class="panel quest ' + kind + '" data-kind="' + kind + '"><div class="grow" style="flex:1"><h3>' + def.text + '</h3>' +
-        '<div class="bar' + (done ? ' green' : '') + '"><i style="width:' + (100 * q.prog / def.target) + '%"></i></div><small>' + ($t('Ödül') + ': 🪙 ') + def.coins + ' 💎 ' + def.gems + '</small></div>' +
+      return '<div class="panel quest ' + kind + '" data-kind="' + kind + '"><div class="grow" style="flex:1"><h3>' + battleTxt(def.text) + '</h3>' +
+        '<div class="bar' + (done ? ' green' : '') + '"><i style="width:' + (100 * q.prog / def.target) + '%"></i></div><small>' + $t('Ödül') + ': ' + nw('🪙 ' + def.coins) + ' ' + nw('💎 ' + def.gems) + '</small></div>' +
         // bos (underdrawn) yuva: ilerleme sayisi kesikli kutuda ("…" yer tutucusu yok); alinabilir = yaldiz, alindi = kesikli tik
         (q.claimed || done ? '<button class="btn ' + (q.claimed ? 'off' : 'gold') + '" data-quest="' + i + '" data-weekly="' + (kind === 'weekly' ? 1 : 0) + '">' + (q.claimed ? ('✔ ' + $t('Alındı')) : $t('Al')) + '</button>' : '<span class="btn off qcount">' + q.prog + '/' + def.target + '</span>') + '</div>';
     }
@@ -558,7 +612,7 @@
     html += ('<div class="sect">' + $t('Başarımlar') + '</div>');
     achs.forEach(function (a) {
       var got = d.achClaimed[a.id], can = S.achClaimable(a), pr = S.achProgress(a);
-      html += '<div class="panel ach' + (got ? ' claimed' : '') + '"><div class="grow"><h3>' + a.text + '</h3><div class="bar' + (can || got ? ' green' : '') + '"><i style="width:' + (100 * pr / a.target) + '%"></i></div><small>' + Z.fmt(pr) + ' / ' + Z.fmt(a.target) + ('  ·  ' + $t('Ödül') + ': 💎 ') + a.gems + '</small></div>' +
+      html += '<div class="panel ach' + (got ? ' claimed' : '') + '"><div class="grow"><h3>' + battleTxt(a.text) + '</h3><div class="bar' + (can || got ? ' green' : '') + '"><i style="width:' + (100 * pr / a.target) + '%"></i></div><small>' + Z.fmt(pr) + ' / ' + Z.fmt(a.target) + ('  ·  ' + $t('Ödül') + ': ') + nw('💎 ' + a.gems) + '</small></div>' +
         (got || can ? '<button class="btn ' + (got ? 'off' : 'gold') + '" data-ach="' + a.id + '">' + (got ? '✔' : $t('Al')) + '</button>' : '') + '</div>'; // alinabilir / alinmis disinda bos yuva cizilmez
     });
     html += ('<div class="sect">' + $t('İstatistikler') + '</div><div class="panel"><table class="tbl">') +
@@ -593,7 +647,7 @@
       if (!S.wheelFree() && d.gems < Z.WHEEL_COST) { A.deny(); return UI.needGems(Z.WHEEL_COST); }
       var res = S.spin(); if (!res) { A.deny(); return UI.toast($t('Yeterli elmas yok')); }
       UI.spinning = true; A.chest();
-      var wheel = $('wheel'), turn = 360 * 6 + (360 - (res.idx * 45 + 22.5));
+      var wheel = $('wheel'), turn = 360 * 6 + (360 - res.idx * 45);
       wheel.style.transition = 'transform 3.4s cubic-bezier(.12,.7,.15,1)'; wheel.style.transform = 'rotate(' + turn + 'deg)';
       setTimeout(function () {
         UI.spinning = false; A.win();
@@ -831,7 +885,7 @@
       };
     } else {
       html = ('<h1>' + $t('Yenilgi') + '</h1><p>') + (b.kind === 'field' ? (b.cmdP.dead || b.cmdP.hp <= 0 ? $t('Komutanın düştü! Onu arkada, korunaklı tut.') : $t('Süre doldu ya da bayraklar kaybedildi. Dizilişini değiştirip tekrar dene!')) : $t('Kampın düştü. Ordunu güçlendirip tekrar dene!')) + '</p>' +
-        '<div class="rewards"><span class="coin">🪙 ' + out.coins + ('</span></div><p class="small">' + $t('İpucu: Düşman birliklerine karşı üstün olanı çağır (🔱 > 🐎 > 🏹 > 🔱).') + '</p>');
+        '<div class="rewards"><span class="coin">🪙 ' + out.coins + ('</span></div><p class="small">' + $t('İpucu: Düşman birliklerine karşı üstün olanı çağır (🔱 > 🐎 > 🏹 > 🔱).').replace(/[(\uFF08][^()\uFF08\uFF09<]*>[^()\uFF08\uFF09<]*[)\uFF09]/, nw) + '</p>'); // ustunluk zinciri tek parca: satir "[simge]" ile biter, ">" ve sonraki simge alt satira dusmez (zh tam genislikte parantez)
     }
     if (M.canRewarded()) {
       if (r.win && !isE && Z.MONEY.ads.doubleWinReward && base > 0) html += '<div class="actions"><button id="btn-dbl" class="btn gold small" data-act="dbl">🎬 ' + $t('Ödülü ×2 yap') + ' (+' + base + ' 🪙)</button></div>';
@@ -931,7 +985,7 @@
     var L = hud.last, set = function (k, v, fn) { if (L[k] !== v) { L[k] = v; fn(v); } }, prep = b.phase === 'prep';
     set('g', Math.floor(b.gold), function (v) { $('gold-val').textContent = v; });
     set('cap', prep ? b.budget0 : b.goldCap(), function (v) { $('gold-cap').textContent = '/' + v; });
-    set('rate', prep ? -1 : b.income(), function (v) { $('gold-rate').textContent = v < 0 ? $t('komuta puanı') : '+' + (Math.round(v * 10) / 10) + ('/' + $t('sn')); });
+    set('rate', prep ? -1 : b.income(), function (v) { $('gold-rate').textContent = v < 0 ? $t('puan') : '+' + (Math.round(v * 10) / 10) + ('/' + $t('sn')); });
     b.deck.forEach(function (id) {
       var cd = b.cooldown[id], def = Z.UNITS[id], c = hud.cards[id], f = Math.round(100 * cd / def.cd) / 100;
       set('cd' + id, f, function (v) { c.cd.style.transform = 'scaleY(' + v + ')'; });

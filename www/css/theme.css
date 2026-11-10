@@ -28,7 +28,7 @@
   --grain:none;--frame:none;--ivy:none;--chequy-enemy:none;--chequy-host:none;
 }
 /* --s sahne olceginin kendisidir (main.js, #stage uzerinde satir ici): --hit = 44 css px'in mantiksal birim karsiligi */
-#stage{--hit:calc(44px/var(--s,.55));background:var(--bg)}
+#stage{--hit:calc(44px/var(--s,.55));--rdmin:calc(19px/var(--s,.55));background:var(--bg)}
 html,body{background:var(--bg)}
 body{font:600 26px/1.3 var(--f-body)}
 :lang(zh),:lang(zh) *{letter-spacing:0!important}
@@ -43,15 +43,24 @@ body{font:600 26px/1.3 var(--f-body)}
 
 /* ---------- ikonlar: Z.ico() ve ic-* sprite (js/icons.js); stil sprite'in kendi <style>'inda ---------- */
 .i{width:1em;height:1em;display:inline-block;vertical-align:-.14em;overflow:visible}
+/* hediye sandigi (ui.js icoId/zi: ic-cur-coffer, -open, ic-nav-coffer otomatik .gift alir): tinktur kurali (S2) - lapis zeminde lapis kapak batiyordu (1.36:1, yalniz murekkep
+   kontur tasiyordu) -> mavi / gece zeminde zincifre kapak (--verm) + koyu kirmizi golge (--mad); altin, zincifre ve parsomen zeminlerde asil lapis sandik (mavi kirmizi / altin uzerinde okunur).
+   .i.ud'den ONCE: bos (underdrawn) durum her zaman kazanir. */
+.i.gift{--c1:var(--verm);--c2:var(--mad)}
+.chip.gold .i.gift,.btn.gold .i.gift,.tab.active .i.gift,.pack .i.gift,.offer .i.gift{--c1:var(--lapis);--c2:var(--lapisd)}
+/* icon + sayi cifti satir sonunda ayrilmaz (yetim simge / yetim sayi yok) */
+.nw{white-space:nowrap}
+/* yuvarlak muhur simgeleri (ui.js .rd: ic-act / ic-rule / ic-perk) hicbir yerde 19 css px'in altina inmez (satir ici 1.25em = 15-17 css px'ti: garb, kilit, kum saati, hedef secilemiyordu); --rdmin = 19 css px'in mantiksal birimi */
+.i.rd{min-width:var(--rdmin);min-height:var(--rdmin)}
 /* bos (underdrawn) durum = Z.Icons.ud: ince kesik --ud cizgi, dolgu ve ayrinti yok (kilitli dugum, bos yildiz, sahipsiz birlik).
    Acik sinif (.ud, ui.js icoId(...,'ud')) ya da durum: kapali / karsilanamayan dugme, kilitli birlik karti, alinmis basarim, gelecek gun, kilitli yildiz odulu, bos hazirlik karti, kapali Gunluk Sefer karti */
-.i.ud,.btn.off .i,.btn.soft .i,.btn[disabled] .i,#btn-mine.off .i,.bchip.none .i,.ucard.locked .i,.ach.claimed .i,.day:not(.today):not(.got) .i,.smile:not(.can):not(.got) .i,.daily-card.off .i{--c1:none;--c2:none;--c3:none;--f1:none;--f2:none;--k1:none;--k2:none;--ink:var(--ud);--il:none;--tk:none;--sw:1.6;--sj:1;--dash:2 3.6}
+.i.ud,.btn.off .i,.btn.soft .i,.btn[disabled] .i,#btn-mine.off .i,.bchip.none .i,.ucard.locked .i,.ach.claimed .i,.day:not(.today):not(.got) .i,.smile:not(.can):not(.got) .i,.daily-card.off .i,.card.poor .c-cost .i{--c1:none;--c2:none;--c3:none;--f1:none;--f2:none;--k1:none;--k2:none;--ink:var(--ud);--il:none;--tk:none;--sw:1.6;--sj:1;--dash:2 3.6}
 /* sahip olunan kahraman kalkani = turuncu bordur (--f2; ic-hero-* kalkan konteyneri) */
 .i.own{--f2:var(--orp)}
 .ico{display:inline-flex;color:var(--orp)}
 .ico.gem{color:var(--vdg)}
 .ico .i{width:1.05em;height:1.05em}
-.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none;-webkit-user-select:none;user-select:none}/* gorunmez test ikizi: secilip kopyalanamaz */
 
 /* ---------- yazi ---------- */
 h2{font:700 38px/1.1 var(--f-rub);font-variant-numeric:lining-nums;color:var(--ivo);text-shadow:0 3px 0 var(--ink)}
@@ -177,6 +186,9 @@ textarea{font-size:22px;padding:12px}
 .curr.plus{min-height:var(--hit)}
 #home-cur .curr{min-height:var(--hit);padding-top:6px;padding-bottom:6px}
 .curr.plus i{background:var(--mal);color:var(--ivo);border:3px solid var(--ink);border-radius:var(--r4);font-family:var(--f-num)}
+/* "+" yazisi yerine arma haci (ic-chg-cross-pattee: altin, ucu acik kollu haç = "elmas ekle"); yazilmis duz "+" isareti heraldik degildi */
+.curr.plus i{width:40px;height:40px}
+.curr.plus i .i{width:32px;height:32px;flex:none}
 .hbtn,.fbtn,.tab,.diff,.lang-btn,.bchip,.smile .btn,.ach .btn,#btn-home,#home-settings,.btn.small{min-width:var(--hit);min-height:var(--hit)}
 .hbtn:active,.fbtn:active{transform:translateY(3px);box-shadow:none}
 
@@ -243,6 +255,8 @@ textarea{font-size:22px;padding:12px}
 .tab.active span{color:var(--ink)}
 .tab .dot{top:6px;right:calc(50% - 44px)}
 .smile{background:none;border:3px dashed var(--ud);border-radius:var(--r2);color:var(--ud);font:700 22px/1.15 var(--f-body)}
+/* oduller alt alta (altin / elmas), her biri simge + sayi cifti: 20000 altin gibi 5 haneli sayilar da simgesinden ayrilmaz */
+.smile .rw{display:flex;flex-direction:column;align-items:center}
 /* alinabilir yildiz odulu: yuzey gouache + 4u yaldiz halka (altin butcesi <= %15), asil yaldiz yuzey icindeki "Al" dugmesi */
 .smile.can{background:var(--lapisd);color:var(--ivo);border:4px solid var(--orp);box-shadow:inset 0 0 0 3px var(--ink),var(--sh4)}
 .smile.got{background:var(--lapisd);color:var(--ivo);border:3px solid var(--ink);box-shadow:var(--sh4)}
@@ -352,7 +366,8 @@ textarea{font-size:22px;padding:12px}
 /* ---------- ordu / hazine / magaza / gorevler ---------- */
 .ucard .info h3{font-size:26px}
 .ucard small,.ucard .small:not(.btn){color:var(--ivo)}
-.wheel{border:6px solid var(--ink);box-shadow:0 0 0 6px var(--leaf),0 0 0 10px var(--ink);background:repeating-conic-gradient(var(--ink) 0 2deg,#0000 2deg 45deg),conic-gradient(var(--lapis) 0 45deg,var(--mad) 45deg 90deg,var(--mal) 90deg 135deg,var(--pur) 135deg 180deg,var(--lapis) 180deg 225deg,var(--mad) 225deg 270deg,var(--mal) 270deg 315deg,var(--pur) 315deg 360deg)}
+/* dilim i, i*45 derecede ortali (ui.js renderVault): gradyanlar -22.5deg'den baslar, isaretci (tepe) durma halinde de bir dilimin ortasini gosterir */
+.wheel{border:6px solid var(--ink);box-shadow:0 0 0 6px var(--leaf),0 0 0 10px var(--ink);background:repeating-conic-gradient(from -22.5deg,var(--ink) 0 2deg,#0000 2deg 45deg),conic-gradient(from -22.5deg,var(--lapis) 0 45deg,var(--mad) 45deg 90deg,var(--mal) 90deg 135deg,var(--pur) 135deg 180deg,var(--lapis) 180deg 225deg,var(--mad) 225deg 270deg,var(--mal) 270deg 315deg,var(--pur) 315deg 360deg)}
 .wheel span{color:var(--ivo);text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink)}
 .wheel-ptr{color:var(--orp);text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),0 5px 0 var(--ink)}
 .wheel-hub{background:var(--orp);border:4px solid var(--ink);box-shadow:var(--gilt)}
@@ -483,9 +498,9 @@ textarea{font-size:22px;padding:12px}
 .modal .actions .btn.gold.primary{background:var(--leaf-g);box-shadow:var(--gilt),var(--sh5)}
 .modal .actions .btn.gold.off{background:none}
 .modal .row-lines .uico{margin:0 -4px}
-/* brifing: dusman frizi = verm/ivo chequy bandi, kendi kadron = lapis/orp chequy kaide (bible 8); karolar dogal boyutunda (24u) */
+/* brifing: dusman frizi = verm/ivo chequy bandi, kendi kadron = lapis/orp chequy kaide (bible 8); karolar dogal boyutunda (24u), desen ortalanir (yarim karo iki uca esit dagilir, tek uc kirik kalmaz) */
 .row-lines>span:first-child{position:relative;padding-bottom:34px}
-.row-lines>span:first-child::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:24px;background:var(--chequy-enemy) 0 0/24px 24px;box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink);pointer-events:none}
+.row-lines>span:first-child::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:24px;background:var(--chequy-enemy) 50% 0/24px 24px;box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink);pointer-events:none}
 .modal .deck{margin:4px 0}
 .modal .deck .uico{box-sizing:content-box;border-bottom:12px solid transparent;border-image:var(--chequy-host) 0 0 24 0/0 0 12px 0 round}
 #toast{padding:12px 26px;font-size:25px;line-height:1.25;border-radius:var(--r4);box-shadow:var(--sh4);animation:toastin .2s ease-out}
@@ -529,18 +544,18 @@ textarea{font-size:22px;padding:12px}
 
 /* birlik simgeleri = oyundaki gercek karakter cizimi (sprite) */
 .uico{width:auto;max-width:84px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none}
-.ucard .big .uico{max-width:88px;max-height:100%}
+.ucard .big .uico{max-width:88px;max-height:100%;object-fit:contain}/* kutu kenetli ama resim orani bozulmaz (dogal oran, nis genisligine sigar) */
 .row-lines .uico{margin:0 -6px}
 
 /* ---------- ikon yerlesimi (ui.js UI.ico/UI.setIco/Z.ico ve index.html simgeleri): boyut sinifi + hizalama ----------
    S (<= 24u metin) >= 28u = ~16 css px: metin icinde 1.25em; M 44-64u: kart / dugme / HUD; L 96-128u: kasa, kahraman, paket, ganimet. vertical-align yalniz satir ici (flex ogelerde yok sayilir). */
-.btn .i,.chip .i,.badge .i,.modal p .i,.qz .i,.qp .i,.small .i,small .i,.toggle .i,.slider .i,.row-lines .i,.new-list .i,#toast .i,#tut-text .i,.rule-box .i,.tbl .i,#hint .i{width:1.25em;height:1.25em;vertical-align:-.3em}
+.btn .i,.chip .i,.badge .i,.modal p .i,.qz .i,.qp .i,.small .i,small .i,h3 .i,.toggle .i,.slider .i,.row-lines .i,.new-list .i,#toast .i,#tut-text .i,.rule-box .i,.tbl .i,#hint .i{width:1.25em;height:1.25em;vertical-align:-.3em}
 .btn .i{margin:-.1em 0}
 .sect .i{width:1.05em;height:1.05em;vertical-align:-.16em}
 .modal h1 .i{width:1.05em;height:1.05em;vertical-align:-.14em}
 .rewards .i{width:1.05em;height:1.05em;vertical-align:-.16em}
 .big-stars .i{width:1em;height:1em;vertical-align:-.14em}/* yildiz satiri (54u brifing / 84u sonuc) .qz .i buyutmesinden etkilenmez */
-.rule-box b .i{width:1.6em;height:1.6em;vertical-align:-.5em;margin:-.2em 4px -.2em 0}
+.rule-box b .i{width:1.6em;height:1.6em;vertical-align:-.25em;margin:-.2em 4px -.2em 0}/* muhur merkezi = baslik yuksekligi ortasi (0.35em): -.5em 3.5 css px asagi oturuyordu */
 .realm small .i{width:1.2em;height:1.2em;vertical-align:-.28em}
 .smile .i{width:1.3em;height:1.3em;vertical-align:-.3em}
 .hbig #hb-main .i{width:.95em;height:.95em;vertical-align:-.1em;margin-right:6px}
@@ -549,20 +564,28 @@ textarea{font-size:22px;padding:12px}
 .hbtn .i{width:64px;height:64px}
 #btn-mine .ico .i{width:46px;height:46px}
 .fbtn .i{width:46px;height:46px}
-#info-title .i,#rule-chip .i,#obj-chip .i,#combo-chip .i{width:30px;height:30px;vertical-align:-8px}
+#info-title .i,#combo-chip .i{width:30px;height:30px;vertical-align:-8px}
+/* kural / hedef rozetleri = yuvarlak muhur (ic-rule-*, ic-act-shield): yuvarlagin sembolu kutunun ~17/32'si; 30u'da (17 css px) cop gibi okunuyordu (garb/kitlik, boru/toplanma, ruzgar, hancer) -> 40u (22 css px @412, 20 @360) */
+#rule-chip .i,#obj-chip .i{width:40px;height:40px;vertical-align:-12px}
 #rule-chip .i+.i{margin-left:4px}
-#perk-row i .i{width:36px;height:36px}
+/* secilen ganimet simgeleri: 54u kutu icinde 46u muhur (style.css 48u kutu 36u muhur 20 css px'ti) */
+#perk-row i{width:54px;height:54px}
+#perk-row i .i{width:46px;height:46px;flex:none}
 .card .c-cost .i{width:1.15em;height:1.15em;vertical-align:-.2em}
 .card.skill .c-ico .i{width:52px;height:52px}
 .drag-ghost .i{width:1.25em;height:1.25em}
 /* ana ekran / harita / ordu / hazine / magaza / gorevler */
 .mode-card .big .i{width:56px;height:56px}
 .daily-card .big .i{width:60px;height:60px}
-.mode-card .deckrow{display:flex;align-items:flex-end;flex-wrap:nowrap;gap:2px;margin-top:2px}
-.deckrow .uico{height:42px!important;max-width:34px}
+/* savas ordusu sirasi: portre ayni oranla (genislik = yukseklik x dogal oran); sira tasarsa portreler ORANTILI kuculur (flex-shrink + object-fit:contain, ayaklar tabanda) - genislik kenetlemesi golem/mancinigi kutuya sikistirip kucuk gosteriyordu */
+.mode-card>div{min-width:0}
+.mode-card .deckrow{display:flex;align-items:flex-end;flex-wrap:nowrap;gap:2px;margin-top:2px;min-width:0}
+.deckrow .uico{height:42px!important;width:auto;max-width:none;min-width:0;flex:0 1 auto;object-fit:contain;object-position:50% 100%}
 .deckrow .i{width:40px;height:40px;margin-left:6px;flex:none}
 .ucard .big .i{width:104px;height:104px}
-.ucard .big .i.ud{--ud:var(--ink2)}/* sahipsiz kahraman kalkani altin kovuk uzerinde: --vel2 cizgisi kaybolur, murekkep tonu okunur */
+/* sahipsiz kahraman kalkani altin kovuk uzerinde: --vel2 cizgisi kaybolur -> murekkep tonu; kesik cizgi (2 3.6) kovugun altin noktalariyla karisip benek gibi okunuyordu -> ince DUZ kontur
+   (kilitli birliklerin alt cizimi de duz ince --ink2 cizgi: ayni sekmede tek "bos" dili: dolgu yok, yalniz kontur) */
+.ucard .big .i.ud{--ud:var(--ink2);--dash:none;--sw:2.2;--sj:1.2}
 .ucard small .i{width:1.25em;height:1.25em;vertical-align:-.3em}
 .vault-ico{display:flex;flex:none}
 .vault-ico .i{width:112px;height:112px}
@@ -574,10 +597,10 @@ textarea{font-size:22px;padding:12px}
 .shop-free .shopbtn span .i{width:48px;height:48px;vertical-align:middle}
 .pk-ico{display:flex;align-items:center;justify-content:center;height:112px}
 .pk-ico .i{width:84px;height:84px}
-.pk-ico .i.pk1{width:90px;height:90px}
-.pk-ico .i.pk2{width:98px;height:98px}
-.pk-ico .i.pk3{width:106px;height:106px}
-.pk-ico .i.pk4{width:112px;height:112px}
+.pk-ico .i.pk4{width:112px;height:112px}/* en buyuk paket: elmasli tac (by.pack[4]) */
+/* elmas yigini (ui.js UI.packIco): 128x112u kutuda mutlak konumlu kabosyonlar; her birinin kutusu satir ici stilde */
+.pk-ico .gc{position:relative;display:block;width:128px;height:112px;flex:none}
+.pk-ico .gc .i{position:absolute}
 .pk-gems .i{width:1.1em;height:1.1em;vertical-align:-.2em}
 .perk .p-ico{display:flex;flex:none;width:76px;height:76px;align-items:center;justify-content:center}
 .perk .p-ico .i{width:72px;height:72px}
