@@ -2,8 +2,18 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const out = process.argv[2] || path.join(__dirname, '..', 'shots'); require('fs').mkdirSync(out, { recursive: true });
-const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
+// file:// altinda Chromium, sayfa yenilenince yerel depolamayi bazen sifirliyor (dil degisimi testi dalgali kaliyordu); gercek cihazda uygulama https://localhost uzerinden calisir.
+// Bu yuzden www/ klasorunu kucuk bir yerel HTTP sunucusuyla (localhost: service worker kaydi yok) sunariz.
+const http = require('http'), fs = require('fs'), root = path.join(__dirname, '..', 'www');
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.json': 'application/json' };
+const server = http.createServer((req, res) => {
+  let f = path.join(root, decodeURIComponent(req.url.split('?')[0])); if (f.endsWith(path.sep) || f === root) f = path.join(f, 'index.html');
+  if (!f.startsWith(root)) { res.writeHead(403); return res.end(); }
+  fs.readFile(f, (e, b) => { if (e) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); res.end(b); });
+});
+let url = '';
 (async () => {
+  await new Promise(r => server.listen(0, '127.0.0.1', r)); url = 'http://localhost:' + server.address().port + '/index.html';
   const browser = await chromium.launch(); const errors = [];
   const stars = {}; for (let i = 1; i <= 30; i++) stars[i] = 2;
   const save = (st) => JSON.stringify({ v: 1, tutorialDone: true, tutorialDone2: true, fieldTutDone: true, langChosen: true, seenVersion: '0.10', cleared: 30, coins: 3000, gems: 50, stars: st, stats: { totalStars: 60, wins: 30 }, daily: { lastDay: new Date().toISOString().slice(0, 10), claimedToday: true, streak: 1 } });
@@ -21,7 +31,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
     check(await p.evaluate(() => Z.lang === 'es'), 'Cihaz dili İspanyolca → oyun İspanyolca açıldı');
     check(await p.locator('.modal h1').first().innerText().then(t => /Bienvenido|Welcome|Hoş|Добро/i.test(t) || t.length > 3) && await p.evaluate(() => !document.getElementById('home').classList.contains('hidden') && !document.querySelector('.lang-btn')), 'İlk açılışta dil ekranı yok: ana menü + (cihaz dilinde) karşılama'); await shot(p, 'v08-01-ilk-acilis');
     await p.evaluate(() => { Z.UI.closeModal(); Z.UI.settingsModal(); }); await p.waitForTimeout(250); await p.click('[data-act="lang"]'); await p.waitForTimeout(250);
-    await p.click('[data-act="l_ru"]'); await p.waitForFunction(() => Z.ready && Z.lang === 'ru'); await p.waitForTimeout(800);
+    await Promise.all([p.waitForNavigation(), p.click('[data-act="l_ru"]')]); await p.waitForFunction(() => globalThis.Z && Z.ready && Z.lang === 'ru'); await p.waitForTimeout(800);
     check(await p.evaluate(() => Z.lang === 'ru' && localStorage.getItem('sefervakti.lang') === 'ru' && Z.Save.data.langChosen === true), 'Rusça seçildi, sayfa yenilendi, tercih kalıcı');
     check(/[А-Яа-я]/.test(await p.locator('.modal h1').first().innerText()), 'Karşılama penceresi Rusça'); await ctx.close(); }
 
@@ -43,7 +53,7 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
   // --- 3) dil degistirme (Ayarlar)
   { const { ctx, p } = await open({ lang: 'tr' });
     await p.evaluate(() => Z.UI.settingsModal()); await p.waitForTimeout(200); await p.click('[data-act="lang"]'); await p.waitForTimeout(200);
-    check(await p.locator('.lang-btn').count() === 6, 'Dil penceresinde 6 dil var'); await p.click('[data-act="l_en"]'); await p.waitForFunction(() => Z.ready && Z.lang === 'en'); await p.waitForTimeout(600);
+    check(await p.locator('.lang-btn').count() === 6, 'Dil penceresinde 6 dil var'); await Promise.all([p.waitForNavigation(), p.click('[data-act="l_en"]')]); await p.waitForFunction(() => globalThis.Z && Z.ready && Z.lang === 'en'); await p.waitForTimeout(600);
     check(/Army/.test(await p.locator('#home').innerText()) && !/Ordu/.test(await p.locator('#home').innerText()), 'İngilizce seçince ana menü İngilizce');
     await p.evaluate(() => Z.Game.startBattle('campaign', 6)); await p.waitForTimeout(900); const hud = await p.locator('#hud').innerText(); check(/Mine|Lv|Upgrade/i.test(hud) || hud.length > 5, 'Savaş HUD İngilizce'); await ctx.close(); }
 
@@ -89,5 +99,5 @@ const url = 'file://' + path.join(__dirname, '..', 'www', 'index.html');
     check(true, 'Yeni sesler (diyar ortamı, pad, gem/reward) hatasız çalıştı'); await ctx.close(); }
 
   if (errors.length) { console.log('HATALAR:\n' + errors.join('\n')); process.exitCode = 1; } else console.log('Tüm kontroller geçti');
-  await browser.close();
+  await browser.close(); server.close();
 })();
