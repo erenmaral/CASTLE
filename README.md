@@ -17,7 +17,7 @@ Her `push` sonrası GitHub Actions otomatik APK derler:
 Tüm sürümler aynı anahtarla imzalandığı için yeni APK eskisinin **üzerine kurulur, kayıtlarınız silinmez**.
 
 ## Tarayıcıda oyna (APK gerekmez)
-Oyun GitHub Pages'te yayınlanır: **https://erenmaral.github.io/erenmaral/**
+Oyun GitHub Pages'te yayınlanır: **https://erenmaral.github.io/CASTLE/**
 Telefonda Chrome'da açıp menüden **Ana ekrana ekle / Uygulamayı yükle** deyin: tam ekran, yatay, çevrimdışı çalışan bir uygulama gibi açılır.
 Bir kez yapılacak ayar: depo → **Settings → Pages → Source: GitHub Actions**. (Kayıtlar tarayıcıya özeldir; APK ile tarayıcı sürümü kayıt paylaşmaz.)
 

@@ -18,7 +18,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 | Minimum / hedef Android | Android 7.0 (API 24) / hedef API 36 |
 | Yön | Dikey (portre) |
 | İzinler | Yalnızca `INTERNET` (faturalandırma ve reklam eklentileri kendi izinlerini ekler) |
-| Web sitesi | https://erenmaral.github.io/erenmaral/ (bkz. 3. madde, Pages notu) |
+| Web sitesi | https://sites.google.com/view/castle-siege-history/ana-sayfa |
 | Gizlilik politikası URL'si | https://sites.google.com/view/castle-siege-history/ana-sayfa (Google Sites; herkese açık yayınlanmış olmalı) |
 | Geliştirici adı (Play Console'da görünür) | **DM Digital** |
 | Geliştirici e-postası | Play Console'da **sizin e-postanız** (zorunlu, herkese açık görünür) |
