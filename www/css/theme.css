@@ -347,6 +347,8 @@ textarea{font-size:22px;padding:12px}
 .modal .story{font:600 26px/34px var(--f-body)}
 .modal .rule-box .small:not(.btn){color:var(--ink2)}
 .modal .actions{margin-top:14px}
+/* son eylem satiri: pencere kayarsa (kucuk ekran, uzun dil) ana dugme hep gorunsun; opak --diap ayak + orp 4u / murekkep 3u kenar (sayfa ayagi ile ayni) */
+.modal .actions:last-child{position:sticky;bottom:0;z-index:2;margin:14px -16px -10px;padding:12px 16px;background:var(--diap);border-top:4px solid var(--orp);box-shadow:0 -3px 0 var(--ink)}
 .modal .actions .btn:not(.small){font-size:26px;padding:6px 22px}
 .big-stars span{color:transparent;-webkit-text-stroke:3px var(--ud);text-shadow:none}
 .big-stars span.on{color:var(--orp);-webkit-text-stroke:4px var(--ink);text-shadow:none;animation:starin .5s ease-out both}
