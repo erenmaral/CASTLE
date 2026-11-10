@@ -42,7 +42,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 
 ### 3.1 GitHub tarafı (bir kez)
 1. **Gizlilik sayfası:** Google Sites sayfası kullanılıyor (adres yukarıda; uygulamada `www/js/monetize-config.js` → `links`). Sayfa **yayınlanmış** olmalı: Google Sites'ta *Yayınla* → *Görüntüleyebilecek kişiler: herkes*; adreste `?authuser=` parametresi olmamalı. Gizli pencerede açıp metnin göründüğünü doğrulayın. Play, adresin herkese açık, giriş istemeyen ve PDF olmayan bir sayfa olmasını ister; politika metni ayrı bir sayfada (ör. `/gizlilik`) ise o sayfanın adresini hem Play Console'a hem `links.privacy` alanına yazın.
-2. **İmza (yükleme) anahtarı — önemli.** Secret tanımlamazsanız anahtar Actions önbelleğinde durur ve 7 gün derleme yapılmazsa silinebilir; Play'e yüklenen uygulama için anahtar tutarlı olmalıdır. Bir kez kendi anahtarınızı üretin (README → *İmza anahtarı*; **takma ad `zafarion` kalmalı**) ve `ZAFARION_KEYSTORE_B64`, `ZAFARION_KEYSTORE_PASSWORD` secret'larını ekleyin. Anahtar dosyasını güvenli yere yedekleyin. (*Play Uygulama İmzalama* açıkken bu anahtar yalnızca **yükleme anahtarı**dır; kaybederseniz Google desteği sıfırlayabilir. İmzalama anahtarını Google tutar.)
+2. **İmza (yükleme) anahtarı — önemli.** Secret tanımlamazsanız anahtar Actions önbelleğinde durur ve 7 gün derleme yapılmazsa silinebilir; Play'e yüklenen uygulama için anahtar tutarlı olmalıdır. Bir kez kendi anahtarınızı üretin (README → *İmza anahtarı*; **takma ad `castlesiege` olmalı**, ya da farklı bir ad kullanırsan `CASTLESIEGE_KEY_ALIAS` secret'ını da gir) ve `CASTLESIEGE_KEYSTORE_B64`, `CASTLESIEGE_KEYSTORE_PASSWORD` secret'larını ekleyin. Anahtar dosyasını güvenli yere yedekleyin. (*Play Uygulama İmzalama* açıkken bu anahtar yalnızca **yükleme anahtarı**dır; kaybederseniz Google desteği sıfırlayabilir. İmzalama anahtarını Google tutar.)
 3. **AdMob kimlikleri (Variables):** Settings → Secrets and variables → Actions → **Variables**: `ADMOB_APP_ID` (`ca-app-pub-…~…`), `ADMOB_REWARDED_ID`, `ADMOB_INTERSTITIAL_ID`, `ADMOB_BANNER_ID` (`ca-app-pub-…/…`). Dördü de geçerliyse CI `testMode=false` yapar; yoksa Google TEST reklamları kalır ve derleme günlüğünde uyarı görürsünüz. **Test kimlikli bir sürümü Production'a göndermeyin.**
 
 ### 3.2 Hesap ve uygulama
@@ -97,7 +97,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 
 - [ ] Google Sites gizlilik sayfası **yayınlandı** ve giriş yapmadan (gizli pencerede) açılıyor; metin sayfada görünüyor
 - [ ] `ADMOB_*` Variables tanımlı; derleme günlüğünde "reklam: gerçek kimlikler yazıldı" (uyarı yok)
-- [ ] `ZAFARION_KEYSTORE_*` secret'ları tanımlı ve anahtar yedeklendi
+- [ ] `CASTLESIEGE_KEYSTORE_*` secret'ları tanımlı ve anahtar yedeklendi
 - [ ] Ürünler Play Console'da **Etkin**; iç testte satın alma + geri yükleme denendi
 - [ ] AdMob'da uygulama Play'e bağlandı (yayın sonrası), AB onay iletisi yayında
 - [ ] Gerçek cihazda: açılış, savaş, mağaza, ödüllü reklam, geçiş reklamı, Ayarlar → gizlilik bağlantıları, dil değişimi

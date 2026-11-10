@@ -80,44 +80,56 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/kscache
-          key: zafarion-keystore-v1
+          key: castlesiege-keystore-v1
+          # Eski adla (zafarion-keystore-v1) kaydedilmis anahtar varsa onu geri yukler: anahtar degismez, telefondaki surumler guncellenmeye devam eder.
+          restore-keys: zafarion-keystore-v1
 
       - name: Imza anahtari
         env:
-          KS_B64: ${{ secrets.ZAFARION_KEYSTORE_B64 }}
-          KS_PASS: ${{ secrets.ZAFARION_KEYSTORE_PASSWORD }}
+          KS_B64: ${{ secrets.CASTLESIEGE_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.CASTLESIEGE_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.CASTLESIEGE_KEY_ALIAS }}
         run: |
-          KS="$RUNNER_TEMP/zafarion.keystore"
+          KS="$RUNNER_TEMP/castlesiege.keystore"
           CD="$RUNNER_TEMP/kscache"
+          ALIAS="${KS_ALIAS:-castlesiege}"
           mkdir -p "$CD"
+          # Eski adla kaydedilmis onbellek dosyasini yeni ada tasi
+          if [ -f "$CD/zafarion.keystore" ] && [ ! -f "$CD/castlesiege.keystore" ]; then mv "$CD/zafarion.keystore" "$CD/castlesiege.keystore"; fi
           if [ -n "$KS_B64" ] && [ -n "$KS_PASS" ]; then
             echo "$KS_B64" | base64 -d > "$KS"
             PASS="$KS_PASS"
             echo "Kalici anahtar (secret) kullaniliyor: guncellemeler eski surumun uzerine kurulur."
-          elif [ -f "$CD/zafarion.keystore" ] && [ -f "$CD/pass.txt" ]; then
-            cp "$CD/zafarion.keystore" "$KS"
+          elif [ -f "$CD/castlesiege.keystore" ] && [ -f "$CD/pass.txt" ]; then
+            cp "$CD/castlesiege.keystore" "$KS"
             PASS=$(cat "$CD/pass.txt")
+            # Eski anahtarin takma adi 'zafarion' ise anahtar materyalini degistirmeden 'castlesiege' yap
+            if keytool -list -keystore "$KS" -storepass "$PASS" 2>/dev/null | grep -q "^zafarion,"; then
+              keytool -changealias -keystore "$KS" -storepass "$PASS" -alias zafarion -destalias castlesiege
+              cp "$KS" "$CD/castlesiege.keystore"
+              echo "Onbellekteki anahtarin takma adi zafarion -> castlesiege olarak degistirildi (anahtar ayni)."
+            fi
             echo "Onbellekteki imza anahtari kullaniliyor: guncellemeler eski surumun uzerine kurulur."
           else
             PASS=$(openssl rand -hex 16)
-            keytool -genkeypair -noprompt -keystore "$KS" -storetype PKCS12 -alias zafarion -keyalg RSA -keysize 2048 \
-              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Sefer Vakti, O=Sefer Vakti, C=TR"
-            cp "$KS" "$CD/zafarion.keystore"; echo "$PASS" > "$CD/pass.txt"
+            keytool -genkeypair -noprompt -keystore "$KS" -storetype PKCS12 -alias "$ALIAS" -keyalg RSA -keysize 2048 \
+              -validity 10000 -storepass "$PASS" -keypass "$PASS" -dname "CN=Castle Siege History, O=DM Digital, C=TR"
+            cp "$KS" "$CD/castlesiege.keystore"; echo "$PASS" > "$CD/pass.txt"
             echo "::notice::Yeni imza anahtari uretildi ve onbellege kaydedildi. Bu surumden SONRAKI surumler ayni anahtarla imzalanir ve ustune kurulur. (Eski bir surum kuruluysa bir kez silmek gerekir.)"
           fi
           echo "::add-mask::$PASS"
           {
-            echo "ZAFARION_KEYSTORE_FILE=$KS"
-            echo "ZAFARION_KEYSTORE_PASSWORD=$PASS"
-            echo "ZAFARION_KEY_PASSWORD=$PASS"
-            echo "ZAFARION_KEY_ALIAS=zafarion"
+            echo "CASTLESIEGE_KEYSTORE_FILE=$KS"
+            echo "CASTLESIEGE_KEYSTORE_PASSWORD=$PASS"
+            echo "CASTLESIEGE_KEY_PASSWORD=$PASS"
+            echo "CASTLESIEGE_KEY_ALIAS=$ALIAS"
           } >> "$GITHUB_ENV"
 
       - name: APK ve AAB derle
         working-directory: android
         env:
-          ZAFARION_VERSION_CODE: ${{ github.run_number }}
-          ZAFARION_VERSION_NAME: ${{ steps.ver.outputs.name }}
+          CASTLESIEGE_VERSION_CODE: ${{ github.run_number }}
+          CASTLESIEGE_VERSION_NAME: ${{ steps.ver.outputs.name }}
           ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
         run: |
           chmod +x gradlew

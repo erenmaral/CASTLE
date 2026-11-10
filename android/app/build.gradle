@@ -7,9 +7,9 @@ android {
         applicationId "com.dmdigital.castlesiege"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // CI her derlemede ZAFARION_VERSION_CODE / ZAFARION_VERSION_NAME verir; yerelde varsayilanlar kullanilir.
-        versionCode Integer.parseInt(System.getenv("ZAFARION_VERSION_CODE") ?: "1")
-        versionName System.getenv("ZAFARION_VERSION_NAME") ?: "0.1.0-dev"
+        // CI her derlemede CASTLESIEGE_VERSION_CODE / CASTLESIEGE_VERSION_NAME verir; yerelde varsayilanlar kullanilir.
+        versionCode Integer.parseInt(System.getenv("CASTLESIEGE_VERSION_CODE") ?: "1")
+        versionName System.getenv("CASTLESIEGE_VERSION_NAME") ?: "0.1.0-dev"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // AdMob uygulama kimligi (AndroidManifest'e ${admobAppId} olarak girer). Verilmezse Google'in TEST kimligi.
         manifestPlaceholders = [admobAppId: System.getenv("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"]
@@ -23,12 +23,12 @@ android {
     // Her surum ayni anahtarla imzalanirsa yeni APK eskisinin uzerine kurulur.
     signingConfigs {
         release {
-            def ks = System.getenv("ZAFARION_KEYSTORE_FILE")
+            def ks = System.getenv("CASTLESIEGE_KEYSTORE_FILE")
             if (ks) {
                 storeFile file(ks)
-                storePassword System.getenv("ZAFARION_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ZAFARION_KEY_ALIAS") ?: "zafarion"
-                keyPassword System.getenv("ZAFARION_KEY_PASSWORD")
+                storePassword System.getenv("CASTLESIEGE_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("CASTLESIEGE_KEY_ALIAS") ?: "castlesiege"
+                keyPassword System.getenv("CASTLESIEGE_KEY_PASSWORD")
             }
         }
     }

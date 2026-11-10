@@ -69,19 +69,20 @@ node store/make-graphics.js        # mağaza öne çıkan görseli + 6 ekran gö
 | `store/` | Google Play mağaza girişi metinleri (6 dil) ve görselleri |
 | `www/privacy.html` | Gizlilik Politikası + Kullanım Şartları |
 
-> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Kayıt anahtarı ve `ZAFARION_*` secret adları ilerleme/imza bozulmasın diye bilerek korundu. **Paket kimliği 0.11.0'da `com.dmdigital.castlesiege` oldu** (Google Play için); eski `com.zafarion.game` kurulumu ayrı bir uygulama olarak kalır, ilerleme için Ayarlar → Kaydı dışa aktar / İçe aktar kullanın.
+> **Not:** Oyun önceki sürümlerde *Zafarion* adını taşıyordu. Kayıt anahtarı (`zafarion.save.v1`) ilerleme bozulmasın diye bilerek korundu; imza anahtarı ve secret adları oyunun adına (`CASTLESIEGE_*`) çevrildi (CI eski önbellekteki anahtarı değiştirmeden yeni ada taşır). **Paket kimliği 0.11.0'da `com.dmdigital.castlesiege` oldu** (Google Play için); eski `com.zafarion.game` kurulumu ayrı bir uygulama olarak kalır, ilerleme için Ayarlar → Kaydı dışa aktar / İçe aktar kullanın.
 
 **Google Play'de yayınlamak için: [docs/PLAY_STORE.md](docs/PLAY_STORE.md)** (uygulama adı, paket adı, varsayılan dil, form cevapları, kontrol listesi).
 
 ## İmza anahtarı (güncellemelerin üst üste kurulması için — bir kez yapılır)
 Anahtar ve şifre **depoda tutulmaz**. Bir kez kendi anahtarınızı üretip GitHub Secrets'a ekleyin:
 ```bash
-keytool -genkeypair -keystore zafarion.keystore -storetype PKCS12 -alias zafarion -keyalg RSA -keysize 2048 -validity 36500
-base64 -w0 zafarion.keystore   # çıktıyı kopyalayın
+keytool -genkeypair -keystore castlesiege.keystore -storetype PKCS12 -alias castlesiege -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=Castle Siege History, O=DM Digital, C=TR"
+base64 -w0 castlesiege.keystore   # çıktıyı kopyalayın
 ```
 GitHub → Settings → Secrets and variables → Actions → **New repository secret**:
-- `ZAFARION_KEYSTORE_B64` = base64 çıktısı
-- `ZAFARION_KEYSTORE_PASSWORD` = keytool'a girdiğiniz şifre (store ve key şifresi aynı olmalı)
+- `CASTLESIEGE_KEYSTORE_B64` = base64 çıktısı
+- `CASTLESIEGE_KEYSTORE_PASSWORD` = keytool'a girdiğiniz şifre (store ve key şifresi aynı olmalı)
+- (isteğe bağlı) `CASTLESIEGE_KEY_ALIAS` = takma ad; verilmezse `castlesiege` kullanılır
 
 Secret'lar yoksa CI imza anahtarını **ilk derlemede üretip GitHub Actions önbelleğine kaydeder**; sonraki derlemeler aynı anahtarla imzalanır ve eski sürümün üzerine kurulur. Önbellek, 7 gün hiç erişilmezse (yani 7 gün derleme yapılmazsa) silinebilir; o zaman yeni anahtar üretilir ve bir kez eski uygulamayı silmek gerekir. **Garantili çözüm yukarıdaki secret'ları tanımlamaktır.**
 Eski bir derleme kuruluysa ("paket mevcut uygulamayla çakışıyor" hatası): önce **Ayarlar → Kaydı dışa aktar** ile ilerlemenizi kopyalayın, uygulamayı silin, yeni APK'yı kurun, **Ayarlar → İçe aktar** ile kaydı geri yükleyin.
