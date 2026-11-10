@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch background (theme item android:background): solid night with the emblem centred. On Android 12+ the system splash
+     shows the same emblem (values-v31). splash_emblem is drawn per density on a 288 dp canvas; the letter is 34% of the short side of a 360 dp phone. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0F1838"/>
+        </shape>
+    </item>
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/splash_emblem"/>
+    </item>
+</layer-list>

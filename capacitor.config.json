@@ -2,6 +2,6 @@
   "appId": "com.dmdigital.castlesiege",
   "appName": "Castle Siege: History",
   "webDir": "www",
-  "backgroundColor": "#0b1020",
-  "android": { "backgroundColor": "#0b1020" }
+  "backgroundColor": "#0F1838",
+  "android": { "backgroundColor": "#0F1838" }
 }

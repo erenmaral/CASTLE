@@ -1,0 +1,24 @@
+<!-- rule family: ct-round + charge. Reference composites; the rest of the family follows this pattern. -->
+<!-- rule fortress: tower charge on a night roundel with an orpiment ring (rule family pattern: --f1 field, --f2 ring). -->
+<symbol id="ic-rule-fortress" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#0F1838);--k2:var(--f2,#E9B62A)"/>
+  <use href="#ic-chg-tower" x="7" y="7" width="18" height="18"/>
+</symbol>
+
+<!-- rule survive (Abluka): hourglass on a night roundel with an orpiment ring. -->
+<symbol id="ic-rule-survive" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#0F1838);--k2:var(--f2,#E9B62A)"/>
+  <use href="#ic-chg-hourglass" x="7" y="7" width="18" height="18"/>
+</symbol>
+
+<!-- rule famine (Kitlik): garb on a night roundel with an orpiment ring. -->
+<symbol id="ic-rule-famine" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#0F1838);--k2:var(--f2,#E9B62A)"/>
+  <use href="#ic-chg-garb" x="7" y="7" width="18" height="18"/>
+</symbol>
+
+<!-- rule rally (Moral Cagrisi): bugle-horn on a night roundel with an orpiment ring. -->
+<symbol id="ic-rule-rally" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#0F1838);--k2:var(--f2,#E9B62A)"/>
+  <use href="#ic-chg-bugle" x="7" y="7" width="18" height="18"/>
+</symbol>

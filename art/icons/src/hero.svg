@@ -1,0 +1,6 @@
+<!-- hero family: heater shield containers. -->
+<!-- hero Demir Bey: sable, great helm argent on a heater shield (owned = --f2 orpiment bordure). -->
+<symbol id="ic-hero-demir" viewBox="0 0 32 32">
+  <use href="#ct-shield" style="--k1:var(--f1,#1E1610);--k2:var(--f2,none)"/>
+  <use href="#ic-chg-helm" x="8" y="5.5" width="16" height="16"/>
+</symbol>

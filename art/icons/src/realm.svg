@@ -1,0 +1,12 @@
+<!-- realm family: blazons on a ct-round (no ring). -->
+<!-- realm 0 Western Europe: azure, fleur-de-lis or (blazon on a roundel, no ring). -->
+<symbol id="ic-realm-0" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#22409A);--k2:var(--f2,none)"/>
+  <use href="#ic-chg-fleur" x="6" y="6" width="20" height="20"/>
+</symbol>
+
+<!-- realm 6 Anatolia / Balkans: vert, crescent or. -->
+<symbol id="ic-realm-6" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#1F6B4E);--k2:var(--f2,none)"/>
+  <use href="#ic-chg-crescent" x="6" y="6" width="20" height="20"/>
+</symbol>

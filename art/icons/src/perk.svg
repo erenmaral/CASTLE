@@ -1,0 +1,6 @@
+<!-- perk / booster family: ct-round (lapis, orpiment ring) + charge. -->
+<!-- perk cooldown (Hizli Cagri): hourglass on a lapis roundel with an orpiment ring (perk family pattern). -->
+<symbol id="ic-perk-hourglass" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#22409A);--k2:var(--f2,#E9B62A)"/>
+  <use href="#ic-chg-hourglass" x="7" y="7" width="18" height="18"/>
+</symbol>
