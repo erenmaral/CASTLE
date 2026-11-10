@@ -6,7 +6,7 @@ const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'css/fonts.css', 'cs
   'fonts/texturina-latin-700-normal.woff2', 'fonts/texturina-latin-ext-700-normal.woff2', 'fonts/pirata-one-latin-400-normal.woff2', 'fonts/pirata-one-latin-ext-400-normal.woff2',
   'fonts/eb-garamond-latin-600-normal.woff2', 'fonts/eb-garamond-latin-ext-600-normal.woff2', 'fonts/eb-garamond-cyrillic-600-normal.woff2',
   'js/version.js', 'js/i18n.js', 'js/lang/en.js', 'js/lang/es.js', 'js/lang/pt.js', 'js/lang/ru.js', 'js/lang/zh.js', 'js/data.js', 'js/save.js', 'js/monetize-config.js', 'js/monetize.js', 'js/monetize-providers.js', 'js/audio.js', 'js/sim.js', 'js/field.js', 'js/art.js', 'js/render.js', 'js/scenery.js', 'js/fieldrender.js', 'js/icons.js', 'js/ui.js', 'js/main.js',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

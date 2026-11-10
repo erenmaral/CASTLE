@@ -41,6 +41,8 @@ jobs:
           node tests/unit-v09.js | tail -3
           node tests/unit-v10.js | tail -3
           node tests/unit-v11.js | tail -3
+          node tests/unit-v12.js | tail -3
+          node scripts/build-icons.js --selftest | tail -1
           node tests/fuzz-sim.js 120 1 | tail -2
           node scripts/i18n.js check
 

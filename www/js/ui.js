@@ -6,11 +6,31 @@
   var UI = Z.UI = { tab: 'map', game: null, vaultTimer: null };
   var handlers = {};
 
-  // ---- simge yardimcilari (ART_DIRECTION bolum 6/8): yalniz harita, brifing ve sonuc ekranlari. Cizilmemis simge = verilen yedek (emoji ya da bos).
-  //      Genel emoji -> simge degisimi (Z.ico) sonraki adimdir; burada baska metne dokunulmaz.
+  // ---- simge yardimcilari (ART_DIRECTION bolum 6): Z.Icons (js/icons.js). Cizilmemis simge ya da Icons yok = verilen yedek (emoji ya da bos): oyun yine acilir.
+  // Iki yol: (1) eslemeli emoji -> simge, metnin bulundugu yerde: zi(html) HTML dizgesinde, UI.ico(duz metin) / UI.setIco(oge, duz metin) duz metinde (kacis + Z.ico + innerHTML);
+  //          (2) veri tabanli yerler (kahraman, kural, kademe, hedef, savas turu, yetenek, hazirlik karti, pazar, paket): emoji data.js'te kalir, simge Z.Icons.by tablosundan
+  //              anahtarla aranir (UI.heroIco ... UI.packIco); belirsiz emojiler (kalkan, kilic, altin kese...) Z.ICO'da yalniz tek bir varsayilana gider.
   var IC = Z.Icons || null;
   function icoId(id, fb, cls) { return IC && IC.has(id) ? IC.svg(id, cls) : (fb || ''); }
   function icoBy(tab, key, fb, cls) { var t = IC && IC.by && IC.by[tab]; return icoId(t && t[key], fb, cls); }
+  function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function zi(html) { return Z.ico ? Z.ico(html) : html; }
+  UI.ico = function (str) { return zi(esc(str)); };
+  // twin: gorunmez ikiz (.vh): testlerin okudugu simge karakteri (yalniz #info-title, #rule-chip, #skill-ico); harf icermez (genislik / i18n denetimi degismez)
+  UI.setIco = function (el, str, twin) { el.innerHTML = zi(esc(str)) + (twin ? '<span class="vh" aria-hidden="true">' + esc(twin) + '</span>' : ''); };
+  // kahraman kalkani: size S (<= 20 css px, duz siluet) | M | L (96-128u, ayrintili); owned = turuncu bordur (--f2), sahipsiz = cls 'ud' (bos)
+  UI.heroIco = function (id, size, cls) {
+    var h = Z.HEROES[id], t = IC && IC.by && IC.by.hero, base = t && t[id], v = size === 'S' ? '-s' : size === 'L' ? '-l' : '';
+    return icoId(IC && IC.has(base + v) ? base + v : base, h ? h.icon : '', cls);
+  };
+  UI.ruleIco = function (id, cls) { var r = Z.RULES[id]; return icoBy('rule', id, r ? r.icon : '', cls); };
+  UI.tierIco = function (i, cls) { var D = Z.DIFFS[i]; return icoBy('tier', i, D ? D.icon : '', cls); };
+  UI.objIco = function (id, cls) { var o = Z.FIELD_OBJECTIVES[id]; return icoBy('objective', id, o ? o.icon : '', cls); };
+  UI.battleIco = function (type, cls) { return icoBy('battle', type === 'field' ? 'field' : 'castle', type === 'field' ? '🏕️' : '🏰', cls); };
+  UI.perkIco = function (id, cls) { var p = Z.PERKS[id]; return icoBy('perk', id, p ? p.icon : '', cls); };
+  UI.boosterIco = function (id, cls) { var b = Z.BOOSTERS[id]; return icoBy('booster', id, b ? b.icon : '', cls); };
+  UI.marketIco = function (m, cls) { return icoBy('market', m.id, m.icon, cls); };
+  UI.packIco = function (i, cls) { var t = IC && IC.by && IC.by.pack; return icoId(t && t[i % t.length], '💎', cls); };
   function star3(n) { var s = '', i; for (i = 1; i <= 3; i++) s += '<span class="' + (i <= n ? 'on' : 'off') + '">' + (i <= n ? icoId('ic-cur-mullet', '★') : icoId('ic-cur-mullet-empty', '★')) + '</span>'; return '<span class="stars">' + s + '</span>'; }
   function unitStats(id, lvl) {
     var u = Z.UNITS[id];
@@ -25,12 +45,12 @@
   // ---------------------------------------------------------------- toast / modal
   var toastTimer = null;
   UI.toast = function (msg) {
-    var t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+    var t = $('toast'); UI.setIco(t, msg); t.classList.remove('hidden');
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.add('hidden'); }, 2200);
   };
   UI.modal = function (html, acts) {
     var layer = $('modal-layer'), ps, pi;
-    layer.innerHTML = '<div class="modal">' + html + '</div>';
+    layer.innerHTML = '<div class="modal">' + zi(html) + '</div>';
     // sessiz bolge (S2): elmas desenin ustune oturan okuma paragraflari duz --night plakaya (.qp) alinir; vellum hikaye/kural kutusu, sprite satiri ve gruplanmis .qz hariclenir
     ps = layer.querySelectorAll('.modal p');
     for (pi = 0; pi < ps.length; pi++) if (!ps[pi].closest('.qz,.rule-box,.tbl') && !/(^|\s)(story|deck)(\s|$)/.test(ps[pi].className)) ps[pi].classList.add('qp');
@@ -49,22 +69,28 @@
     var hl = document.querySelector('.hl-name'); if (hl) { hl.textContent = ''; if (m) { hl.appendChild(document.createTextNode(m[1])); hl.appendChild(document.createElement('br')); hl.appendChild(document.createTextNode(m[2])); } else hl.textContent = up; }
     Array.prototype.forEach.call(document.querySelectorAll('.logo'), function (el) { el.textContent = up; });
   };
-  // Birlik simgesi: oyundaki gercek karakter cizimi (sprite) -> resim; cizim yoksa emoji
+  // Birlik simgesi: oyundaki gercek karakter cizimi (sprite) -> resim. Portre = halesiz, zemin cizgisiz (R.icoMode + R.px = 3; resim bir kez pisirilir, onbellekte).
+  // ghost: oyuncunun henuz sahip olmadigi birlik = R.ghostSprite (--ink2 silueti .45, bos/underdrawn). Cizim yoksa: sinifin karsi-zincir simgesi (varsa) ya da bos (emoji gosterilmez).
   var iconCache = {};
-  UI.unitImg = function (id, team, h) {
-    var u = Z.UNITS[id], key = id + (team ? 1 : 0), url = iconCache[key];
+  UI.unitImg = function (id, team, h, ghost) {
+    var u = Z.UNITS[id], key = id + (team ? 1 : 0) + (ghost ? 'g' : ''), url = iconCache[key];
     if (url === undefined) {
+      var R = Z.Render, o = R.px, oi = R.icoMode;
       try {
-        var R = Z.Render, o = R.px; R.px = 3; var cv = R.renderSprite(u.cls, team ? 1 : 0, 'i', 0); R.px = o;
-        // golgeyi atip karakterin sinirlarina kirp (ust kisim): saydam olmayan piksellerin kutusu
-        var g = cv.getContext('2d'), w = cv.width, hh = cv.height, px = g.getImageData(0, 0, w, hh).data, x0 = w, y0 = hh, x1 = 0, y1 = 0, xx, yy;
-        for (yy = 0; yy < hh; yy++) for (xx = 0; xx < w; xx++) if (px[(yy * w + xx) * 4 + 3] > 150) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        R.px = 3; R.icoMode = true;
+        var cv = ghost ? R.ghostSprite(u.cls, team ? 1 : 0) : R.renderSprite(u.cls, team ? 1 : 0, 'i', 0), w = cv.width, hh = cv.height, x0 = w, y0 = hh, x1 = 0, y1 = 0, xx, yy;
+        if (ghost && cv.bbox) { x0 = cv.bbox.x0; y0 = cv.bbox.y0; x1 = cv.bbox.x1; y1 = cv.bbox.y1; } // silueti saydam: kutu ghostSprite'tan gelir
+        else { // golgeyi atip karakterin sinirlarina kirp (ust kisim): saydam olmayan piksellerin kutusu
+          var px = cv.getContext('2d').getImageData(0, 0, w, hh).data;
+          for (yy = 0; yy < hh; yy++) for (xx = 0; xx < w; xx++) if (px[(yy * w + xx) * 4 + 3] > 150) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        }
         var pad = 4, cw = Math.max(8, x1 - x0 + 1 + pad * 2), ch = Math.max(8, y1 - y0 + 1 + pad * 2), out = document.createElement('canvas'); out.width = cw; out.height = ch;
         out.getContext('2d').drawImage(cv, x0 - pad, y0 - pad, cw, ch, 0, 0, cw, ch); url = out.toDataURL('image/png');
       } catch (e) { url = null; }
+      R.px = o; R.icoMode = oi;
       iconCache[key] = url;
     }
-    return url ? '<img class="uico" alt="" src="' + url + '" style="height:' + h + 'px">' : u.icon;
+    return url ? '<img class="uico' + (ghost ? ' ghost' : '') + '" alt="" src="' + url + '" style="height:' + h + 'px">' : icoBy('unit', id, '');
   };
   // Elmas yetmiyorsa: eksik miktari + eksigi kapatan en kucuk paketi gosterip magazaya yonlendirir
   UI.needGems = function (price) {
@@ -100,6 +126,18 @@
     $('home').addEventListener('click', onHomeClick);
     bindHud();
     setTimeout(UI.prewarmMap, 1500); // harita simgeleri onceden (bkz. prewarmMap)
+    setTimeout(UI.prewarmUnits, 1800); // kadro portreleri onceden (bkz. prewarmUnits)
+  };
+  // Birlik portresi (sprite -> resim) ilk kullanimda 3-19 ms surer; harita ust bolumundeki kadro sirasi, ordu ve savas kartlari ayni onbellegi kullanir:
+  // kadro birimleri ana menu bosken, her biri ayri gorevde pisirilir (haritanin ilk acilisi bunu beklemez, yalnizca hazirsa kazanir).
+  UI.prewarmUnits = function () {
+    if (UI.unitsWarm || !S.data || !S.data.deck) return; UI.unitsWarm = true;
+    var q = S.data.deck.slice(), i = 0;
+    (function next() {
+      if (i >= q.length) return;
+      try { UI.unitImg(q[i++], 0, 40); } catch (e) { /* onbellek isitma isteye bagli */ }
+      setTimeout(next, 60);
+    })();
   };
 
   // Sefer merkezi: harita / ordu / hazine / gorev (ana menuden ayri ekran)
@@ -121,8 +159,8 @@
   UI.renderHome = function () {
     var d = S.data, n = UI.homeLevel(), info = Z.levelInfo(n), dots = computeDots();
     $('home-coins').textContent = Z.fmt(d.coins); $('home-gems').textContent = Z.fmt(d.gems);
-    $('hb-main').textContent = d.cleared === 0 ? ('▶ ' + $t('İLK SEFERE ÇIK')) : d.cleared >= Z.MAX_LEVEL ? ('▶ ' + $t('SEFERİ TEKRARLA')) : ('▶ ' + $t('SEFERE DEVAM'));
-    $('hb-sub').textContent = (info.type === 'field' ? ('🏕️ ' + $t('Kale önü muharebesi')) : ('🏰 ' + $t('Kale kuşatması'))) + (' · ' + $t('Sefer') + ' ') + n + ' · ' + info.name;
+    UI.setIco($('hb-main'), d.cleared === 0 ? ('▶ ' + $t('İLK SEFERE ÇIK')) : d.cleared >= Z.MAX_LEVEL ? ('▶ ' + $t('SEFERİ TEKRARLA')) : ('▶ ' + $t('SEFERE DEVAM')));
+    $('hb-sub').innerHTML = UI.battleIco(info.type) + ' ' + esc((info.type === 'field' ? $t('Kale önü muharebesi') : $t('Kale kuşatması')) + (' · ' + $t('Sefer') + ' ') + n + ' · ' + info.name);
     Array.prototype.forEach.call(document.querySelectorAll('#home [data-home]'), function (b) {
       var k = b.getAttribute('data-home'), old = b.querySelector('.dot'); if (old) old.remove();
       var map = { map: 'map', army: 'army', vault: 'vault', quests: 'quests', shop: 'shop' };
@@ -237,13 +275,13 @@
     html += '<div class="starrow">';
     Z.STAR_MILESTONES.forEach(function (m) {
       var can = S.starClaimable(m), got = d.starClaimed[m.n];
-      html += '<div class="smile' + (can ? ' can' : '') + (got ? ' got' : '') + '">⭐ ' + m.n + '<span>🪙' + m.coins + ' 💎' + m.gems + '</span>' +
+      html += '<div class="smile' + (can ? ' can' : '') + (got ? ' got' : '') + '"><span class="sn">⭐ ' + m.n + '</span><span>🪙' + m.coins + ' 💎' + m.gems + '</span>' +
         (got ? '<span>✔</span>' : can ? '<button class="btn gold" data-star="' + m.n + ('">' + $t('Al') + '</button>') : '<span class="mut">🔒</span>') + '</div>';
     });
     html += '</div>' + dailyCard(d) + '<div class="mode-row">' +
       ('<button class="panel mode-card" data-act-hub="endless"><span class="big">♾️</span><div><h3>' + $t('Sonsuz Kuşatma') + '</h3><small>' + $t('Rekor') + ': <b style="color:var(--gold)">') + $t('{n}. dalga', { n: d.endlessBest }) + '</b></small></div></button>' +
-      ('<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>' + $t('Savaş Ordusu') + '</h3><small>') + d.deck.map(function (u) { return Z.UNITS[u].icon; }).join(' ') + ' ' + Z.HEROES[d.hero].icon + '</small></div></button></div>';
-    html += '<div class="maptrack" id="maptrack" style="height:' + h + 'px">';
+      ('<button class="panel mode-card" data-act-hub="deck"><span class="big">🎖️</span><div><h3>' + $t('Savaş Ordusu') + '</h3><small class="deckrow">') + d.deck.map(function (u) { return UI.unitImg(u, 0, 40); }).join('') + UI.heroIco(d.hero, 'M', 'own') + '</small></div></button></div>';
+    html = zi(html) + '<div class="maptrack" id="maptrack" style="height:' + h + 'px">'; // emoji -> simge yalniz ust bolumde; harita izi (>= 90 .dec, 105 dugum) zaten simge/CSS: yeniden taranmaz
     for (r = 0; r < realms; r++) { // diyar zeminleri + donem florasi (emoji yok: cizilmemis motif atlanir)
       var y0 = yb[r], y1 = r === realms - 1 ? h : yb[r + 1], open = (r * 15 + 1) <= d.cleared + 1, row = (IC && IC.by.dec && IC.by.dec[r]) || [], rs = 0, ri2;
       html += '<div class="rbg r' + r + (open ? '' : ' closed') + '" style="top:' + y0 + 'px;height:' + (y1 - y0) + 'px"></div>';
@@ -255,7 +293,7 @@
       }
       for (ri2 = r * 15 + 1; ri2 <= Math.min(N, r * 15 + 15); ri2++) rs += d.stars[ri2] || 0;
       html += '<div class="realm r' + r + (open ? '' : ' closed') + '" style="top:' + y0 + 'px"><span class="ri">' + icoId('ic-realm-' + r, '', open ? '' : 'ud') + '</span><div><b>' + $t('Diyar {n} · {name}', { n: '<i class="rn">' + (r + 1) + '</i>', name: Z.REALMS[r] }) + '</b><small>' +
-        (open ? '⭐ ' + rs + ' / 45' : '🔒 ' + $t('{n}. bölümü bitirince açılır', { n: r * 15 })) + '</small></div></div>';
+        (open ? icoId('ic-cur-mullet', '⭐') + ' ' + rs + ' / 45' : icoId('ic-act-lock', '🔒', 'ud') + ' ' + $t('{n}. bölümü bitirince açılır', { n: r * 15 })) + '</small></div></div>';
     }
     // yol: tum yol = yalniz delik delik (pricked) cizgi; kazanilan kisim = murekkep kenar + bole + orpiment
     var full = curve(pts), won = upto > 1 ? curve(pts.slice(0, upto)) : '';
@@ -294,15 +332,15 @@
     if (!S.dailyAvailable()) return ('<div class="panel daily-card off"><span class="big">📅</span><div><h3>' + $t('Günlük Sefer') + '</h3><small>' + $t('{n}. bölümü kazanınca açılır', { n: Z.DAILY_UNLOCK }) + '</small></div></div>');
     var di = S.dailyInfo(), won = d.dailySefer.won;
     return '<button class="panel daily-card' + (won ? ' done' : '') + ('" data-act-hub="daily"><span class="big">📅</span><div class="grow"><h3>' + $t('Günlük Sefer') + ' ') + (won ? ('<span class="chip">✔ ' + $t('Tamam') + '</span>') : ('<span class="chip gold">🎁 ' + $t('Ödül hazır') + '</span>')) + '</h3>' +
-      '<small>' + Z.REALMS[di.theme] + ' · ' + di.rules.map(function (r) { return Z.RULES[r].icon + ' ' + Z.RULES[r].name; }).join(' + ') + '</small></div></button>';
+      '<small>' + Z.REALMS[di.theme] + ' · ' + di.rules.map(function (r) { return UI.ruleIco(r) + ' ' + Z.RULES[r].name; }).join(' + ') + '</small></div></button>';
   }
 
   // Hedef satiri: kale kusatmasi mi, acik alan mi
   function goalHtml(n, rules) {
     var info = Z.levelInfo(n);
     if (info.type === 'field') {
-      var ob = Z.FIELD_OBJECTIVES[Z.fieldObjective(n, rules)];
-      return ('<div class="rule-box field-box">' + $t('<b>🏕️ Kale Önü Muharebesi') + ' · ') + ob.icon + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + (' ' + $t('Önce') + ' <b>') + Z.fieldBudget(n) + (' ' + $t('komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.') + '</span></div>');
+      var obk = Z.fieldObjective(n, rules), ob = Z.FIELD_OBJECTIVES[obk];
+      return ('<div class="rule-box field-box">' + $t('<b>🏕️ Kale Önü Muharebesi').replace(/🏕️?/, UI.battleIco('field')) + ' · ') + UI.objIco(obk) + ' ' + ob.name + '</b><br><span class="small">' + ob.desc + (' ' + $t('Önce') + ' <b>') + Z.fieldBudget(n) + (' ' + $t('komuta puanı</b> ile ordunu sahaya yerleştirirsin, sonra savaş başlar.') + '</span></div>');
     }
     return ('<p class="goal">🎯 ' + $t('Hedef') + ': ') + (rules.indexOf('survive') >= 0 ? '<b>' + Z.fmtTime(info.surviveTime) + ('</b> ' + $t('boyunca kampını savun')) : $t('düşman kalesini yık')) + '</p>';
   }
@@ -318,16 +356,16 @@
     if (boostFor !== n) { boostSel = {}; boostFor = n; }
     var chips = Z.BOOSTER_ORDER.map(function (id) {
       var B = Z.BOOSTERS[id], cnt = d.boost[id] || 0, on = boostSel[id] && cnt > 0;
-      return '<button class="bchip' + (on ? ' on' : '') + (cnt ? '' : ' none') + '" data-act="bst_' + id + '"><span class="bi">' + B.icon + '</span><b>×' + cnt + '</b></button>';
+      return '<button class="bchip' + (on ? ' on' : '') + (cnt ? '' : ' none') + '" data-act="bst_' + id + '"><span class="bi">' + UI.boosterIco(id) + '</span><b>×' + cnt + '</b></button>';
     }).join('');
     var sel = Z.BOOSTER_ORDER.filter(function (id) { return boostSel[id] && (d.boost[id] || 0) > 0; });
-    return '<div class="boost-row"><span class="bl">' + $t('Hazırlık') + '</span>' + chips + '</div><p class="small bdesc">' + (sel.length ? sel.map(function (id) { return Z.BOOSTERS[id].icon + ' ' + Z.BOOSTERS[id].name; }).join(' · ') : $t('Savaşa tek kullanımlık hazırlık kartı götür (Hazine → Pazar\'dan alınır).')) + '</p>';
+    return '<div class="boost-row"><span class="bl">' + $t('Hazırlık') + '</span>' + chips + '</div><p class="small bdesc">' + (sel.length ? sel.map(function (id) { return UI.boosterIco(id) + ' ' + Z.BOOSTERS[id].name; }).join(' · ') : $t('Savaşa tek kullanımlık hazırlık kartı götür (Hazine → Pazar\'dan alınır).')) + '</p>';
   }
   function heroRow(n) {
     var d = S.data; if (n <= 1) return '';
     var owned = Z.HERO_ORDER.filter(function (h) { return d.heroOwned[h]; });
     if (owned.length < 2) return '';
-    return '<div class="boost-row"><span class="bl">' + $t('Kahraman') + '</span>' + owned.map(function (h) { return '<button class="bchip' + (d.hero === h ? ' on' : '') + '" data-act="hero_' + h + '"><span class="bi">' + Z.HEROES[h].icon + '</span></button>'; }).join('') + '</div>';
+    return '<div class="boost-row"><span class="bl">' + $t('Kahraman') + '</span>' + owned.map(function (h) { return '<button class="bchip' + (d.hero === h ? ' on' : '') + '" data-act="hero_' + h + '"><span class="bi">' + UI.heroIco(h, 'M', 'own') + '</span></button>'; }).join('') + '</div>';
   }
   function levelModal(n, diff) {
     diff = diff || 0;
@@ -348,9 +386,9 @@
     UI.modal(
       // baslik: arma (diyar) + sefer no + rozetler; sade metin satiri altta
       '<div class="bhead"><span class="niche bz">' + icoId('ic-realm-' + info.realm, '') + '</span><div class="bt"><h1>' + $t('Sefer') + ' ' + n + (info.boss ? (' <span class="badge">' + $t('PATRON') + '</span>') : '') + (info.type === 'field' ? (' <span class="badge fld">' + $t('KALE ÖNÜ') + '</span>') : '') + '</h1>' +
-      '<p class="mut" style="margin:0">' + Z.REALMS[info.realm] + ' · ' + info.name + (d.hardCleared[n] ? ' · ' + Z.DIFFS[d.hardCleared[n]].icon : '') + '</p></div></div>' +
+      '<p class="mut" style="margin:0">' + Z.REALMS[info.realm] + ' · ' + info.name + (d.hardCleared[n] ? ' · ' + UI.tierIco(d.hardCleared[n]) : '') + '</p></div></div>' +
       '<p class="story' + (dropCap(info.story) ? ' dc' : '') + '">' + (info.story || '') + '</p>' + drow +
-      (info.rule !== 'none' ? '<div class="rule-box"><b>' + rl.icon + (' ' + $t('Sefer kuralı') + ': ') + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
+      (info.rule !== 'none' ? '<div class="rule-box"><b>' + UI.ruleIco(info.rule) + (' ' + $t('Sefer kuralı') + ': ') + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
       (field ? goalHtml(n, [info.rule]) : '') +
       // sessiz bolge: hedef, yildiz, hazirlik, dusman/odul ve onerilen seviye tek duz --night defterde (elmas desenin ustunde okuma metni yok); satirlar kesik (pricked) cizgiyle ayrilir
       '<div class="qz"><div>' + (field ? '' : goalHtml(n, [info.rule])) +
@@ -376,7 +414,7 @@
   UI.levelModal = levelModal;
   UI.dailyModal = function () {
     var d = S.data, di = S.dailyInfo(), won = d.dailySefer.won, info = Z.levelInfo(di.level);
-    var rb = di.rules.map(function (r) { var R = Z.RULES[r]; return '<div class="rule-box"><b>' + R.icon + ' ' + R.name + '</b><br><span class="small">' + R.desc + '</span></div>'; }).join('');
+    var rb = di.rules.map(function (r) { var R = Z.RULES[r]; return '<div class="rule-box"><b>' + UI.ruleIco(r) + ' ' + R.name + '</b><br><span class="small">' + R.desc + '</span></div>'; }).join('');
     UI.modal(('<h1>📅 ' + $t('Günlük Sefer') + '</h1><p class="mut" style="margin:0">') + Z.REALMS[di.theme] + ' · ' + $t('Sefer {n} seviyesinde', { n: di.level }) + '</p>' + rb +
       goalHtml(di.level, di.rules) +
       '<div class="rewards"><span class="coin">🪙 ' + di.rewardCoins + '</span><span class="gem">💎 ' + di.rewardGems + '</span></div>' +
@@ -395,7 +433,7 @@
     Z.UNIT_ORDER.forEach(function (id) {
       var u = Z.UNITS[id], lvl = d.unitLvl[id], locked = un.indexOf(id) < 0, inDeck = d.deck.indexOf(id) >= 0, s = unitStats(id, lvl);
       var cost = Z.unitUpgradeCost(lvl), maxed = lvl >= Z.MAX_UNIT_LVL;
-      html += '<div class="panel ucard' + (locked ? ' locked' : '') + (inDeck ? ' indeck' : '') + '"><div class="big">' + UI.unitImg(id, 0, 84) + '</div><div class="info">' +
+      html += '<div class="panel ucard' + (locked ? ' locked' : '') + (inDeck ? ' indeck' : '') + '"><div class="big">' + UI.unitImg(id, 0, 84, locked) + '</div><div class="info">' +
         '<h3>' + u.name + (' <span class="lvl">' + $t('Sv.')) + lvl + '</span></h3>' +
         (locked ? '<small>🔒 ' + $t('Bölüm {n} tamamlanınca açılır', { n: Z.UNLOCK_AT[id] }) + '</small>' :
           '<div class="qz"><small>❤ ' + s.hp + ' · ⚔ ' + s.dmg + ' · 🪙 ' + u.cost + '</small><div class="small">' + u.desc + '</div></div>' +
@@ -407,7 +445,7 @@
     html += ('</div><div class="sect">' + $t('Kahramanlar') + '</div><div class="grid2">'); gt = 0;
     Z.HERO_ORDER.forEach(function (id) {
       var h = Z.HEROES[id], owned = d.heroOwned[id], lvl = d.heroLvl[id], sel = d.hero === id, cost = Z.heroUpgradeCost(lvl);
-      html += '<div class="panel ucard' + (sel ? ' indeck' : '') + '"><div class="big">' + h.icon + '</div><div class="info"><h3>' + h.name + (owned ? (' <span class="lvl">' + $t('Sv.')) + lvl + '</span>' : '') + '</h3>' +
+      html += '<div class="panel ucard' + (sel ? ' indeck' : '') + '"><div class="big">' + UI.heroIco(id, 'L', owned ? 'own' : 'ud') + '</div><div class="info"><h3>' + h.name + (owned ? (' <span class="lvl">' + $t('Sv.')) + lvl + '</span>' : '') + '</h3>' +
         '<div class="qz"><small><b style="color:var(--gold)">' + h.skill + '</b> · ' + h.cd + (' ' + $t('sn') + '</small><div class="small">') + h.desc + '</div></div>' +
         '<div class="row" style="margin-top:10px;gap:10px">' +
         (owned ? (lvl >= Z.MAX_HERO_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + gilt(d.coins >= cost) + '" data-hup="' + id + '">⬆ 🪙 ' + Z.fmt(cost) + '</button>') +
@@ -419,14 +457,14 @@
     html += ('</div><div class="sect">' + $t('Kamp') + '</div><div class="panel ucard"><div class="big">🏕️</div><div class="info"><h3>' + $t('Kamp Tahkimatı') + ' <span class="lvl">' + $t('Sv.')) + d.castleLvl + '</span></h3>' +
       ('<div class="qz"><small>' + $t('Kamp canı') + ': ❤ ') + Z.castleHp(d.castleLvl) + ' → ' + Z.castleHp(d.castleLvl + 1) + '</small></div></div>' +
       (d.castleLvl >= Z.MAX_CASTLE_LVL ? ('<button class="btn off">' + $t('MAKS') + '</button>') : '<button class="btn ' + gilt(d.coins >= cc) + '" data-castle="1">⬆ 🪙 ' + Z.fmt(cc) + '</button>') + '</div>';
-    c.innerHTML = html;
+    c.innerHTML = zi(html);
   }
 
   // ---------------------------------------------------------------- HAZINE
   function renderVault(c) {
     var d = S.data, html = '', pend = S.treasuryPending(), cap = Z.treasuryRate(d.treasuryLvl, d.cleared) * Z.TREASURY_CAP_H;
     var uc = Z.treasuryUpgradeCost(d.treasuryLvl);
-    html += ('<h2>' + $t('Hazine') + '</h2><div class="panel"><div class="row"><span style="font-size:80px">💰</span><div class="grow" style="flex:1">') +
+    html += ('<h2>' + $t('Hazine') + '</h2><div class="panel"><div class="row"><span class="vault-ico">' + icoBy('ui', 'vault', '💰') + '</span><div class="grow" style="flex:1">') +
       '<div class="bignum" id="vault-amt">🪙 ' + Z.fmt(pend) + '</div>' +
       '<div class="bar green"><i id="vault-bar" style="width:' + Math.min(100, 100 * pend / cap) + '%"></i></div>' +
       '<small id="vault-sub">' + $t('Saatte {rate} altın · en çok {h} saat birikir', { rate: Z.fmt(Z.treasuryRate(d.treasuryLvl, d.cleared)), h: Z.TREASURY_CAP_H }) + (S.treasuryFull() ? (' · <b style="color:var(--red)">' + $t('DOLU!</b>')) : '') + '</small></div>' +
@@ -438,13 +476,13 @@
       var a = i * 45 + 22.5;
       wl += '<span style="transform:rotate(' + a + 'deg) translateY(-104px) rotate(' + (-a) + 'deg)">' + (sg.gems ? '💎' + sg.gems : '🪙' + sg.coins) + '</span>';
     });
-    html += ('<div class="sect">' + $t('Şans Çarkı') + '</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">▼</div>') +
+    html += ('<div class="sect">' + $t('Şans Çarkı') + '</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">' + icoBy('ui', 'wheelPointer', '▼') + '</div>') +
       '<div class="wheel" id="wheel">' + wl + '</div><div class="wheel-hub"></div></div>' +
       '<div style="flex:1"><h3>' + (free ? $t('Bugünkü bedava hakkın hazır!') : $t('Bedava hakkını kullandın')) + '</h3><p class="small" style="margin:6px 0 16px">' + $t('Her gün 1 bedava çevirme. Sonrası {n} 💎. En büyük ödül: 💎 40!', { n: Z.WHEEL_COST }) + '</p>' +
       '<button class="btn gold" data-spin="1" id="spin-btn">' + (free ? ('🎡 ' + $t('Bedava Çevir')) : ('🎡 ' + $t('Çevir') + ' · ') + Z.WHEEL_COST + ' 💎') + '</button></div></div></div>';
     html += ('<div class="sect">' + $t('Pazar') + '</div>');
     Z.MARKET.forEach(function (m) {
-      html += '<div class="panel mrow"><span class="big">' + m.icon + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? (gm++ ? '' : 'gold') : 'off') + '" data-buy="' + m.id + '">💎 ' + m.gems + '</button></div>';
+      html += '<div class="panel mrow"><span class="big">' + UI.marketIco(m) + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? (gm++ ? '' : 'gold') : 'off') + '" data-buy="' + m.id + '">💎 ' + m.gems + '</button></div>';
     });
     html += ('<div class="sect">' + $t('Günlük Giriş Ödülü') + '</div><div class="panel"><div class="daily">');
     var idx = S.dailyIndex();
@@ -455,10 +493,10 @@
     });
     html += '</div><div class="actions" style="text-align:center;margin-top:16px"><button class="btn ' + (d.daily.claimedToday ? 'off' : 'gold') + '" data-daily="1">' +
       (d.daily.claimedToday ? $t('Yarın tekrar gel!') : ('🎁 ' + $t('Ödülü Al'))) + '</button></div></div>';
-    c.innerHTML = html;
+    c.innerHTML = zi(html);
     UI.vaultTimer = setInterval(function () {
       var amt = $('vault-amt'); if (!amt) { clearInterval(UI.vaultTimer); return; }
-      var p = S.treasuryPending(); amt.textContent = '🪙 ' + Z.fmt(p);
+      var p = S.treasuryPending(); UI.setIco(amt, '🪙 ' + Z.fmt(p));
       $('vault-bar').style.width = Math.min(100, 100 * p / cap) + '%';
     }, 1000);
   }
@@ -475,10 +513,10 @@
       '<p class="small" style="margin:8px 0 0">' + (M.adsOn() ? ($t('Bugün kalan') + ': <b>' + left + ' / ' + cfgA.rewardedPerDay + '</b> · ' + $t('Kısa bir reklam izle, ödülü kap.')) : $t('Reklam ödülleri yakında.')) + '</p></div>';
     // elmas paketleri
     html += '<div class="sect">💎 ' + $t('Elmas Paketleri') + '</div><div class="shop-grid">';
-    var ICON = ['💎', '💎', '💰', '🎁', '👑'], gi = 0;
+    var gi = 0;
     Z.MONEY.products.forEach(function (p) {
       if (p.type !== 'gems') return;
-      html += '<div class="panel pack"><span class="pk-ico">' + ICON[gi++ % 5] + '</span><b class="pk-gems">' + Z.fmt(p.gems) + ' 💎</b>' +
+      html += '<div class="panel pack"><span class="pk-ico">' + UI.packIco(gi, 'pk' + (gi++ % 5)) + '</span><b class="pk-gems">' + Z.fmt(p.gems) + ' 💎</b>' +
         (p.badge ? '<span class="pk-badge">' + p.badge + '</span>' : '') +
         '<button class="btn small gold' + (M.iapOn() ? '' : ' soft') + '" data-iap="' + p.id + '">' + (M.iapOn() ? M.price(p) : $t('Yakında')) + '</button></div>';
     });
@@ -497,7 +535,7 @@
       '<button class="btn small" data-shop="privacy">🔒 ' + $t('Reklam gizlilik tercihleri') + '</button>' +
       '<div class="links"><a data-url="privacy">' + $t('Gizlilik Politikası') + '</a><a data-url="terms">' + $t('Kullanım Şartları') + '</a><a data-url="support">' + $t('Destek') + '</a></div></div>' +
       '<p class="small qp">' + $t('Satın alımlar Google Play hesabına bağlıdır; cihaz değiştirsen de geri yükleyebilirsin.') + '</p>';
-    void L; c.innerHTML = html;
+    void L; c.innerHTML = zi(html);
   }
 
   // ---------------------------------------------------------------- GOREVLER
@@ -527,7 +565,7 @@
       ('<tr><td>' + $t('Oynanan savaş') + '</td><td>') + d.stats.battles + ('</td><td>' + $t('Kazanılan') + '</td><td>') + d.stats.wins + '</td></tr>' +
       ('<tr><td>' + $t('Yenilen düşman') + '</td><td>') + d.stats.kills + ('</td><td>' + $t('Toplam yıldız') + '</td><td>⭐ ') + d.stats.totalStars + '</td></tr>' +
       ('<tr><td>' + $t('Sonsuz kuşatma rekoru') + '</td><td>') + $t('{n}. dalga', { n: d.endlessBest }) + ('</td><td>' + $t('İlerleme') + '</td><td>') + $t('Bölüm {n}', { n: d.cleared + ' / ' + Z.MAX_LEVEL }) + '</td></tr></table></div>';
-    c.innerHTML = html;
+    c.innerHTML = zi(html);
   }
 
   // ---------------------------------------------------------------- sekme tiklamalari
@@ -705,7 +743,7 @@
     function slider(k, label) { return '<div class="slider"><span>' + label + '</span><input type="range" min="0" max="100" step="5" value="' + (st[k] === undefined ? 100 : st[k]) + '" data-vol="' + k + '"><b>' + (st[k] === undefined ? 100 : st[k]) + '</b></div>'; }
     // sessiz bolge: dil, anahtarlar ve kaydiricilar tek duz --night defterde (kesik cizgiyle ayrilir); altbilgi (ipucu + surum) ayri defter.
     // Son satir (Sifirla / Tamam) en sonda: pencere kayarsa yapisik (sticky) ayakta hep gorunur. Baglanti ayiraclari CSS'te (metin dugumu yok: satir sararken '·' yetim kalmaz).
-    UI.modal(('<h1>' + $t('Ayarlar') + '</h1>') + '<div class="setbox">' + ('<div class="toggle" data-act="lang"><span>🌐 ' + $t('Dil') + '</span><b class="lc" data-code="' + li.id.toUpperCase() + '">' + li.name + ' ›</b></div>') + row('sound', ('🔊 ' + $t('Ses efektleri'))) + row('music', ('🥁 ' + $t('Savaş müziği'))) + row('vibrate', ('📳 ' + $t('Titreşim'))) + row('menuBattle', ('⚔️ ' + $t('Menüde canlı savaş (pil/performans için kapatılabilir)'))) + slider('musicVol', '🥁 ' + $t('Müzik ses düzeyi')) + slider('sfxVol', '🔊 ' + $t('Efekt ses düzeyi')) + '</div>' +
+    UI.modal(('<h1>' + $t('Ayarlar') + '</h1>') + '<div class="setbox">' + ('<div class="toggle" data-act="lang"><span>🌐 ' + $t('Dil') + '</span><b class="lc" data-code="' + li.id.toUpperCase() + '">' + li.name + ' ›</b></div>') + row('sound', ('🔊 ' + $t('Ses efektleri'))) + row('music', ('🥁 ' + $t('Savaş müziği'))) + row('vibrate', ('📳 ' + $t('Titreşim'))) + row('menuBattle', (icoId('ic-act-swords', '⚔️') + ' ' + $t('Menüde canlı savaş (pil/performans için kapatılabilir)'))) + slider('musicVol', '🥁 ' + $t('Müzik ses düzeyi')) + slider('sfxVol', '🔊 ' + $t('Efekt ses düzeyi')) + '</div>' +
       ('<div class="actions"><button class="btn small" data-act="exp">📤 ' + $t('Kaydı dışa aktar') + '</button><button class="btn small" data-act="imp">📥 ' + $t('İçe aktar') + '</button></div>') +
       (Z.Monetize.adsOn() ? ('<div class="actions"><button class="btn small" data-act="adprivacy">🔒 ' + $t('Reklam gizlilik tercihleri') + '</button></div>') : '') +
       ('<div class="links settings-links"><a data-act="u_privacy">' + $t('Gizlilik Politikası') + '</a><a data-act="u_terms">' + $t('Kullanım Şartları') + '</a><a data-act="u_support">' + $t('Destek') + '</a></div>') +
@@ -759,13 +797,13 @@
     acts.dbl = function () {
       M.showRewarded('double', function (ok) {
         if (!ok) return UI.toast($t('Ödül için reklamı sonuna kadar izlemelisin'));
-        S.data.coins += base; S.save(); A.chest(); UI.toast('+' + base + ' 🪙'); var bt = $('btn-dbl'); if (bt) { bt.textContent = '✔'; bt.classList.add('off'); }
+        S.data.coins += base; S.save(); A.chest(); UI.toast('+' + base + ' 🪙'); var bt = $('btn-dbl'); if (bt) { UI.setIco(bt, '✔'); bt.classList.add('off'); }
       });
     };
     acts.adcoins = function () {
       M.showRewarded('result', function (ok) {
         if (!ok) return UI.toast($t('Ödül için reklamı sonuna kadar izlemelisin'));
-        var g = M.grantFreeReward('coins'); S.save(); A.chest(); UI.toast('+' + g.coins + ' 🪙'); var bt = $('btn-adcoins'); if (bt) { bt.textContent = '✔'; bt.classList.add('off'); }
+        var g = M.grantFreeReward('coins'); S.save(); A.chest(); UI.toast('+' + g.coins + ' 🪙'); var bt = $('btn-adcoins'); if (bt) { UI.setIco(bt, '✔'); bt.classList.add('off'); }
       });
     };
     if (isE) {
@@ -773,14 +811,14 @@
         '<p class="mut">' + $t('Süre {time} · {kills} düşman', { time: Z.fmtTime(r.time), kills: r.kills }) + '</p><div class="rewards"><span class="coin">🪙 ' + out.coins + '</span>' + (out.gems ? '<span class="gem">💎 ' + out.gems + '</span>' : '') + '</div>';
     } else if (r.win) {
       var base = out.coins - (out.chest ? out.chest.coins : 0), bg = out.gems - (out.chest ? out.chest.gems : 0);
-      html = '<h1 class="ban">' + (b.mode === 'daily' ? $t('GÜNLÜK SEFER TAMAM!') : $t('ZAFER!')) + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + Z.DIFFS[b.diff].icon + ' ' + Z.DIFFS[b.diff].name + (' ' + $t('kademe') + '</p>') : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : 'off') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">' + (i <= r.stars ? icoId('ic-cur-mullet', '★') : icoId('ic-cur-mullet-empty', '★')) + '</span>'; }).join('') + '</div>' +
+      html = '<h1 class="ban">' + (b.mode === 'daily' ? $t('GÜNLÜK SEFER TAMAM!') : $t('ZAFER!')) + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + UI.tierIco(b.diff) + ' ' + Z.DIFFS[b.diff].name + (' ' + $t('kademe') + '</p>') : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : 'off') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">' + (i <= r.stars ? icoId('ic-cur-mullet', '★') : icoId('ic-cur-mullet-empty', '★')) + '</span>'; }).join('') + '</div>' +
         '<p class="mut">' + (b.kind === 'field' ? $t('Süre {time} · Ordu korundu %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills }) : $t('Süre {time} · Kamp canı %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills })) + '</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + base + '</span>' + (bg > 0 ? '<span class="gem">💎 ' + bg + '</span>' : '') + '</div>' +
         (out.chest ? ('<div id="chest-area"><button class="chest" data-act="chest">' + icoId('ic-cur-coffer', '🎁') + '</button><p class="small qp">' + $t('Sandığı aç!') + '</p></div>') : '');
       var notes = (b.mode === 'daily' && !out.dailyFirst ? ('<p class="small">' + $t('Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).') + '</p>') : '') +
         (out.firstHard ? ('<p class="small gold">' + $t('İlk kez bu kademede kazandın: bonus elmas!') + '</p>') : '') +
-        (out.booster ? '<p class="gold">🎁 ' + $t('Hazırlık kartı kazandın') + ': ' + Z.BOOSTERS[out.booster].icon + ' ' + Z.BOOSTERS[out.booster].name + '</p>' : '') +
-        (out.newUnits.length ? ('<p class="gold">🎉 ' + $t('Yeni birlik') + ': ') + out.newUnits.map(function (u) { return Z.UNITS[u].icon + ' ' + Z.UNITS[u].name; }).join(', ') + '</p>' : '');
+        (out.booster ? '<p class="gold">🎁 ' + $t('Hazırlık kartı kazandın') + ': ' + UI.boosterIco(out.booster) + ' ' + Z.BOOSTERS[out.booster].name + '</p>' : '') +
+        (out.newUnits.length ? ('<p class="gold">🎉 ' + $t('Yeni birlik') + ': ') + out.newUnits.map(function (u) { return UI.unitImg(u, 0, 44) + ' ' + Z.UNITS[u].name; }).join(', ') + '</p>' : '');
       if (notes) html += '<div class="qz">' + notes + '</div>';
       acts.chest = function () {
         var a = $('chest-area'); if (!a || !out.chest) return;
@@ -788,7 +826,7 @@
         setTimeout(function () {
           if (!$('chest-area')) return;
           A.win();
-          $('chest-area').innerHTML = ('<p class="small qp">' + $t('Sandık ödülü') + '</p><div class="rewards"><span class="coin">🪙 ') + out.chest.coins + '</span>' + (out.chest.gems ? '<span class="gem">💎 ' + out.chest.gems + '</span>' : '') + '</div>';
+          $('chest-area').innerHTML = zi(('<p class="small qp">' + $t('Sandık ödülü') + '</p><div class="rewards"><span class="coin">🪙 ') + out.chest.coins + '</span>' + (out.chest.gems ? '<span class="gem">💎 ' + out.chest.gems + '</span>' : '') + '</div>');
         }, 750);
       };
     } else {
@@ -808,6 +846,10 @@
   // ---------------------------------------------------------------- Savas HUD
   var hud = { battle: null, cards: {}, last: {}, drag: null, ghost: null };
   UI.hud = hud;
+  // durus dugmesi: saldiri = capraz kilic, savunma = kalkan (ic-act-*); etiket i18n anahtarlari ayni
+  function stanceHtml(def) { return def ? icoId('ic-act-shield', '🛡') + '<small>' + $t('Savun') + '</small>' : icoId('ic-act-swords', '⚔') + '<small>' + $t('Saldır') + '</small>'; }
+  // secilen ganimet (perk) simgeleri: <i> ogeleri kalir (e2e-v02 '#perk-row i' sayar), icerik by.perk simgesi
+  function perkRowHtml(b) { return Object.keys(b.perks).map(function (k) { return '<i title="' + esc(Z.PERKS[k].name) + '">' + UI.perkIco(k) + '</i>'; }).join(''); }
 
   UI.hudBuild = function (b) {
     hud.battle = b; hud.last = {}; hud.cards = {};
@@ -816,16 +858,18 @@
     b.deck.forEach(function (id) {
       var u = Z.UNITS[id], el = document.createElement('button');
       el.className = 'card'; el.setAttribute('data-unit', id);
-      el.innerHTML = '<div class="cd"></div><div class="c-ico">' + UI.unitImg(id, 0, 66) + '</div><div class="c-name">' + u.name + '</div><div class="c-cost">🪙 ' + u.cost + '</div>';
+      el.innerHTML = zi('<div class="cd"></div><div class="c-ico">' + UI.unitImg(id, 0, 66) + '</div><div class="c-name">' + u.name + '</div><div class="c-cost">🪙 ' + u.cost + '</div>');
       wrap.appendChild(el); hud.cards[id] = { el: el, cd: el.firstChild };
     });
     var hero = Z.HEROES[b.heroId];
-    $('skill-ico').textContent = hero.icon; $('skill-name').textContent = hero.skill;
+    $('skill-ico').innerHTML = UI.heroIco(b.heroId, 'M', 'own') + '<span class="vh" aria-hidden="true">' + hero.icon + '</span>'; $('skill-name').textContent = hero.skill; // .vh: testlerin okudugu kahraman karakteri (gorunmez ikiz)
     hud.tut = false; $('hint').classList.add('hidden');
     UI.tutStop(false);
     $('perk-row').innerHTML = '';
-    var rc = $('rule-chip'), rtxt = (b.diff > 0 ? Z.DIFFS[b.diff].icon + ' ' : '') + b.rules.map(function (r) { return Z.RULES[r].icon + (b.rules.length === 1 ? ' ' + Z.RULES[r].name : ''); }).join(' ');
-    if (rtxt) { rc.textContent = rtxt; rc.classList.remove('hidden'); } else rc.classList.add('hidden');
+    // kural rozeti: kademe + kural simgeleri (veri tabanli); ikiz (.vh) ayni emojileri yalniz karakter olarak tutar (e2e-v04 /🔥/)
+    var rc = $('rule-chip'), rhtml = (b.diff > 0 ? UI.tierIco(b.diff) + ' ' : '') + b.rules.map(function (r) { return UI.ruleIco(r) + (b.rules.length === 1 ? ' ' + esc(Z.RULES[r].name) : ''); }).join(' '),
+      rtwin = (b.diff > 0 ? Z.DIFFS[b.diff].icon : '') + b.rules.map(function (r) { return Z.RULES[r].icon; }).join('');
+    if (rhtml.replace(/\s+/g, '')) { rc.innerHTML = rhtml + (rtwin ? '<span class="vh" aria-hidden="true">' + esc(rtwin) + '</span>' : ''); rc.classList.remove('hidden'); } else rc.classList.add('hidden');
     $('info-title').textContent = b.mode === 'endless' ? $t('Sonsuz Kuşatma') : (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Bölüm') + ' ') + b.level) + ' · ' + b.info.name;
     $('btn-speed').textContent = 'x' + (UI.game.speed || 1);
     var f = b.kind === 'field';
@@ -834,9 +878,9 @@
     hud.sel = f ? b.deck[0] : null; hud.fdrag = null; Z.Render.fhover = null;
     if (f) {
       $('fb-stance').classList.add('hidden'); $('fb-go').classList.remove('hidden'); $('fb-auto').classList.remove('hidden'); $('fb-clear').classList.remove('hidden');
-      $('fb-stance').innerHTML = ('⚔<small>' + $t('Saldır') + '</small>');
+      $('fb-stance').innerHTML = stanceHtml(false);
       hud.fieldTut = !S.data.fieldTutDone; $('hint').classList.toggle('hidden', !hud.fieldTut);
-      $('hint').textContent = ('👆 ' + $t('Kartı sahaya sürükle · birliğe dokun: geri al'));
+      UI.setIco($('hint'), '👆 ' + $t('Kartı sahaya sürükle · birliğe dokun: geri al'));
     }
     if (!f && b.mode === 'campaign' && b.level === 1 && !S.data.tutorialDone2) UI.tutStart(b);
   };
@@ -861,7 +905,7 @@
   UI.tutNext = function (b) {
     tut.i++; if (tut.i >= TUT.length) return UI.tutStop(true);
     var st = TUT[tut.i], info = st.kind === 'info';
-    $('tut-step').textContent = ($t('Öğretici') + ' ') + (tut.i + 1) + ' / ' + TUT.length; $('tut-text').innerHTML = st.text;
+    $('tut-step').textContent = ($t('Öğretici') + ' ') + (tut.i + 1) + ' / ' + TUT.length; $('tut-text').innerHTML = zi(st.text);
     $('tut-ok').classList.toggle('hidden', !info); if (info) $('tut-ok').textContent = st.ok || $t('Tamam');
     $('tut').classList.toggle('block', info); UI.game.tutHold = !!st.hold; A.click();
     tut.target = st.target ? st.target(b) : null; tut.pos = 0; if (st.assist) st.assist(b); UI.tutPlace();
@@ -899,23 +943,24 @@
     set('hst', prep ? $t('Savaşta') : b.heroCd <= 0 ? $t('HAZIR!') : Math.ceil(b.heroCd) + (' ' + $t('sn')), function (v) { $('skill-state').textContent = v; $('btn-skill').classList.toggle('ready', !prep && b.heroCd <= 0); });
     var mc = b.mineCost();
     set('mine', prep + ':' + b.mine + ':' + (mc !== null && b.gold >= mc), function () {
-      $('mine-txt').innerHTML = mc === null ? $t('Maden MAKS') : $t('Maden Sv.') + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
+      $('mine-txt').innerHTML = zi(mc === null ? $t('Maden MAKS') : $t('Maden Sv.') + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>');
       $('btn-mine').classList.toggle('off', prep || mc === null || b.gold < mc);
     });
     set('phase', b.phase, function () {
       $('fb-go').classList.toggle('hidden', !prep); $('fb-auto').classList.toggle('hidden', !prep); $('fb-clear').classList.toggle('hidden', !prep); $('fb-stance').classList.toggle('hidden', prep);
       if (!prep) { hud.fieldTut = false; S.data.fieldTutDone = true; S.save(); $('hint').classList.add('hidden'); }
     });
-    set('stance', b.stance, function (v) { $('fb-stance').innerHTML = (v === 'defend' ? ('🛡<small>' + $t('Savun') + '</small>') : ('⚔<small>' + $t('Saldır') + '</small>')); $('fb-stance').classList.toggle('def', v === 'defend'); });
-    var oc = $('obj-chip'), txt;
-    if (b.objective === 'capture') txt = '🚩 ' + Math.floor(b.scores.p) + ' – ' + Math.floor(b.scores.e);
-    else if (b.objective === 'survive') txt = '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t));
-    else txt = '👑 ' + Math.round(100 * Math.max(0, b.cmdE.hp) / b.cmdE.max) + '%';
-    txt = '🛡 ' + Math.round(100 * Math.max(0, b.cmdP.hp) / b.cmdP.max) + '% · ' + txt;
-    set('obj', txt, function (v) { oc.textContent = v; });
+    set('stance', b.stance, function (v) { $('fb-stance').innerHTML = stanceHtml(v === 'defend'); $('fb-stance').classList.toggle('def', v === 'defend'); });
+    // hedef rozeti: komutan can yuzdesi (kalkan) + hedefin simgesi (by.objective: tac / sancak / kum saati) ve skoru
+    var oc = $('obj-chip'), ok = b.objective === 'capture' ? 'capture' : b.objective === 'survive' ? 'survive' : 'commander', txt;
+    if (ok === 'capture') txt = Math.floor(b.scores.p) + ' – ' + Math.floor(b.scores.e);
+    else if (ok === 'survive') txt = Z.fmtTime(Math.max(0, b.info.surviveTime - b.t));
+    else txt = Math.round(100 * Math.max(0, b.cmdE.hp) / b.cmdE.max) + '%';
+    txt = zi('🛡 ' + Math.round(100 * Math.max(0, b.cmdP.hp) / b.cmdP.max) + '% · ') + UI.objIco(ok) + ' ' + esc(txt);
+    set('obj', txt, function (v) { oc.innerHTML = v; });
     set('title', Math.floor(b.t / 2), function () { $('info-title').textContent = (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Sefer') + ' ') + b.level) + ' · ' + b.info.name + (prep ? (' · ' + $t('Hazırlık')) : ' · ' + Z.fmtTime(b.t)); });
-    set('combo', b.combo >= 3 ? b.combo : 0, function (v) { var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = ('🔥 ' + $t('Seri x')) + v; });
-    set('perks', Object.keys(b.perks).join(), function () { $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join(''); });
+    set('combo', b.combo >= 3 ? b.combo : 0, function (v) { var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) UI.setIco(cEl, ('🔥 ' + $t('Seri x')) + v); });
+    set('perks', Object.keys(b.perks).join(), function () { $('perk-row').innerHTML = perkRowHtml(b); });
   }
   UI.fieldPlace = function (type, x, y, el) {
     var b = hud.battle;
@@ -967,17 +1012,15 @@
     });
     var mc = b.mineCost();
     set('mine', b.mine + ':' + (mc !== null && b.gold >= mc), function () {
-      $('mine-txt').innerHTML = mc === null ? $t('Maden MAKS') : $t('Maden Sv.') + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>';
+      $('mine-txt').innerHTML = zi(mc === null ? $t('Maden MAKS') : $t('Maden Sv.') + (b.mine + 1) + '<br><span style="color:var(--gold)">🪙 ' + mc + '</span>');
       $('btn-mine').classList.toggle('off', mc === null || b.gold < mc);
     });
     if (b.mode === 'endless') set('title', 'w' + b.wave(), function () { $('info-title').textContent = ($t('Dalga') + ' ') + b.wave() + ' · ' + Z.fmtTime(b.t); });
-    else set('title', Math.floor(b.t), function () { $('info-title').textContent = (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Sefer') + ' ') + b.level) + ' · ' + b.info.name + ' · ' + (b.rl('survive') ? '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t)) : Z.fmtTime(b.t)); });
+    else set('title', Math.floor(b.t), function () { var sv = b.rl('survive'); UI.setIco($('info-title'), (b.mode === 'daily' ? $t('Günlük Sefer') : ($t('Sefer') + ' ') + b.level) + ' · ' + b.info.name + ' · ' + (sv ? '⏳ ' + Z.fmtTime(Math.max(0, b.info.surviveTime - b.t)) : Z.fmtTime(b.t)), sv ? '⏳' : ''); }); // ikiz: e2e-v03 /⏳/
     set('combo', b.combo >= 3 ? b.combo : 0, function (v) {
-      var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) cEl.textContent = ('🔥 ' + $t('Seri x')) + v;
+      var cEl = $('combo-chip'); cEl.classList.toggle('hidden', !v); if (v) UI.setIco(cEl, ('🔥 ' + $t('Seri x')) + v);
     });
-    set('perks', Object.keys(b.perks).join(), function () {
-      $('perk-row').innerHTML = Object.keys(b.perks).map(function (k) { return '<i title="' + Z.PERKS[k].name + '">' + Z.PERKS[k].icon + '</i>'; }).join('');
-    });
+    set('perks', Object.keys(b.perks).join(), function () { $('perk-row').innerHTML = perkRowHtml(b); });
     if (UI.tutActive()) UI.tutUpdate(b);
   };
 
@@ -1029,7 +1072,7 @@
       if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 14 * UI.game.stage.scale) {
         d.moved = true;
         var g = document.createElement('div'); g.className = 'drag-ghost';
-        g.textContent = d.action.kind === 'unit' ? Z.UNITS[d.action.type].icon : Z.HEROES[hud.battle.heroId].icon;
+        g.innerHTML = d.action.kind === 'unit' ? UI.unitImg(d.action.type, 0, 84) : UI.heroIco(hud.battle.heroId, 'L', 'own'); // surukleme hayaleti: onbellekli birlik portresi / kahraman kalkani
         $('stage').appendChild(g); hud.ghost = g;
       }
       if (d.moved) {
@@ -1113,7 +1156,7 @@
     var acts = {}, html = ('<h1>⚔️ ' + $t('Savaş Ganimeti') + '</h1><p>' + $t('Birini seç — bu savaş boyunca geçerli olur.') + '</p><div class="perks">');
     b.perkOffer.forEach(function (id) {
       var p = Z.PERKS[id];
-      html += '<button class="perk" data-act="p_' + id + '"><span class="p-ico">' + p.icon + '</span><span class="p-name">' + p.name + '</span><span class="p-desc">' + p.desc + '</span></button>';
+      html += '<button class="perk" data-act="p_' + id + '"><span class="p-ico">' + UI.perkIco(id) + '</span><span class="p-name">' + p.name + '</span><span class="p-desc">' + p.desc + '</span></button>';
       acts['p_' + id] = function () { b.pickPerk(id); UI.closeModal(); if (done) done(); };
     });
     UI.modal(html + '</div>', acts);
@@ -1125,7 +1168,7 @@
       '🏰 ' + $t('<b>Her bölüm gerçek bir tarihî kuşatma:</b> Orléans, Akka, Kazan, Malta, Viyana, İstanbul… 105 bölümün her biri gerçekten yaşanmış bir kale kuşatması') + '<br>' +
       '🏕️ ' + $t('<b>Senin tarafında artık kamp var:</b> tahta çit, yurtlar, ateşler ve tuğ') + '<br>' +
       '⚔️ ' + $t('<b>Yeni kuşatma kuralları:</b> Hendek, Yardım Ordusu, Abluka ve sur yarılınca gedik') + '<br>' +
-      '🌐 ' + $t('Oyunun yeni adı:') + ' <b>' + Z.NAME + '</b><br><span class="small">' + $t('İlerlemen korundu.') + '</span></div>' +
+      icoId('ic-status-new', '🌐') + ' ' + $t('Oyunun yeni adı:') + ' <b>' + Z.NAME + '</b><br><span class="small">' + $t('İlerlemen korundu.') + '</span></div>' +
       '<div class="actions"><button class="btn gold primary" data-act="ok">' + $t('Sefere çıkalım!') + '</button></div>',
       { ok: function () { d.seenVersion = Z.NOTES_ID; S.save(); UI.closeModal(); UI.welcome(); } });
   };

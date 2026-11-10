@@ -23,11 +23,11 @@
   <!-- SAVAS ARAYUZU (720 genisliginde ortalanmis sutun) -->
   <div id="hud" class="hidden"><div class="col">
     <div id="hud-top">
-      <button id="btn-pause" class="hbtn" aria-label="Duraklat">⏸</button>
+      <button id="btn-pause" class="hbtn" aria-label="Duraklat"><svg class="i" aria-hidden="true"><use href="#ic-act-pause"/></svg></button>
       <button id="btn-speed" class="hbtn">x1</button>
-      <button id="btn-auto" class="hbtn" data-i18n-title="Oto savaş" aria-label="Oto savaş">🤖</button>
+      <button id="btn-auto" class="hbtn" data-i18n-title="Oto savaş" aria-label="Oto savaş"><svg class="i" aria-hidden="true"><use href="#ic-act-auto"/></svg></button>
       <div id="gold-chip"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-coin"/></svg></span><b id="gold-val">0</b><small id="gold-cap">/400</small><em id="gold-rate">+10/sn</em></div>
-      <button id="btn-mine"><span class="ico">⛏</span><span id="mine-txt">Maden</span></button>
+      <button id="btn-mine"><span class="ico"><svg class="i" aria-hidden="true"><use href="#ic-act-pickaxe"/></svg></span><span id="mine-txt">Maden</span></button>
     </div>
     <div id="hud-info"><div id="info-title"></div><div id="info-chips"><span id="obj-chip" class="hidden"></span><span id="rule-chip" class="hidden"></span><span id="combo-chip" class="hidden"></span></div></div>
     <div id="perk-row"></div>
@@ -35,10 +35,10 @@
     <div id="hud-bottom">
       <div id="hud-row1">
         <div id="field-bar" class="hidden">
-          <button id="fb-auto" class="fbtn">🎲<small data-i18n>Otomatik</small></button>
-          <button id="fb-clear" class="fbtn">🗑<small data-i18n>Temizle</small></button>
-          <button id="fb-go" class="fbtn go">⚔<small data-i18n>SAVAŞ</small></button>
-          <button id="fb-stance" class="fbtn stance hidden">⚔<small data-i18n>Saldır</small></button>
+          <button id="fb-auto" class="fbtn"><svg class="i" aria-hidden="true"><use href="#ic-act-dice"/></svg><small data-i18n>Otomatik</small></button>
+          <button id="fb-clear" class="fbtn"><svg class="i" aria-hidden="true"><use href="#ic-act-cross"/></svg><small data-i18n>Temizle</small></button>
+          <button id="fb-go" class="fbtn go"><svg class="i" aria-hidden="true"><use href="#ic-act-swords"/></svg><small data-i18n>SAVAŞ</small></button>
+          <button id="fb-stance" class="fbtn stance hidden"><svg class="i" aria-hidden="true"><use href="#ic-act-swords"/></svg><small data-i18n>Saldır</small></button>
         </div>
         <button id="btn-skill" class="card skill"><div class="cd"></div><div class="c-ico" id="skill-ico"></div><div class="s-txt"><div class="c-name" id="skill-name"></div><div class="c-cost" id="skill-state"></div></div></button>
       </div>
@@ -55,7 +55,7 @@
         <path class="pi" d="M15 82H105"/><path class="bar" d="M17 82H103"/><circle class="ball" cx="15" cy="82" r="6"/><circle class="ball" cx="105" cy="82" r="6"/>
         <path class="sock" d="M52 52H68L66 63H54Z"/><path class="head" d="M60 3C69 14 74 28 70 41C68 47 64 51 60 53C56 51 52 47 50 41C46 28 51 14 60 3Z"/></svg><div class="hl-text"><div class="hl-name">CASTLE SIEGE:<br>HISTORY</div><div class="band"></div><div class="hl-tag" data-i18n>Ordunu kur. Seferi kazan.</div></div></div>
     <div id="home-btns">
-      <button class="hbig" data-home="play"><span id="hb-main">▶ SEFERE ÇIK</span><small id="hb-sub"></small></button>
+      <button class="hbig" data-home="play"><span id="hb-main"><svg class="i" aria-hidden="true"><use href="#ic-act-play"/></svg> SEFERE ÇIK</span><small id="hb-sub"></small></button>
       <div class="hrow"><button data-home="map"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg><span data-i18n>Sefer Haritası</span></button><button data-home="army"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span data-i18n>Ordu</span></button></div>
       <div class="hrow"><button data-home="daily"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg><span data-i18n>Günlük Sefer</span></button><button data-home="endless"><svg class="i" aria-hidden="true"><use href="#i-inf"/></svg><span data-i18n>Sonsuz Kuşatma</span></button></div>
       <div class="hrow three"><button data-home="vault"><svg class="i" aria-hidden="true"><use href="#i-chest"/></svg><span data-i18n>Hazine</span></button><button data-home="shop" class="shopbtn"><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg><span data-i18n>Mağaza</span></button><button data-home="quests"><svg class="i" aria-hidden="true"><use href="#i-scroll"/></svg><span data-i18n>Görevler</span></button></div>
@@ -84,7 +84,7 @@
     </nav>
   </div></div>
 
-  <div id="tut" class="hidden"><div id="tut-ring"></div><div id="tut-hand">👆</div>
+  <div id="tut" class="hidden"><div id="tut-ring"></div><div id="tut-hand"><svg class="i" aria-hidden="true"><use href="#ic-mar-manicule"/></svg></div>
     <div id="tut-bubble"><div id="tut-step"></div><div id="tut-text"></div><div id="tut-row"><button id="tut-skip" class="btn small" data-i18n>Öğreticiyi geç</button><button id="tut-ok" class="btn gold small">Tamam</button></div></div></div>
   <div id="modal-layer" class="hidden"></div>
   <div id="toast" class="hidden"></div>

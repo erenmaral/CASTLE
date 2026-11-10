@@ -8,13 +8,13 @@
   // ---------- TEST saglayici: sahte reklam ve sahte odeme penceresi ----------
   M.testProvider = function () {
     function overlay(html) {
-      var el = document.createElement('div'); el.id = 'sim-overlay'; el.innerHTML = '<div class="sim-box">' + html + '</div>'; document.getElementById('stage').appendChild(el); return el;
+      var el = document.createElement('div'); el.id = 'sim-overlay'; el.innerHTML = '<div class="sim-box">' + (Z.ico ? Z.ico(html) : html) + '</div>'; document.getElementById('stage').appendChild(el); return el;
     }
     return {
       ads: true, iap: true, test: true,
       showRewarded: function () { return new Promise(function (res) {
         var left = 3, el = overlay('<div class="sim-tag">TEST</div><h2>🎬 ' + $t('Reklam (test)') + '</h2><p id="sim-cd">' + left + '</p><button id="sim-close" class="btn gold hidden">' + $t('Ödülü al') + '</button><button id="sim-cancel" class="btn small">' + $t('Kapat') + '</button>');
-        var t = setInterval(function () { left--; var cd = el.querySelector('#sim-cd'); if (cd) cd.textContent = left > 0 ? left : '✔'; if (left <= 0) { clearInterval(t); var b = el.querySelector('#sim-close'); if (b) b.classList.remove('hidden'); } }, 1000);
+        var t = setInterval(function () { left--; var cd = el.querySelector('#sim-cd'); if (cd) cd.innerHTML = left > 0 ? left : (Z.ico ? Z.ico('✔') : '✔'); if (left <= 0) { clearInterval(t); var b = el.querySelector('#sim-close'); if (b) b.classList.remove('hidden'); } }, 1000);
         el.addEventListener('click', function (e) { var id = e.target.id; if (id === 'sim-close') { clearInterval(t); el.remove(); res(true); } else if (id === 'sim-cancel') { clearInterval(t); el.remove(); res(false); } });
       }); },
       showInterstitial: function () { return new Promise(function (res) {

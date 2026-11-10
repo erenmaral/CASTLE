@@ -43,8 +43,11 @@ body{font:600 26px/1.3 var(--f-body)}
 
 /* ---------- ikonlar: Z.ico() ve ic-* sprite (js/icons.js); stil sprite'in kendi <style>'inda ---------- */
 .i{width:1em;height:1em;display:inline-block;vertical-align:-.14em;overflow:visible}
-/* bos (underdrawn) durum = Z.Icons.ud: ince kesik --ud cizgi, dolgu ve ayrinti yok (kilitli dugum, bos yildiz, sahipsiz birlik) */
-.i.ud{--c1:none;--c2:none;--c3:none;--f1:none;--f2:none;--k1:none;--k2:none;--ink:var(--ud);--il:none;--tk:none;--sw:1.6;--sj:1;--dash:2 3.6}
+/* bos (underdrawn) durum = Z.Icons.ud: ince kesik --ud cizgi, dolgu ve ayrinti yok (kilitli dugum, bos yildiz, sahipsiz birlik).
+   Acik sinif (.ud, ui.js icoId(...,'ud')) ya da durum: kapali / karsilanamayan dugme, kilitli birlik karti, alinmis basarim, gelecek gun, kilitli yildiz odulu, bos hazirlik karti, kapali Gunluk Sefer karti */
+.i.ud,.btn.off .i,.btn.soft .i,.btn[disabled] .i,#btn-mine.off .i,.bchip.none .i,.ucard.locked .i,.ach.claimed .i,.day:not(.today):not(.got) .i,.smile:not(.can):not(.got) .i,.daily-card.off .i{--c1:none;--c2:none;--c3:none;--f1:none;--f2:none;--k1:none;--k2:none;--ink:var(--ud);--il:none;--tk:none;--sw:1.6;--sj:1;--dash:2 3.6}
+/* sahip olunan kahraman kalkani = turuncu bordur (--f2; ic-hero-* kalkan konteyneri) */
+.i.own{--f2:var(--orp)}
 .ico{display:inline-flex;color:var(--orp)}
 .ico.gem{color:var(--vdg)}
 .ico .i{width:1.05em;height:1.05em}
@@ -79,7 +82,7 @@ b{font-weight:800}
 .panel.indeck,.ucard.indeck{border:4px solid var(--orp);box-shadow:0 0 0 3px var(--ink),0 8px 0 3px var(--ink)}
 /* bos kart (kilitli birlik): kesikli cizgi, dolgu yok */
 .ucard.locked,.daily-card.off{background:none;border:3px dashed var(--ud);box-shadow:none;color:var(--ud)}
-.ucard.locked .uico{opacity:.45}
+.ucard.locked .uico{opacity:1}/* sahipsiz birlik = R.ghostSprite (zaten --ink2 silueti .45): ikinci bir solma yok */
 .niche{background:var(--dp-gold) 0 0/24px,var(--leaf);border:3px solid var(--ink);border-radius:50% 50% 4px 4px/42% 42% 4px 4px}
 .ucard .big{display:flex;align-items:center;justify-content:center;flex:none;width:100px;height:116px;font-size:52px;background:var(--dp-gold) 0 0/24px,var(--leaf);border:3px solid var(--ink);border-radius:50% 50% 4px 4px/42% 42% 4px 4px}
 .ucard .info h3 .lvl{font-family:var(--f-body)}
@@ -528,6 +531,60 @@ textarea{font-size:22px;padding:12px}
 .uico{width:auto;max-width:84px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none}
 .ucard .big .uico{max-width:88px;max-height:100%}
 .row-lines .uico{margin:0 -6px}
+
+/* ---------- ikon yerlesimi (ui.js UI.ico/UI.setIco/Z.ico ve index.html simgeleri): boyut sinifi + hizalama ----------
+   S (<= 24u metin) >= 28u = ~16 css px: metin icinde 1.25em; M 44-64u: kart / dugme / HUD; L 96-128u: kasa, kahraman, paket, ganimet. vertical-align yalniz satir ici (flex ogelerde yok sayilir). */
+.btn .i,.chip .i,.badge .i,.modal p .i,.qz .i,.qp .i,.small .i,small .i,.toggle .i,.slider .i,.row-lines .i,.new-list .i,#toast .i,#tut-text .i,.rule-box .i,.tbl .i,#hint .i{width:1.25em;height:1.25em;vertical-align:-.3em}
+.btn .i{margin:-.1em 0}
+.sect .i{width:1.05em;height:1.05em;vertical-align:-.16em}
+.modal h1 .i{width:1.05em;height:1.05em;vertical-align:-.14em}
+.rewards .i{width:1.05em;height:1.05em;vertical-align:-.16em}
+.big-stars .i{width:1em;height:1em;vertical-align:-.14em}/* yildiz satiri (54u brifing / 84u sonuc) .qz .i buyutmesinden etkilenmez */
+.rule-box b .i{width:1.6em;height:1.6em;vertical-align:-.5em;margin:-.2em 4px -.2em 0}
+.realm small .i{width:1.2em;height:1.2em;vertical-align:-.28em}
+.smile .i{width:1.3em;height:1.3em;vertical-align:-.3em}
+.hbig #hb-main .i{width:.95em;height:.95em;vertical-align:-.1em;margin-right:6px}
+.hbig small .i{width:1.5em;height:1.5em;vertical-align:-.4em}
+/* HUD: dugmeler M, rozetler S (>= 28u), kahraman kalkani M */
+.hbtn .i{width:64px;height:64px}
+#btn-mine .ico .i{width:46px;height:46px}
+.fbtn .i{width:46px;height:46px}
+#info-title .i,#rule-chip .i,#obj-chip .i,#combo-chip .i{width:30px;height:30px;vertical-align:-8px}
+#rule-chip .i+.i{margin-left:4px}
+#perk-row i .i{width:36px;height:36px}
+.card .c-cost .i{width:1.15em;height:1.15em;vertical-align:-.2em}
+.card.skill .c-ico .i{width:52px;height:52px}
+.drag-ghost .i{width:1.25em;height:1.25em}
+/* ana ekran / harita / ordu / hazine / magaza / gorevler */
+.mode-card .big .i{width:56px;height:56px}
+.daily-card .big .i{width:60px;height:60px}
+.mode-card .deckrow{display:flex;align-items:flex-end;flex-wrap:nowrap;gap:2px;margin-top:2px}
+.deckrow .uico{height:42px!important;max-width:34px}
+.deckrow .i{width:40px;height:40px;margin-left:6px;flex:none}
+.ucard .big .i{width:104px;height:104px}
+.ucard .big .i.ud{--ud:var(--ink2)}/* sahipsiz kahraman kalkani altin kovuk uzerinde: --vel2 cizgisi kaybolur, murekkep tonu okunur */
+.ucard small .i{width:1.25em;height:1.25em;vertical-align:-.3em}
+.vault-ico{display:flex;flex:none}
+.vault-ico .i{width:112px;height:112px}
+.bignum .i{width:1em;height:1em;vertical-align:-.16em}
+.wheel span .i{width:1.4em;height:1.4em;vertical-align:-.4em}
+.wheel-ptr .i{width:68px;height:68px;display:block}
+.mrow .big .i{width:58px;height:58px}
+.day .ico .i{width:42px;height:42px}
+.shop-free .shopbtn span .i{width:48px;height:48px;vertical-align:middle}
+.pk-ico{display:flex;align-items:center;justify-content:center;height:112px}
+.pk-ico .i{width:84px;height:84px}
+.pk-ico .i.pk1{width:90px;height:90px}
+.pk-ico .i.pk2{width:98px;height:98px}
+.pk-ico .i.pk3{width:106px;height:106px}
+.pk-ico .i.pk4{width:112px;height:112px}
+.pk-gems .i{width:1.1em;height:1.1em;vertical-align:-.2em}
+.perk .p-ico{display:flex;flex:none;width:76px;height:76px;align-items:center;justify-content:center}
+.perk .p-ico .i{width:72px;height:72px}
+.bchip .bi{display:inline-flex;align-items:center}
+.bchip .bi .i{width:46px;height:46px}
+.chest .i{width:1em;height:1em;display:block}
+#tut-hand .i{width:1.4em;height:1.4em;transform:rotate(-90deg);transform-origin:50% 50%}
 
 /* CJK sistem yazisi hafif: yalniz basliklarda kalin agirlik (sentetik) acik; govdede font-synthesis kapali kalir (font: kisayollarindan sonra gelmeli) */
 :lang(zh) h1,:lang(zh) h2,:lang(zh) .logo,:lang(zh) .hl-name,:lang(zh) .sect{font-weight:900;font-synthesis:weight}
