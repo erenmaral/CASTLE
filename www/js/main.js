@@ -238,10 +238,6 @@
     var fontsDone = part(), baked = part();
     try {
       if (Z.Icons && Z.Icons.inject) Z.Icons.inject();
-      // Eski satir ici sprite (i-coin, i-gem ...) index.html'de durdukca onun id'leri kazansin: yeni sprite'taki ayni adli takma adlar (i-coin -> ic-cur-bezant ...)
-      // sayfadaki sirada onun ardinda kalir, gorunum degismez. Eski sprite index.html'den silinince bu satir bir sey yapmaz ve takma adlar devralir.
-      var ic = $('z-icons'), old = document.querySelector('#stage > svg:not(#z-icons)');
-      if (ic && old && old.nextSibling !== ic) old.parentNode.insertBefore(ic, old.nextSibling);
     } catch (e) { /* simgesiz de acilir */ }
     loadFonts().then(fontsDone); // yazi dosyalari agdan inerken ...
     try { if (Z.Art && Z.Art.bake) Z.Art.bake(baked); else baked(); } catch (e) { baked(); } // ... boot dokulari (senkron, ~25 ms) pisirilir; dokusuz da acilir

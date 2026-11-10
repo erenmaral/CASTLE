@@ -39,7 +39,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .tab span{font-size:38px;line-height:1}
 h2{margin:0 0 12px;font-size:34px}
 h3{margin:0 0 4px;font-size:26px}
-small,.small{font-size:22px}
+small,.small{font-size:24px}
 
 /* sefer haritasi (dikey yol) */
 .maptrack{position:relative;width:100%;overflow:hidden;margin-top:8px}
@@ -50,13 +50,13 @@ small,.small{font-size:22px}
 .node .nn{font-size:36px;line-height:1}
 .node .st{position:absolute;bottom:-12px;font-size:22px;line-height:1;white-space:nowrap}
 .node .st:empty{display:none}
-.node .nm{position:absolute;z-index:3;top:100%;margin-top:10px;width:max-content;max-width:250px;text-align:center;font-size:22px;line-height:1.1;pointer-events:none}
+.node .nm{position:absolute;z-index:3;top:100%;margin-top:10px;width:max-content;max-width:250px;text-align:center;font-size:24px;line-height:1.1;pointer-events:none}
 .node.boss .nm{margin-top:6px}
 .node .rl{position:absolute;bottom:100%;margin-bottom:2px;font-size:22px;line-height:1;pointer-events:none;white-space:nowrap}
 .realm{position:absolute;left:50%;transform:translateX(-50%);z-index:1;display:flex;align-items:center;gap:14px;white-space:nowrap;text-align:left}
 .realm .ri{font-size:46px;line-height:1}
 .realm b{display:block;font-size:26px}
-.realm small{display:block;font-size:22px}
+.realm small{display:block;font-size:24px}
 .flagmark{position:absolute;z-index:4;font-size:44px;margin-left:-14px;pointer-events:none}
 .rbg{position:absolute;left:0;right:0;pointer-events:none}
 .dec{position:absolute;margin:-20px 0 0 -20px;pointer-events:none;line-height:1}
@@ -69,7 +69,7 @@ small,.small{font-size:22px}
 .mode-card{flex:1;display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;min-width:0}
 .mode-card .big{font-size:44px}
 .mode-card h3{font-size:24px}
-.mode-card small{font-size:22px;line-height:1.2;display:block}
+.mode-card small{font-size:24px;line-height:1.2;display:block}
 
 /* ordu */
 .grid2{display:grid;grid-template-columns:1fr;gap:12px}
@@ -130,7 +130,7 @@ small,.small{font-size:22px}
 #cards .card{flex:0 0 calc((100% - 32px) / 5)}
 .card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;touch-action:none;min-width:0}
 .card .c-ico{font-size:44px;line-height:1}
-.card .c-name{font-size:22px;font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.card .c-name{font-size:24px;font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .card .c-cost{font-size:24px;font-weight:900}
 .card .cd{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 0;transform:scaleY(0);pointer-events:none}
 .card.skill{flex:1;height:88px;flex-direction:row;gap:12px;justify-content:flex-start;padding:0 16px}
@@ -170,7 +170,7 @@ small,.small{font-size:22px}
 .rule-box{margin:8px 0;padding:8px 16px;text-align:left}
 .daily-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:6px 0}
 .daily-card .big{font-size:46px}.daily-card .grow{flex:1;min-width:0}.daily-card h3{font-size:25px}
-.diffrow{display:flex;gap:8px;justify-content:center;margin:4px 0}
+.diffrow{display:flex;gap:14px;justify-content:center;margin:4px 0}
 .diff{flex:1;max-width:190px;height:70px;font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center;gap:8px}
 .diff .di{font-size:28px}
 .mrow{display:flex;align-items:center;gap:14px;margin-bottom:10px}.mrow .big{font-size:44px}.mrow .grow{flex:1;min-width:0}.mrow h3{font-size:24px}
@@ -178,13 +178,13 @@ textarea{width:100%;font:22px/1.3 ui-monospace,Menlo,Consolas,monospace;padding:
 
 /* ---- Acik alan savasi ---- */
 #field-bar{display:flex;gap:8px;flex:none}
-.fbtn{width:92px;height:88px;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;line-height:1}
+.fbtn{width:100px;height:88px;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:32px;line-height:1}
 .fbtn small{font-size:22px;margin-top:3px;font-weight:800}
 .fbtn.go{width:128px}
 .fbtn.stance{width:150px}
 .fbtn:active{transform:translateY(2px)}
 #hud.field #perk-row{top:calc(var(--stp) + 204px)}
-#hud.field #hint{bottom:248px}
+#hud.field #hint{bottom:268px}
 
 /* ---- Sefer haritasi: diyar manzaralari, kivrimli yol ---- */
 .maptrack .rd-edge{stroke-width:30}
@@ -209,7 +209,7 @@ textarea{width:100%;font:22px/1.3 ui-monospace,Menlo,Consolas,monospace;padding:
 .hrow button span{font-size:22px;font-weight:800}
 .hrow.three button{height:104px}
 #home [data-home] .dot{position:absolute;right:10px;top:10px;width:20px;height:20px;border-radius:50%}
-#home-ver{position:absolute;left:0;right:0;bottom:calc(var(--sbp) + 2px);text-align:center;font-size:22px;pointer-events:none}
+#home-ver{position:absolute;left:0;right:0;bottom:calc(var(--sbp) + 2px);text-align:center;font-size:24px;pointer-events:none}
 #btn-home{width:56px;height:56px;font-size:36px;font-weight:900;flex:none;line-height:1}
 
 /* ---- Etkilesimli ogretici ---- */
@@ -246,9 +246,9 @@ textarea{width:100%;font:22px/1.3 ui-monospace,Menlo,Consolas,monospace;padding:
 .pack .btn{min-width:150px}
 .offer{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .offer .grow{flex:1;min-width:0}
-.offer small{font-size:22px}
+.offer small{font-size:24px}
 .shop-misc{display:flex;flex-direction:column;gap:10px;align-items:stretch}
-.shop-misc .links{text-align:center;font-size:22px}
+.shop-misc .links{text-align:center;font-size:24px}
 .shop-misc .links a{text-decoration:underline;padding:6px}
 #ad-banner{flex:none;height:60px;margin:0 12px 6px;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:2px}
 #sim-overlay{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center}
@@ -272,7 +272,7 @@ textarea{width:100%;font:22px/1.3 ui-monospace,Menlo,Consolas,monospace;padding:
 
 /* ---- Hazirlik kartlari + kahraman secimi (brifing) ---- */
 .boost-row{display:flex;align-items:center;gap:10px;margin:4px 0}
-.boost-row .bl{font-size:22px;font-weight:800;min-width:96px;text-align:left}
+.boost-row .bl{font-size:24px;font-weight:800;min-width:96px;text-align:left}
 .bchip{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;font-size:30px;line-height:1.1}
 .bchip b{font-size:22px}
 .bdesc{margin:2px 0 8px;min-height:24px}

@@ -17,21 +17,7 @@
 </head>
 <body>
 <div id="stage">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7l5 5-5 5-5-5z"/></symbol>
-  <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 4h12l4 6-10 11L2 10z"/><path d="M2 10h20M9 4l-2 6 5 11 5-11-2-6"/></symbol>
-  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M10.500 3h3l.6 2.400 1.700.7 2.100-1.300 2.100 2.100-1.300 2.100.7 1.700 2.400.6v3l-2.400.6-.7 1.700 1.300 2.100-2.100 2.100-2.100-1.300-1.700.7-.6 2.400h-3l-.6-2.400-1.700-.7-2.100 1.300-2.100-2.100 1.300-2.100-.7-1.700L3 13.500v-3l2.400-.6.7-1.700-1.300-2.100 2.100-2.100 2.100 1.300 1.700-.7z"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
-  <symbol id="i-sword" viewBox="0 0 24 24"><path d="M5 19L19 5M15 5h4v4M19 19L5 5M9 5H5v4"/><path d="M4 20l3-3M20 20l-3-3"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M12 8v8M8.5 12h7"/></symbol>
-  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M9 3h6l-1.4 3h-3.2z"/><path d="M10.4 6C6.4 9 4.5 12 4.5 15a5 5 0 005 5h5a5 5 0 005-5c0-3-1.9-6-5.9-9"/><path d="M12 11.5v5M9.8 13.5h4.4"/></symbol>
-  <symbol id="i-chest" viewBox="0 0 24 24"><path d="M3.5 11V9a5.5 5.5 0 015.5-5.5h6A5.5 5.5 0 0120.500 9v2"/><rect x="3.500" y="11" width="17" height="9.500" rx="1.500"/><path d="M3.500 14.500h17M12 13v4"/></symbol>
-  <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M8 4h10v13a3 3 0 01-3 3H6a3 3 0 003-3V6.500A2.500 2.500 0 105.500 6"/><path d="M12 8.500h3.500M12 12h3.500"/></symbol>
-  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M12 12.500l2 2-2 2-2-2z"/></symbol>
-  <symbol id="i-inf" viewBox="0 0 24 24"><path d="M12 12c-2-3-3.500-4-5.500-4a4 4 0 000 8c2 0 3.500-1 5.500-4s3.500-4 5.500-4a4 4 0 010 8c-2 0-3.500-1-5.500-4z"/></symbol>
-</defs></svg>
-
+  <!-- Simge sprite (ic-* ve i-* takma adlari): js/icons.js ekler, #stage icinde ilk cocuk (main.js prepare) -->
   <canvas id="game" class="hidden"></canvas>
 
   <!-- SAVAS ARAYUZU (720 genisliginde ortalanmis sutun) -->
@@ -40,7 +26,7 @@
       <button id="btn-pause" class="hbtn" aria-label="Duraklat">⏸</button>
       <button id="btn-speed" class="hbtn">x1</button>
       <button id="btn-auto" class="hbtn" data-i18n-title="Oto savaş" aria-label="Oto savaş">🤖</button>
-      <div id="gold-chip"><span class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-coin"/></svg></span><b id="gold-val">0</b><small id="gold-cap">/400</small><em id="gold-rate">+10/sn</em></div>
+      <div id="gold-chip"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-coin"/></svg></span><b id="gold-val">0</b><small id="gold-cap">/400</small><em id="gold-rate">+10/sn</em></div>
       <button id="btn-mine"><span class="ico">⛏</span><span id="mine-txt">Maden</span></button>
     </div>
     <div id="hud-info"><div id="info-title"></div><div id="info-chips"><span id="obj-chip" class="hidden"></span><span id="rule-chip" class="hidden"></span><span id="combo-chip" class="hidden"></span></div></div>
@@ -62,16 +48,17 @@
 
   <!-- ANA MENU (canli savas arkada) -->
   <div id="home" class="hidden"><div id="home-col">
-    <div id="home-cur"><button id="home-settings" class="round" data-home="settings" aria-label="Ayarlar"><svg class="i" viewBox="0 0 24 24"><use href="#i-gear"/></svg></button><div class="spacer"></div><div class="curr"><span class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-coin"/></svg></span><b id="home-coins">0</b></div><button class="curr plus" data-home="shop"><span class="ico gem"><svg class="i" viewBox="0 0 24 24"><use href="#i-gem"/></svg></span><b id="home-gems">0</b><i>+</i></button></div>
+    <div id="home-cur"><button id="home-settings" class="round" data-home="settings" aria-label="Ayarlar"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg></button><div class="spacer"></div><div class="curr"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-coin"/></svg></span><b id="home-coins">0</b></div><button class="curr plus" data-home="shop"><span class="ico gem"><svg class="i" aria-hidden="true"><use href="#i-gem"/></svg></span><b id="home-gems">0</b><i>+</i></button></div>
     <div id="home-logo"><svg class="tug" viewBox="0 0 120 276" aria-hidden="true">
-        <g class="tails"><path class="t1" d="M60 80C40 116 32 170 38 236C50 182 54 128 60 80Z"/><path class="t2" d="M60 80C80 116 88 170 82 236C70 182 66 128 60 80Z"/><path class="t3" d="M60 80C30 112 14 160 16 214C32 168 46 124 60 80Z"/><path class="t4" d="M60 80C90 112 106 160 104 214C88 168 74 124 60 80Z"/><path class="t5" d="M60 80C53 140 53 200 60 252C67 200 67 140 60 80Z"/></g>
-        <path class="pole" d="M60 36V270"/><path class="bar" d="M26 80H94"/><circle class="ball" cx="26" cy="80" r="5"/><circle class="ball" cx="94" cy="80" r="5"/>
-        <path class="moon" d="M44 38a18 18 0 1 1 32 0a13 13 0 1 0-32 0z"/><circle class="ball" cx="60" cy="14" r="6"/></svg><div class="hl-text"><div class="hl-name">CASTLE SIEGE:<br>HISTORY</div><div class="band"></div><div class="hl-tag" data-i18n>Ordunu kur. Seferi kazan.</div></div></div>
+        <path class="pi" d="M60 55V274"/><path class="pole" d="M60 58V271"/>
+        <g class="tails"><path class="t1" d="M19 88H45L43.5 152L42 224L32 204L21.5 225L20 152Z"/><path class="t5" d="M47 88H73L72 162L71 264L60 243L49 265L48 162Z"/><path class="t2" d="M75 88H101L100 152L98.5 224L88 204L78 226L76.5 152Z"/></g>
+        <path class="pi" d="M15 82H105"/><path class="bar" d="M17 82H103"/><circle class="ball" cx="15" cy="82" r="6"/><circle class="ball" cx="105" cy="82" r="6"/>
+        <path class="sock" d="M52 52H68L66 63H54Z"/><path class="head" d="M60 3C69 14 74 28 70 41C68 47 64 51 60 53C56 51 52 47 50 41C46 28 51 14 60 3Z"/></svg><div class="hl-text"><div class="hl-name">CASTLE SIEGE:<br>HISTORY</div><div class="band"></div><div class="hl-tag" data-i18n>Ordunu kur. Seferi kazan.</div></div></div>
     <div id="home-btns">
       <button class="hbig" data-home="play"><span id="hb-main">▶ SEFERE ÇIK</span><small id="hb-sub"></small></button>
-      <div class="hrow"><button data-home="map"><svg class="i" viewBox="0 0 24 24"><use href="#i-map"/></svg><span data-i18n>Sefer Haritası</span></button><button data-home="army"><svg class="i" viewBox="0 0 24 24"><use href="#i-shield"/></svg><span data-i18n>Ordu</span></button></div>
-      <div class="hrow"><button data-home="daily"><svg class="i" viewBox="0 0 24 24"><use href="#i-cal"/></svg><span data-i18n>Günlük Sefer</span></button><button data-home="endless"><svg class="i" viewBox="0 0 24 24"><use href="#i-inf"/></svg><span data-i18n>Sonsuz Kuşatma</span></button></div>
-      <div class="hrow three"><button data-home="vault"><svg class="i" viewBox="0 0 24 24"><use href="#i-chest"/></svg><span data-i18n>Hazine</span></button><button data-home="shop" class="shopbtn"><svg class="i" viewBox="0 0 24 24"><use href="#i-bag"/></svg><span data-i18n>Mağaza</span></button><button data-home="quests"><svg class="i" viewBox="0 0 24 24"><use href="#i-scroll"/></svg><span data-i18n>Görevler</span></button></div>
+      <div class="hrow"><button data-home="map"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg><span data-i18n>Sefer Haritası</span></button><button data-home="army"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg><span data-i18n>Ordu</span></button></div>
+      <div class="hrow"><button data-home="daily"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg><span data-i18n>Günlük Sefer</span></button><button data-home="endless"><svg class="i" aria-hidden="true"><use href="#i-inf"/></svg><span data-i18n>Sonsuz Kuşatma</span></button></div>
+      <div class="hrow three"><button data-home="vault"><svg class="i" aria-hidden="true"><use href="#i-chest"/></svg><span data-i18n>Hazine</span></button><button data-home="shop" class="shopbtn"><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg><span data-i18n>Mağaza</span></button><button data-home="quests"><svg class="i" aria-hidden="true"><use href="#i-scroll"/></svg><span data-i18n>Görevler</span></button></div>
     </div>
     <div id="home-ver"></div>
   </div></div>
@@ -79,21 +66,21 @@
   <!-- SEFER MERKEZI (harita / ordu / hazine / gorev) -->
   <div id="hub" class="hidden"><div id="hub-col">
     <div id="hub-top">
-      <button id="btn-home" class="round" aria-label="Ana menü"><svg class="i" viewBox="0 0 24 24"><use href="#i-back"/></svg></button>
+      <button id="btn-home" class="round" aria-label="Ana menü"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></button>
       <div class="logo">CASTLE SIEGE: HISTORY</div>
       <div class="spacer"></div>
-      <div class="curr"><span class="ico"><svg class="i" viewBox="0 0 24 24"><use href="#i-coin"/></svg></span><b id="cur-coins">0</b></div>
-      <div class="curr"><span class="ico gem"><svg class="i" viewBox="0 0 24 24"><use href="#i-gem"/></svg></span><b id="cur-gems">0</b></div>
-      <button id="btn-settings" class="round" aria-label="Ayarlar"><svg class="i" viewBox="0 0 24 24"><use href="#i-gear"/></svg></button>
+      <div class="curr"><span class="ico"><svg class="i" aria-hidden="true"><use href="#i-coin"/></svg></span><b id="cur-coins">0</b></div>
+      <div class="curr"><span class="ico gem"><svg class="i" aria-hidden="true"><use href="#i-gem"/></svg></span><b id="cur-gems">0</b></div>
+      <button id="btn-settings" class="round" aria-label="Ayarlar"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg></button>
     </div>
     <main id="tab-content"></main>
     <div id="ad-banner" class="hidden"></div>
     <nav id="tabs">
-      <button data-tab="map" class="tab"><span><svg class="i" viewBox="0 0 24 24"><use href="#i-sword"/></svg></span><em data-i18n>Sefer</em></button>
-      <button data-tab="army" class="tab"><span><svg class="i" viewBox="0 0 24 24"><use href="#i-shield"/></svg></span><em data-i18n>Ordu</em></button>
-      <button data-tab="shop" class="tab"><span><svg class="i" viewBox="0 0 24 24"><use href="#i-bag"/></svg></span><em data-i18n>Mağaza</em></button>
-      <button data-tab="vault" class="tab"><span><svg class="i" viewBox="0 0 24 24"><use href="#i-chest"/></svg></span><em data-i18n>Hazine</em></button>
-      <button data-tab="quests" class="tab"><span><svg class="i" viewBox="0 0 24 24"><use href="#i-scroll"/></svg></span><em data-i18n>Görev</em></button>
+      <button data-tab="map" class="tab"><span><svg class="i" aria-hidden="true"><use href="#i-sword"/></svg></span><em data-i18n>Sefer</em></button>
+      <button data-tab="army" class="tab"><span><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg></span><em data-i18n>Ordu</em></button>
+      <button data-tab="shop" class="tab"><span><svg class="i" aria-hidden="true"><use href="#i-bag"/></svg></span><em data-i18n>Mağaza</em></button>
+      <button data-tab="vault" class="tab"><span><svg class="i" aria-hidden="true"><use href="#i-chest"/></svg></span><em data-i18n>Hazine</em></button>
+      <button data-tab="quests" class="tab"><span><svg class="i" aria-hidden="true"><use href="#i-scroll"/></svg></span><em data-i18n>Görev</em></button>
     </nav>
   </div></div>
 
@@ -101,7 +88,7 @@
     <div id="tut-bubble"><div id="tut-step"></div><div id="tut-text"></div><div id="tut-row"><button id="tut-skip" class="btn small" data-i18n>Öğreticiyi geç</button><button id="tut-ok" class="btn gold small">Tamam</button></div></div></div>
   <div id="modal-layer" class="hidden"></div>
   <div id="toast" class="hidden"></div>
-  <div id="boot"><div class="logo big">CASTLE SIEGE: HISTORY</div><div class="sub" data-i18n>Yükleniyor…</div></div>
+  <div id="boot"><div class="logo big">CASTLE SIEGE: HISTORY</div><div class="boot-rule"></div><div class="sub" data-i18n>Yükleniyor…</div></div>
 </div>
 <script src="js/version.js"></script>
 <script src="js/i18n.js"></script>

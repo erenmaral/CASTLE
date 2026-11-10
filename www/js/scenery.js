@@ -7,9 +7,10 @@
   'use strict';
   var R = Z.Render, U = R.util, TAU = U.TAU, THEMES = R.THEMES;
   var DW = 720, CASTLE_H = 86;
-  var DIAPER_A = 0.10;        // bible section 7: realm diaper over the flat ground (tuned by eye in R.Scenery.tune)
+  var DIAPER_A = 0.18;        // bible section 7 says .10, but the realm tiles are tone-on-tone (lattice ~6% off the ground), so .10 vanishes; .30 read as wallpaper behind a melee (volcano, autumn); .18 is the quiet middle
   var ROAD = '#E3CFA0';       // lanes and roads: flat, no ruts or pebbles
   var TUFT_MAX = 400;         // ink tufts per scene (bible: <= 400)
+  var ROAD_RULE = true;       // a pricked --ink2 line of dots 8u inside both road edges (scribe's ruling; the itinerary-road motif of the map)
 
   // ---- tokens: Z.Art.TOK (bible section 2), inline copy when art.js is missing ----------------------------------------
   var ART = Z.Art || {};
@@ -28,19 +29,23 @@
   function rng(seed) { return ART.rng ? ART.rng(seed) : U.seeded(typeof seed === 'number' ? seed : 7); }
 
   // ---- per-theme scenery tokens (theme index = realm index; the ground and diaper come from Z.Art.REALM) ------------------
-  // leaf/leaf2 broadleaf clumps, con conifer, bush, rock, trunk; water = river/pond body; band = horizon tile; far/near = ridge tones
+  // leaf/leaf2 broadleaf clumps, con conifer, bush, rock, trunk, palm fronds; band = horizon tile; far = far-ridge tone; flowers = bush blossom dots
+  // FOLIAGE VS UNITS: the units are mid-tones too (host azure #22409A, garrison gules #D8391F), so luminance alone cannot separate them from a canopy; every leaf / leaf2 /
+  // con / bush / palm tone must sit >= 1.4:1 away in luminance OR >= 40 deg away in hue from both tinctures (azure is 227 deg, gules 7 deg). That is why the night forest is
+  // jade (the old violet canopy was 1.00:1 against azure) and the autumn canopy is ochre (the old orange was 1.13:1 against gules). The gallery gate measures it.
   var TH = [
-    /* 0 W. Europe  (forest) */ { leaf: '#3F8F5A', leaf2: '#4D9B54', con: '#2C7552', bush: '#5BA05A', rock: '#BDB8A8', trunk: TK.bis, water: TK.azur, band: 'gold', far: '#86A97A', near: 1, flowers: [IVO, TK.verm, TK.orp] },
-    /* 1 Holy Lands (desert) */ { leaf: '#7C8D4B', leaf2: '#8E9A55', palm: '#3F8F5A', con: '#3F8F5A', bush: '#8E9B52', rock: '#C9A56C', trunk: TK.bis, water: TK.azur, band: 'gold', far: '#DDBB7C', near: 1, flowers: [TK.orp, IVO] },
-    /* 2 Northern   (ice)    */ { leaf: '#2F6E7A', leaf2: '#3A7F88', con: '#2F6E7A', bush: '#5C8F8E', rock: TK.arg, trunk: TK.bis, water: '#8FB9E3', band: 'gold', far: '#C7D3E3', near: 1, flowers: [IVO], snow: IVO },
-    /* 3 Mediterr.  (volcano)*/ { leaf: '#3A2A22', leaf2: '#4B3A30', con: '#3A2A22', bush: '#4B3A30', rock: '#6D5A52', trunk: '#2C1F19', water: TK.verm, band: 'gold', far: '#9DB9AC', near: 1, flowers: [TK.orp, TK.verm] },
-    /* 4 Low Countr.(swamp)  */ { leaf: '#2F7F5F', leaf2: '#3C8F6A', con: '#2A6F55', bush: '#4A8F5E', rock: '#9AA088', trunk: '#6B4A2C', water: '#3FA58C', band: 'gold', far: '#B2BA84', near: 1, flowers: [IVO, TK.orp] },
-    /* 5 Asia       (autumn) */ { leaf: '#C4621F', leaf2: '#D98B2B', con: '#2C6B4E', bush: '#B8772B', rock: '#BDA9A0', trunk: TK.bis, water: TK.azur, band: 'gold', far: '#B9A7C4', near: 1, flowers: [TK.orp, TK.verm] },
-    /* 6 Anatolia   (night)  */ { leaf: '#473C86', leaf2: '#5A4B9C', con: '#1F5B6B', bush: '#51468F', rock: '#A7AEC8', trunk: '#5A3A22', water: TK.lapis, band: 'lapis', far: '#6D78AC', near: 1, flowers: [IVO, TK.orp] }
+    /* 0 W. Europe  (forest) */ { leaf: '#3F8F5A', leaf2: '#4D9B54', con: '#2C7552', bush: '#5BA05A', rock: '#BDB8A8', trunk: TK.bis, band: 'gold', far: '#86A97A', flowers: [IVO, TK.verm, TK.orp] },
+    /* 1 Holy Lands (desert) */ { leaf: '#7C8D4B', leaf2: '#8E9A55', palm: '#3F8F5A', con: '#3F8F5A', bush: '#8E9B52', rock: '#C9A56C', trunk: TK.bis, band: 'gold', far: '#DDBB7C', flowers: [TK.orp, IVO] },
+    /* 2 Northern   (ice)    */ { leaf: '#2E7468', leaf2: '#3A8478', con: '#2E7468', bush: '#5C9486', rock: TK.arg, trunk: TK.bis, band: 'gold', far: '#C7D3E3', flowers: [IVO] },
+    /* 3 Mediterr.  (volcano)*/ { leaf: '#3A2A22', leaf2: '#4B3A30', con: '#3A2A22', bush: '#4B3A30', rock: '#6D5A52', trunk: '#2C1F19', band: 'gold', far: '#9DB9AC', flowers: [TK.orp, TK.verm] },
+    /* 4 Low Countr.(swamp)  */ { leaf: '#2F7F5F', leaf2: '#3C8F6A', con: '#2A6F55', bush: '#4A8F5E', rock: '#9AA088', trunk: '#6B4A2C', band: 'gold', far: '#B2BA84', flowers: [IVO, TK.orp] },
+    /* 5 Asia       (autumn) */ { leaf: '#C9962E', leaf2: '#E0B84A', con: '#2C6B4E', bush: '#B8863A', rock: '#BDA9A0', trunk: TK.bis, band: 'gold', far: '#B9A7C4', flowers: [TK.orp, TK.verm] },
+    /* 6 Anatolia   (night)  */ { leaf: '#2F7F6A', leaf2: '#3FA58C', con: '#1D5E55', bush: '#4E8F7A', rock: '#A7AEC8', trunk: '#5A3A22', band: 'lapis', far: '#6D78AC', flowers: [IVO, TK.orp] }
   ];
-  function ground(theme) { var g0 = REALM[Math.max(0, Math.min(6, theme))][0]; return theme === 3 ? mix(g0, '#B3A08C', 0.32) : g0; } // the Mediterranean sea-green is pulled toward ash for the volcano theme
+  function ground(theme) { var g0 = REALM[Math.max(0, Math.min(6, theme))][0]; return theme === 3 ? mix(g0, '#A99888', 0.8) : g0; } // the Mediterranean sea-green is pulled almost to warm ash for the volcano theme (mid-light, azure units stay >= 3:1)
 
   // ---- paths and ink -----------------------------------------------------------------------------------------------------
+  var now = (typeof performance !== 'undefined' && performance.now) ? function () { return performance.now(); } : function () { return Date.now(); };
   function P2(fn) { var p = new Path2D(); fn(p); return p; }
   function smooth(p, pts, move) { // quadratic mid-point spline through pts (open)
     var i, n = pts.length;
@@ -146,9 +151,6 @@
       clump(g, top.x, top.y, top.r, top.r * 0.9, pal1, rnd, 9, 2.3);
       clump(g, left.x, left.y, left.r, left.r * 0.9, lc, rnd, 8, 2.3);
       clump(g, right.x, right.y, right.r, right.r * 0.9, pal2, rnd, 8, 2.3);
-      if (o && o.dots) { // a few ivory/vermilion fruit or blossom dots (kept tiny)
-        for (var i = 0; i < 4; i++) { g.fillStyle = o.dots[i % o.dots.length]; g.beginPath(); g.arc((rnd() - 0.5) * r * 1.3, -r * (0.55 - rnd() * 0.55), 1.3, 0, TAU); g.fill(); }
-      }
     });
   }
 
@@ -240,7 +242,7 @@
       clump(g, -r * 0.5, r * 0.02, r * 0.62, r * 0.55, pal, rnd, 7, 2);
       clump(g, r * 0.52, r * 0.06, r * 0.58, r * 0.52, pal, rnd, 7, 2);
       clump(g, 0, -r * 0.3, r * 0.66, r * 0.58, pal, rnd, 8, 2);
-      if (flowers) for (var i = 0; i < 5; i++) { g.fillStyle = flowers[Math.floor(rnd() * flowers.length)]; g.beginPath(); g.arc((rnd() - 0.5) * r * 1.4, -r * 0.3 + (rnd() - 0.5) * r * 0.7, 1.2 + rnd() * 0.5, 0, TAU); g.fill(); }
+      if (flowers) for (var i = 0; i < 3; i++) { g.fillStyle = flowers[Math.floor(rnd() * flowers.length)]; g.beginPath(); g.arc((rnd() - 0.5) * r * 1.3, -r * 0.3 + (rnd() - 0.5) * r * 0.6, 1.1 + rnd() * 0.4, 0, TAU); g.fill(); }
     });
   }
 
@@ -293,10 +295,7 @@
   }
 
   // ---- ground: flat realm colour + quiet diaper + ink tufts --------------------------------------------------------------------
-  function tuftSet(kind) { // per-kind tuft shapes; three variants each (bible: hand-drawn short ink strokes, 3 small variants)
-    return kind;
-  }
-  function addTuft(kind, v, x, y, rnd, A, B, C, D, E) { // A,B,C: stroke batches per variant; D: ink dots; E: accent dots
+  function addTuft(kind, v, x, y, rnd, A, B, C, D, E) { // three hand-drawn variants per kind; A,B,C: stroke batches; D: ink dots; E: accent dots
     var s = 0.9 + rnd() * 0.3, f = kind === 'swamp' ? 1.5 : 1;
     if (kind === 'desert') {
       if (v === 0) { A.moveTo(x - 3, y); A.quadraticCurveTo(x - 4.4 * s, y - 3, x - 6 * s, y - 4.6 * s); A.moveTo(x + 1, y); A.quadraticCurveTo(x + 2.4 * s, y - 3.4, x + 4.6 * s, y - 6 * s); }
@@ -338,6 +337,34 @@
     var pat = ART.pattern ? ART.pattern(g, 'r' + c.theme, 1) : null;
     if (pat) { g.save(); g.globalAlpha = DIAPER_A; g.fillStyle = pat; g.fillRect(0, 0, W, H); g.restore(); }
     return tufts(g, c);
+  }
+
+  // ---- ground decals that make a realm recognisable at a glance: lava cracks (volcano), sand dunes (desert) ------------------------------------
+  function crackDecal(g, x, y, len, rnd) { // ink-edged vermilion zig-zag with an orpiment spark
+    var pts = [[x, y]], a = rnd() * TAU, n = 4 + Math.floor(rnd() * 3), i, st;
+    for (i = 0; i < n; i++) { a += (rnd() - 0.5) * 1.7; st = len / n * (0.7 + rnd() * 0.6); pts.push([pts[i][0] + Math.cos(a) * st, pts[i][1] + Math.sin(a) * st]); }
+    var P = P2(function (p) { p.moveTo(pts[0][0], pts[0][1]); for (i = 1; i < pts.length; i++) p.lineTo(pts[i][0], pts[i][1]); });
+    var B = P2(function (p) { var m = pts[2 + Math.floor(rnd() * 2)], b = a + (rnd() < 0.5 ? 1 : -1) * (0.9 + rnd() * 0.5); p.moveTo(m[0], m[1]); p.lineTo(m[0] + Math.cos(b) * len * 0.3, m[1] + Math.sin(b) * len * 0.3); });
+    g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+    g.strokeStyle = INK; g.lineWidth = 4.6; g.stroke(P); g.stroke(B);
+    g.strokeStyle = TK.verm; g.lineWidth = 2.2; g.stroke(P); g.stroke(B);
+    g.strokeStyle = TK.orp; g.lineWidth = 0.8; g.stroke(P);
+    g.restore();
+  }
+  function duneDecal(g, x, y, rx, ry, theme) { // a low dune: a lighter lobe, hard shade on the lee side, ink on the crest only
+    var gr = ground(theme), pal = { b: mix(gr, IVO, 0.3), s: mix(gr, '#8A5E22', 0.3), t: IVO };
+    var P = P2(function (p) { p.moveTo(x - rx, y); p.bezierCurveTo(x - rx * 0.7, y - ry * 1.5, x + rx * 0.2, y - ry * 1.55, x + rx, y); p.quadraticCurveTo(x, y + ry * 0.35, x - rx, y); });
+    gouache(g, P, pal, -rx * 0.2, -ry * 0.12); inkStroke(g, P, 2);
+  }
+  function decals(g, c) {
+    var n = c.n, tries = 0, x, y, k = c.kind;
+    if (k !== 'volcano' && k !== 'desert') return;
+    while (n > 0 && tries++ < n * 14) {
+      x = c.x0 + c.rnd() * (c.x1 - c.x0); y = c.y0 + c.rnd() * (c.y1 - c.y0);
+      if (c.avoid && c.avoid(x, y)) continue;
+      if (k === 'volcano') crackDecal(g, x, y, 26 + c.rnd() * 26, c.rnd); else duneDecal(g, x, y, c.big ? 36 + c.rnd() * 34 : 20 + c.rnd() * 16, c.big ? 12 + c.rnd() * 6 : 7 + c.rnd() * 4, c.theme);
+      n--;
+    }
   }
 
   // ---- horizon: gold-leaf diaper band, ink hill line ------------------------------------------------------------------------------
@@ -487,7 +514,7 @@
     if (kind === 'swamp') { // lily pads
       for (i = 0; i < 4; i++) { var lx = x + (rnd() - 0.5) * rx * 1.1, ly = y + (rnd() - 0.5) * ry * 0.9, Lp = P2(function (p) { p.moveTo(lx, ly); p.arc(lx, ly, 4.6, 0.35, TAU - 0.35); p.closePath(); }); g.fillStyle = TK.mal; g.fill(Lp); inkStroke(g, Lp, 1.4, 0.4); }
     }
-    // shore ticks
+    if (kind === 'volcano' || kind === 'ice') return;
     var T = P2(function (p) { for (var k = 0; k < 8; k++) { var a = rnd() * TAU, ex = x + Math.cos(a) * (rx + 4), ey = y + Math.sin(a) * (ry + 3); p.moveTo(ex - 2.2, ey); p.lineTo(ex, ey - 4.6 - rnd() * 2); p.moveTo(ex + 2, ey); p.lineTo(ex + 0.4, ey - 3.6); } });
     g.save(); g.strokeStyle = INK; g.lineWidth = 1.6; g.lineCap = 'round'; g.globalAlpha = 0.8; g.stroke(T); g.restore();
   }
@@ -505,12 +532,17 @@
     inkStroke(g, P2(function (p) { smooth(p, L, true); }), 3);
     inkStroke(g, P2(function (p) { smooth(p, Rr, true); }), 3);
     inkStroke(g, P2(function (p) { p.moveTo(L[0][0], L[0][1]); p.lineTo(Rr[0][0], Rr[0][1]); p.moveTo(L[L.length - 1][0], L[L.length - 1][1]); p.lineTo(Rr[Rr.length - 1][0], Rr[Rr.length - 1][1]); }), 3);
+    if (ROAD_RULE) { // pricked dots, 8u inside both edges
+      var at = function (arr, yy) { var k = Math.max(0, Math.min(arr.length - 2, Math.floor((yy - arr[0][1]) / step))); var a = arr[k], b = arr[k + 1]; return a[0] + (b[0] - a[0]) * (yy - a[1]) / (b[1] - a[1]); };
+      var D = P2(function (p) { for (var yy = y0 + 28; yy < y1 - 24; yy += 11) { var xl = at(L, yy) + 8.5, xr = at(Rr, yy) - 8.5; p.moveTo(xl + 1.05, yy); p.arc(xl, yy, 1.05, 0, TAU); p.moveTo(xr + 1.05, yy); p.arc(xr, yy, 1.05, 0, TAU); } });
+      g.save(); g.fillStyle = INK2; g.globalAlpha = 0.55; g.fill(D); g.restore();
+    }
   }
 
   function build() {
     var c = document.createElement('canvas'); c.width = this.canvas.width; c.height = this.canvas.height;
     var g = c.getContext('2d'), W = this.W, H = this.H, ox = this.ox, i, j, k, self = this, px = this.px;
-    var theme = this.theme || 0, T = THEMES[theme], kind = T.kind, seed = this.seed || 1, th = TH[theme], rnd = rng(seed * 31 + theme * 7 + 5);
+    var theme = this.theme || 0, T = THEMES[theme], kind = T.kind, seed = this.seed || 1, th = TH[theme], rnd = rng(seed * 31 + theme * 7 + 5), t0 = now();
     this.phase = ((seed || 1) % 7) * 0.9;
     g.setTransform(px, 0, 0, px, 0, 0);
     var top = this.eY - CASTLE_H, bot = this.pY + CASTLE_H;
@@ -523,10 +555,11 @@
     var inPond = function (x, y) { for (var q = 0; q < ponds.length; q++) { var pd = ponds[q]; if (Math.pow((x - pd[0]) / (pd[2] + 10), 2) + Math.pow((y - pd[1]) / (pd[3] + 9), 2) < 1) return true; } return false; };
 
     // 1) ground
-    groundLayer(g, { W: W, H: H, x0: 0, x1: W, y0: top + 30, y1: H - 6, cell: 38, keep: 0.62, rnd: rnd, kind: kind, theme: theme, avoid: function (x, y) { return nearRoad(x, y, 72) || inPond(x, y); } });
+    var nTuft = groundLayer(g, { W: W, H: H, x0: 0, x1: W, y0: top + 30, y1: H - 6, cell: 38, keep: 0.62, rnd: rnd, kind: kind, theme: theme, avoid: function (x, y) { return nearRoad(x, y, 72) || inPond(x, y); } });
+    decals(g, { kind: kind, theme: theme, rnd: rnd, n: kind === 'volcano' ? 16 : 9, x0: 4, x1: W - 4, y0: top + 60, y1: bot + 110, avoid: function (x, y) { return nearRoad(x, y, 70) || inPond(x, y); } });
     // 2) horizon
     horizon(g, { W: W, y0: 0, y1: top + 14, theme: theme, kind: kind, rnd: rnd, px: px });
-    if (kind !== 'volcano') for (i = 0; i < ponds.length; i++) pond(g, ponds[i][0], ponds[i][1], ponds[i][2], ponds[i][3], theme, kind, rnd);
+    for (i = 0; i < ponds.length; i++) pond(g, ponds[i][0], ponds[i][1], ponds[i][2], ponds[i][3], theme, kind, rnd);
     // 3) roads
     for (i = 0; i < 3; i++) laneRoad(g, this, i, rnd);
 
@@ -545,11 +578,11 @@
         y += stepY + rnd() * 12;
       }
     };
-    for (j = 0; j < strips.length; j++) addStrip(ox + strips[j][0] - (j === 0 ? 14 : 0), ox + strips[j][1] + (j === 3 ? 14 : 0), (j === 0 || j === 3) ? 0.86 : 1, 30, bot + 60);
+    for (j = 0; j < strips.length; j++) addStrip(ox + strips[j][0] - (j === 0 ? 14 : 0), ox + strips[j][1] + (j === 3 ? 14 : 0), (j === 0 || j === 3) ? 0.86 : 1, 33, bot + 60);
     if (ox > 2) { addStrip(-16, ox + 8, 1.1, 34, bot + 60); addStrip(ox + DW - 8, W + 16, 1.1, 34, bot + 60); }
     var flowersOn = th.flowers;
     for (i = 0; i < 3; i++) for (var yb = this.eY + 14; yb < this.pY - 10; yb += 46 + rnd() * 40) for (k = -1; k <= 1; k += 2) {
-      if (rnd() < 0.4) continue;
+      if (rnd() < 0.62) continue;
       var bxx = this.roadX(i, yb) + k * (71 + rnd() * 12), byy = yb + rnd() * 14;
       if (kind === 'volcano' || kind === 'ice' || kind === 'desert') items.push({ x: bxx, y: byy, r: 5 + rnd() * 5, kind: 'rock', v: Math.floor(rnd() * 2) });
       else items.push({ x: bxx, y: byy, r: 6 + rnd() * 5, kind: 'bush', v: Math.floor(rnd() * 2) });
@@ -569,6 +602,7 @@
     for (i = 0; i < items.length; i++) drawSprite(g, px, items[i].s, items[i].x, items[i].y, (items[i].v & 1) === 1 && items[i].kind !== 'bush' ? true : false);
 
     this.bg = c;
+    R.Scenery.stats = { kind: 'lane', theme: theme, tufts: nTuft, flora: items.length, ms: Math.round((now() - t0) * 10) / 10 };
   }
 
   // ==============================================================================================================================
@@ -576,7 +610,7 @@
   // ==============================================================================================================================
   function field() {
     var b = this.battle, map = b.map, W = this.W, H = this.H, px = this.px, theme = this.theme || 0, T = THEMES[theme], kind = T.kind, th = TH[theme];
-    var seed = this.seed || 1, rnd = rng(seed * 29 + theme * 11 + 3), fx = this.fox, fy = this.foy, FW = Z.FW, FH = Z.FH, i, j, k;
+    var seed = this.seed || 1, rnd = rng(seed * 29 + theme * 11 + 3), t0 = now(), fx = this.fox, fy = this.foy, FW = Z.FW, FH = Z.FH, i, j, k;
     var cv = document.createElement('canvas'); cv.width = this.canvas.width; cv.height = this.canvas.height;
     var g = cv.getContext('2d'); g.setTransform(px, 0, 0, px, 0, 0);
     var top = fy - 6;
@@ -598,6 +632,7 @@
     // 1) ground over the whole canvas (the world sits at fx, fy); tufts live in world coordinates
     g.save(); g.translate(fx, fy);
     var nT = groundLayerField(g, { W: FW, H: H, theme: theme, kind: kind, rnd: rnd, avoid: function (x, y) { return nearPoly(x, y, 44) || riverNear(y, 12) || hitObj(x, y); }, fx: fx, fy: fy, FW: FW, FH: FH, cvW: W, cvH: H });
+    g.save(); g.translate(fx, fy); decals(g, { kind: kind, theme: theme, rnd: rnd, n: kind === 'volcano' ? 12 : 7, big: true, x0: 24, x1: FW - 24, y0: 80, y1: FH - 60, avoid: function (x, y) { return nearPoly(x, y, 56) || riverNear(y, 24) || hitObj(x, y); } }); g.restore();
     g.restore();
     // 2) horizon: lapis page margin above, gold band (110u) with the ink hill line right above the enemy wall
     var y1 = top + 14, y0 = Math.max(0, y1 - 14 - 110);
@@ -612,6 +647,15 @@
       g.lineTo(pts[pts.length - 1][0] + X, pts[pts.length - 1][1] + Y); g.lineTo(a1[0] + X, a1[1] + Y); g.stroke();
     };
     g.save(); g.globalAlpha = 0.6; road(64, INK2, 0.6, 0.6, 3); g.restore(); road(64, INK, 0, 0, 3); road(58, ROAD, 0, 0, 0);
+    if (ROAD_RULE) { // pricked dots 8u inside both edges, evenly spaced along the centre curve
+      var D = new Path2D(), acc = 0, q3, ax, ay, bx, by2, sl, nx, ny;
+      for (q3 = 1; q3 < poly.length; q3++) {
+        ax = poly[q3 - 1][0]; ay = poly[q3 - 1][1]; bx = poly[q3][0]; by2 = poly[q3][1]; sl = Math.hypot(bx - ax, by2 - ay); if (sl < 0.01) continue;
+        nx = -(by2 - ay) / sl; ny = (bx - ax) / sl; acc += sl;
+        if (acc >= 11 && ay > 14 && ay < FH - 14) { acc = 0; D.moveTo(ax + nx * 20.5 + 1.05, ay + ny * 20.5); D.arc(ax + nx * 20.5, ay + ny * 20.5, 1.05, 0, TAU); D.moveTo(ax - nx * 20.5 + 1.05, ay - ny * 20.5); D.arc(ax - nx * 20.5, ay - ny * 20.5, 1.05, 0, TAU); }
+      }
+      g.save(); g.fillStyle = INK2; g.globalAlpha = 0.55; g.fill(D); g.restore();
+    }
 
     // 4) river with ivory wavy bands, ink banks and paved fords
     if (map.river) {
@@ -684,6 +728,7 @@
     }
     g.restore();
     this.bg = cv;
+    R.Scenery.stats = { kind: 'field', theme: theme, tufts: nT, ms: Math.round((now() - t0) * 10) / 10 };
   }
   function groundLayerField(g, c) { // world-space ground: the flat colour + diaper cover the whole canvas, tufts only the world rectangle
     var inv = { x: -c.fx, y: -c.fy };
@@ -696,5 +741,8 @@
   R.buildBg = function () {
     try { build.call(this); } catch (e) { if (typeof console !== 'undefined') console.warn('scenery: fell back to the basic background', e); this.buildBgBasic(); }
   };
-  R.Scenery = { build: build, field: field, TH: TH, tune: function (o) { if (o && o.diaper != null) DIAPER_A = o.diaper; } };
+  // build/field: the two scene builders (call with the renderer as this). flat: the flat painters, reusable by simpler fallbacks
+  // (groundLayer/horizon take a context object, see their callers). tune({diaper, rule}): live knobs for art review. stats: last build.
+  R.Scenery = { build: build, field: field, TH: TH, stats: null, flat: { groundLayer: groundLayer, horizon: horizon, laneRoad: laneRoad, pond: pond, inkStroke: inkStroke },
+    tune: function (o) { if (o && o.diaper != null) DIAPER_A = o.diaper; if (o && o.rule != null) ROAD_RULE = !!o.rule; } };
 })(globalThis.Z = globalThis.Z || {});
