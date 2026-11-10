@@ -117,9 +117,9 @@ small,.small{font-size:22px}
 #gold-chip em{grid-column:3;grid-row:2;min-width:0;overflow:hidden;text-overflow:ellipsis;font-style:normal;font-size:22px;line-height:1.2}
 #btn-mine{height:88px;min-width:140px;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:22px;line-height:1.1;white-space:nowrap;flex:none}
 #btn-mine .ico{font-size:30px}
-#hud-info{position:absolute;left:14px;right:14px;top:calc(var(--stp) + 96px);display:flex;align-items:center;justify-content:space-between;gap:8px}
+#hud-info{position:absolute;left:14px;right:14px;top:calc(var(--stp) + 96px);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 8px}
 #info-title{font-size:22px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-#info-chips{display:flex;gap:6px;flex:none}
+#info-chips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto;min-width:0}
 #rule-chip,#obj-chip,#combo-chip{display:inline-block;white-space:nowrap;font-weight:800;font-size:22px;padding:2px 12px}
 #perk-row{position:absolute;left:14px;top:286px;display:flex;gap:6px}
 #perk-row i{font-style:normal;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:26px}
@@ -183,7 +183,7 @@ textarea{width:100%;font:22px/1.3 ui-monospace,Menlo,Consolas,monospace;padding:
 .fbtn.go{width:128px}
 .fbtn.stance{width:150px}
 .fbtn:active{transform:translateY(2px)}
-#hud.field #perk-row{top:calc(var(--stp) + 132px)}
+#hud.field #perk-row{top:calc(var(--stp) + 204px)}
 #hud.field #hint{bottom:248px}
 
 /* ---- Sefer haritasi: diyar manzaralari, kivrimli yol ---- */
@@ -194,7 +194,7 @@ textarea{width:100%;font:22px/1.3 ui-monospace,Menlo,Consolas,monospace;padding:
 
 /* ---- Ana menu: arkada canli savas, buyuk dugmeler ---- */
 #home{position:absolute;inset:0;display:flex;justify-content:center}
-#home-col{position:relative;width:100%;max-width:720px;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:calc(var(--stp) + 14px) 18px calc(var(--sbp) + 22px)}
+#home-col{position:relative;width:100%;max-width:720px;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:calc(var(--stp) + 14px) 18px calc(var(--sbp) + 40px)}
 #home-cur{display:flex;gap:10px;justify-content:flex-end}
 #home-logo{text-align:center;margin-top:-6px;pointer-events:none}
 .hl-top{font-size:64px;line-height:1}

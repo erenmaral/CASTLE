@@ -1,0 +1,252 @@
+<!-- act family: HUD / settings actions. Each symbol = ct-round on vellum (--f1 field, --f2 ring band, default madder) + ONE hand-inked
+     charge drawn inline at roundel scale (ink + one accent). Charge tokens: --c1 body/accent, --c2 its hard shade, --c3 second colour (each comment lists the roles).
+     Charge bodies are class ik with stroke-width var(--sw,2.4): the same 2.4u contour as ij normally, and the sturdier 1.6u dashed outline when underdrawn.
+     Ink details (il, ia, tk) vanish when underdrawn. Baked by a seeded generator (wobble, hard shade, ivory tick); the pointer is naked (no roundel). -->
+<!-- pause: two hand-cut ink bars (pen-cut, slightly slanted ends) on a vellum roundel. --c1 ink bars; ring --f2. -->
+<symbol id="ic-act-pause" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#1E1610);stroke-width:var(--sw,2.4)" d="M11 11.6l2.3 -.4 .1 0 .2 .1 .1 .1 0 .2 0 4.3 .1 4.3 -.1 .3 -.1 .1 -.3 .2 -2 .2 -.3 -.2 -.2 -.3 -.2 -3.6 0 -4.7 0 -.3 .1 -.2z"/>
+  <path class="ik" style="fill:var(--c1,#1E1610);stroke-width:var(--sw,2.4)" d="M18.7 11.2l2.2 .1 .3 .2 .2 .3 0 .3 0 4.7 .1 3.6 -.1 .4 -.1 .1 -.2 0 -.3 0 -1.9 -.4 -.3 -.2 -.2 -.3 -.1 -3.1 0 -5.2 0 -.2 .1 -.2z"/>
+  <path class="tk" style="stroke-width:1.0" d="M11.46 12.36Q11.47 13.76 11.5 15.16"/>
+</symbol>
+
+<!-- speed: double ink chevron pointing right (battle speed), two hand-cut wedges with a clear gap. --c1 ink; ring --f2. -->
+<symbol id="ic-act-speed" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#1E1610);stroke-width:var(--sw,2.4)" d="M11 11.7l1.1 0 .2 .1 .2 .2 2.4 3.6 .1 .3 0 .3 -.1 .2 -2.3 3.6 -.3 .3 -.4 .1 -1.1 0 -.2 -.1 0 -.2 2.2 -3.8 .1 -.2 0 -.2 -.2 -.4 -2 -3.5 -.1 -.2 .1 0z"/>
+  <path class="ik" style="fill:var(--c1,#1E1610);stroke-width:var(--sw,2.4)" d="M16.9 11.7l1.3 0 .2 0 .3 .2 2.4 3.7 .2 .3 0 .3 -.1 .2 -2.4 3.7 -.2 .3 -.4 .1 -1.3 .1 -.2 -.1 -.1 -.1 .1 -.2 .6 -1.1 1.6 -2.7 .1 -.4 0 -.2 -.1 -.2 -2.3 -3.6 0 -.2 0 -.1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M11.7 12.4Q12.24 13.3 12.78 14.2"/>
+</symbol>
+
+<!-- cross: hand-inked X, heavy NW-SE stroke and hairline NE-SW stroke (nib thick/thin). Ink. --c1 ink; ring --f2. -->
+<symbol id="ic-act-cross" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#1E1610);stroke-width:var(--sw,2.4)" d="M12 13.4l-.9 -.3 -.2 -.1 0 -.2 1.6 -1.7 .1 -.1 .2 0 .1 .2 .5 .9 1.5 1.4 1.4 1.4 .9 -.8 .8 -.9 .9 -1 .3 -1 .1 -.1 .2 .1 1.2 1.1 .1 .1 -.1 .2 -.1 .1 -.8 .5 -1.3 1.5 -1.4 1.2 .8 1 1 .9 1.1 .8 1 .3 .1 .2 0 .2 -1.7 1.6 -.1 .1 -.2 0 -.1 -.2 -.4 -.9 -1.4 -1.4 -1.4 -1.4 -.8 .8 -1.6 1.9 -.5 1 -.1 .1 -.2 -.1 -1.2 -1.1 -.1 -.1 0 -.2 .1 -.1 .9 -.5 1.3 -1.5 1.3 -1.2 -1.4 -1.4z"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.22 12.6Q13.49 13.51 14.11 14.14"/>
+</symbol>
+
+<!-- auto: ink loop arrow (clockwise, tapered tail) with an orpiment arrowhead (gilt = the active mode). --c1 ink arc, --c3 head, --c2 head shade (bole). -->
+<symbol id="ic-act-auto" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#1E1610);stroke-width:var(--sw,2.4)" d="M18.2 20.2l-.4 .2 -1 .3 -1 .1 -1 -.2 -1 -.3 -.8 -.5 -.8 -.7 -.5 -.9 -.4 -1 -.2 -1 0 -.5 .2 -1 .4 -1 .6 -.8 .8 -.7 .8 -.5 1 -.4 1 -.2 1 .1 1 .3 -.2 .4 -.4 -.1 -.9 -.2 -1 .1 -.8 .2 -.5 .2 -.7 .5 -.7 .6 -.5 .8 -.2 .4 -.3 .9 -.1 .4 .1 1 .1 .4 .3 .9 .5 .7 .7 .7 .7 .5 .5 .2 .8 .3 1 .1 .9 -.2 .9 -.3z"/>
+  <path class="ik" style="fill:var(--c3,#E9B62A);stroke-width:var(--sw,2.4)" d="M17.8 9.7l4.7 3 .2 .1 0 .1 -.3 .1 -3.3 .2 -2.5 .2 -.3 0 -.1 -.2 0 -.2 1.1 -3.2 0 -.2 .2 0 .1 0z"/>
+  <path class="hs" style="fill:var(--c2,#8C3520)" d="M16.4 12.4l5.2 -.3 1 .6 .1 .2 -.3 .1 -6 .4 -.1 -.1 -.1 -.1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M19.58 11.89Q18.68 11.26 17.87 10.86"/>
+</symbol>
+
+<!-- pickaxe: argent double-pointed head (hard shade) on a bister haft, ink collar (gold mine upgrade). --c1 head, --c2 head shade, --c3 haft (bister) and collar (ink). -->
+<symbol id="ic-act-pickaxe" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M16.9 14l.7 .8 0 .2 0 .2 -4.8 6.7 -.2 .1 -.2 0 -1.2 -.8 -.1 -.1 .1 -.2 3 -4 2.3 -2.9 .2 -.1z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB);stroke-width:var(--sw,2.4)" d="M11.7 12l.6 -.3 .7 -.2 .7 0 .7 .1 .7 .1 .6 .2 .7 .2 .6 .3 .6 .4 .6 .4 .5 .4 .5 .5 .5 .6 .4 .6 .3 .6 .2 .6 .3 .7 .1 .6 0 .7 -.1 .7 -.3 .1 -.4 -.5 -.7 -1 -.7 -.9 -.8 -.8 -1.2 -1.1 -1.3 -1 -1 -.5 -1.1 -.5 -1.1 -.5 -.6 -.3z"/>
+  <path class="hs" style="fill:var(--c2,#8B94A8)" d="M11.7 12l.2 -.1 .5 .2 1.1 .5 1 .5 1.3 1 1.2 1 -1.1 -.8 -.9 -.6 -1 -.5 -1.7 -.7 -.6 -.3zM19.9 18.3l.1 -.7 0 -.7 -.4 -1.3 -.5 -1.2 -.4 -.6 -.7 -.7 .7 .5 1 1.1 .7 1.2 .2 .6 .4 1.3 0 .7 -.1 .7 -.3 .1z"/>
+  <path class="ik" style="fill:var(--c3,#1E1610);stroke-width:var(--sw,2.4)" d="M15.7 14l2.3 1.6 .2 .2 0 .1 -.1 .1 -.8 1 -.1 0 -.2 -.1 -2.2 -1.8 0 -.1 0 -.1 .5 -.9 .2 -.1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M16.84 13.22Q15.74 12.51 13.95 12.34"/>
+</symbol>
+
+<!-- dice: ivory die in three-quarter view (three contoured faces, right face in hard shade), three ink pips (1 on top, 2 on the left face). --c1 ivory faces, --c2 shade face; ink pips. -->
+<symbol id="ic-act-dice" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#F4ECD3);stroke-width:var(--sw,2.4)" d="M16.4 9.4l5.1 2.8 .2 .1 0 .2 -.2 .2 -5.1 3 -.3 .1 -.2 0 -.3 0 -.2 -.1 -4.7 -2.9 -.3 -.2 .1 -.2 .1 -.2 5.1 -2.7 .4 -.1z"/>
+  <path class="ik" style="fill:var(--c1,#F4ECD3);stroke-width:var(--sw,2.4)" d="M10.7 12.8l4.7 2.9 .3 .2 .1 .2 .1 .4 0 3 -.1 3 0 .2 -.1 .1 -.1 0 -.3 -.1 -4.6 -2.8 -.3 -.2 -.2 -.3 0 -.3 -.1 -.6 .1 -5.5 0 -.2 .1 -.1 .1 0z"/>
+  <path class="ik" style="fill:var(--c2,#C6B684);stroke-width:var(--sw,2.4)" d="M16.4 15.7l5.1 -3 .3 -.1 .1 .1 .1 .3 -.1 4.1 0 1.8 -.1 .4 -.2 .2 -.2 .2 -5 3 -.3 .1 -.2 -.1 -.1 -.2 .1 -6 .1 -.2 .1 -.3z"/>
+  <path class="ia" d="M17.4 13.1l-.3 .2 -.2 .1 -.4 .1 -.8 -.1 -.4 -.1 -.3 -.1 -.3 -.2 -.1 -.2 -.1 -.3 0 -.2 .1 -.2 .2 -.2 .3 -.1 .4 -.1 .8 .1 .4 .1 .3 .1 .3 .2 .1 .2 .1 .3 0 .2zM12.8 15.5l.1 .4 .1 .3 -.1 .2 -.1 .2 -.2 .2 -.2 0 -.2 0 -.3 -.2 -.6 -.4 -.4 -.7 -.1 -.3 0 -.3 0 -.3 .1 -.2 .2 -.1 .2 0 .3 0 .3 .1 .3 .2 .2 .3zM15.3 19.9l.1 .4 0 .3 0 .2 -.1 .2 -.2 .2 -.2 0 -.3 0 -.3 -.2 -.5 -.4 -.2 -.3 -.3 -.7 -.1 -.3 .1 -.3 .1 -.2 .2 -.1 .2 0 .3 0 .2 .1 .6 .5z"/>
+  <path class="tk" style="stroke-width:1.0" d="M14.37 11.35Q13.01 12.1 12.18 12.54"/>
+</symbol>
+
+<!-- swords: two crossed swords (NE-SW over NW-SE), long argent blades with hard shade, ink guards, bister grips. --c1 blade, --c2 blade shade, --c3 grip (bister) and guard (ink). -->
+<symbol id="ic-act-swords" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M12.9 20.1l-.6 .5 .1 .2 -.1 .3 -.1 .2 -.2 .2 -.4 0 -.4 0 -.3 -.3 -.2 -.2 -.1 -.5 .1 -.2 .1 -.2 .3 -.2 .4 -.1 .6 -.5 .2 0 .6 .6 0 .1z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB);stroke-width:var(--sw,2.4)" d="M20.8 10.9l-.7 2.1 -.1 .2 -6.1 6.4 -.1 .1 -.1 -.1 -1.3 -1.1 0 -.1 0 -.1 6.3 -6.4 .2 -.2 1.8 -.8z"/>
+  <path class="hs" style="fill:var(--c2,#8B94A8)" d="M12.4 18.5l.4 .4 .2 -.1 6 -6.3 .2 -.3 .2 -.7 1.4 -.6 -.7 2.1 -.1 .2 -6.1 6.4 -.1 .1 -.1 -.1z"/>
+  <path class="ik" style="fill:var(--c3,#1E1610);stroke-width:var(--sw,2.4)" d="M12 17.8l2.4 2.3 .1 .1 0 .2 -.2 .2 -.2 .2 -.2 .1 -.2 -.1 -2.4 -2.3 -.1 -.2 0 -.1 .1 -.2 .2 -.2 .3 -.1z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M20.1 19.3l.4 .5 .3 0 .4 .2 .1 .2 .1 .2 0 .3 -.2 .4 -.2 .2 -.3 .2 -.5 0 -.2 -.1 -.2 -.1 -.2 -.3 0 -.4 -.4 -.5 0 -.2 .6 -.6 .2 -.1z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB);stroke-width:var(--sw,2.4)" d="M11.1 10.9l2 .9 .3 .2 6 6.2 0 .1 0 .1 -1.1 1.3 -.1 .1 -.1 -.1 -.5 -.5 -2.9 -3.2 -2.6 -2.9 -.1 -.2 -.9 -1.9z"/>
+  <path class="hs" style="fill:var(--c2,#8B94A8)" d="M17.3 19l1.2 -1.4 0 -.2 -5.4 -5.6 .3 .2 6 6.2 0 .2 -1.2 1.4 -.1 -.1z"/>
+  <path class="ik" style="fill:var(--c3,#1E1610);stroke-width:var(--sw,2.4)" d="M17.8 20l2.3 -2.2 .2 -.1 .1 .1 .4 .3 .1 .2 -.1 .3 -1.2 1.1 -1.2 1.1 -.2 .1 -.1 0 -.2 -.1 -.2 -.2 -.1 -.3z"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.14 11.96Q12.78 13.2 13.79 14.19"/>
+</symbol>
+
+<!-- shield: heater shield, azure with an orpiment bordure (same cut as the P1 charge at roundel scale). --c1 azure, --c2 shade, --c3 bordure. -->
+<symbol id="ic-act-shield" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#22409A);stroke-width:var(--sw,2.4)" d="M11.8 10.4l8.3 -.1 .2 2.6 .1 1.2 -.2 1.5 -.3 1.2 -.3 .9 -.5 .7 -1.4 1.5 -1.6 1.8 -1.3 -1 -.8 -.9 -.6 -.9 -.4 -.8 -1 -2.1 -.3 -.9 -.1 -1 0 -1.2z"/>
+  <path class="hs" style="fill:var(--c2,#14275F)" d="M14.3 20.2l.7 .5 1.6 -1.8 1.2 -1.3 .6 -.7 .5 -1.3 .3 -1.7 .1 -1.4 -.2 -2.2 1 0 .2 2.9 0 1.4 -.3 1.8 -.3 .9 -.2 .6 -.6 .7 -1.2 1.3 -1.6 1.8 -1.1 -.8z"/>
+  <path class="il" style="stroke:var(--c3,#E9B62A);stroke-width:1.5" d="M13.1 11.8l5.7 -.1 .1 1.6 .1 1 -.2 1.3 -.3 1 -.3 .6 -.2 .4 -2.1 2.2 -.5 -.5 -.8 -1.2 -.9 -1.7 -.5 -1 -.2 -.8 0 -.6 0 -.7z"/>
+  <path class="tk" style="stroke-width:1.0" d="M13.57 12.29Q13.35 13.69 13.66 15.06"/>
+</symbol>
+
+<!-- lock: padlock, azure body with hard shade and ink keyhole, thick ink hasp (locked node, mode, difficulty). --c1 body, --c2 shade, --c3 hasp ink. -->
+<symbol id="ic-act-lock" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#1E1610);stroke-width:var(--sw,2.4)" d="M13.4 13l.1 2.8 -1 0 0 -2.9 .1 -.7 .3 -.7 .2 -.3 .5 -.5 .3 -.3 .7 -.3 .7 -.3 .3 0 .8 0 .7 .1 .3 .1 .7 .4 .5 .5 .3 .3 .3 .7 .3 .7 0 .7 -1 0 0 -.5 -.2 -.5 -.4 -.7 -.4 -.4 -.5 -.2 -.7 -.2 -.6 0 -.5 .1 -.5 .2 -.4 .3 -.4 .4 -.2 .5zM19.6 13.3l0 2.5 -1 0 0 -2.5z"/>
+  <path class="ik" style="fill:var(--c1,#22409A);stroke-width:var(--sw,2.4)" d="M12.8 15.3l3.2 0 3.2 0 .4 0 .3 .2 .2 .3 .1 .5 .1 4.1 -.1 .2 -.1 .3 -.3 .3 -.5 .1 -3.3 .1 -3.2 .2 -.4 0 -.3 -.1 -.2 -.2 -.1 -.5 0 -4.6 .1 -.3 .2 -.3 .3 -.2z"/>
+  <path class="hs" style="fill:var(--c2,#14275F)" d="M11.8 20.5l6.3 -.3 .6 -.2 .2 -.3 .2 -.4 -.1 -4 .7 .1 .3 .1 .1 .2 .1 .6 .1 4.1 -.2 .4 -.2 .3 -.6 .2 -6.7 .3 -.3 0 -.3 -.2 -.2 -.3z"/>
+  <path class="ia" d="M17 17.9l0 .3 0 .3 -.1 .2 -.3 .3 .3 1.5 -1.8 0 .3 -1.5 -.3 -.3 -.1 -.2 0 -.3 0 -.3 .1 -.2 .2 -.2 .2 -.2 .2 -.1 .3 0 .3 0 .2 .1 .2 .2 .2 .2z"/>
+  <path class="tk" style="stroke-width:1.0" d="M13.02 16.54Q13.04 17.94 13.02 19.34"/>
+</symbol>
+
+<!-- card: tilted ivory unit card over a lapis diaper back (orpiment lozenge lattice), ink rule and device (drag a unit card). --c1 face, --c2 shades (face and back), --c3 back (lapis) and diaper dots (orpiment). -->
+<symbol id="ic-act-card" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#22409A);stroke-width:var(--sw,2.4)" d="M16.2 10.6l4.8 1.1 .3 .2 .1 .2 0 .5 -1.6 7.1 -.1 .3 -.1 .1 -.2 .1 -.4 0 -4.9 -1.2 -.3 -.2 -.1 -.1 -.1 -.2 0 -.4 1.8 -7 .1 -.3 .2 -.1 .2 -.1z"/>
+  <path class="hs" style="fill:var(--c2,#14275F)" d="M13.6 18.2l4.5 1.2 .3 0 .2 -.2 .2 -.4 1.6 -7.2 .7 .2 .2 .1 .1 .3 0 .4 -1.6 7.1 -.2 .4 -.2 .2 -.3 0 -5 -1.4 -.3 -.1 -.1 -.1 -.1 -.2z"/>
+  <path class="hs" style="fill:var(--c3,#E9B62A)" d="M19.6 13.9l0 .2 -.1 .3 -.2 .1 -.3 .1 -.1 0 -.2 0 -.2 -.2 -.1 -.3 0 -.2 .1 -.3 .2 -.1 .3 -.1 .2 0 .1 0 .2 .2z"/>
+  <path class="ik" style="fill:var(--c1,#F4ECD3);stroke-width:var(--sw,2.4)" d="M11.6 12.8l5.1 -.8 .3 0 .2 .2 .2 .3 1.2 7.4 0 .4 -.1 .2 -.2 .1 -.3 .1 -5 .7 -.3 0 -.3 -.2 -.1 -.2 -.1 -.2 -1.1 -7.3 0 -.2 .1 -.3 .2 -.1z"/>
+  <path class="hs" style="fill:var(--c2,#C6B684)" d="M12.2 20.8l0 -.4 4.9 -.6 .3 -.1 .1 -.2 .1 -.5 -1.2 -7 .4 0 .3 0 .2 .2 .1 .3 1.2 7.4 -.1 .5 -.1 .2 -.3 .1 -5.2 .7 -.2 0 -.3 -.2z"/>
+  <path class="il" style="stroke-width:1.1" d="M12.1 13.7l4.4 -.7 1.1 6.8 -4.5 .5z"/>
+  <path class="ia" d="M14.6 14.9l1.3 1.4 .1 .1 0 .2 -.8 1.8 -.1 .1 -.1 -.1 -1.2 -1.4 -.1 -.1 0 -.2 .7 -1.7 0 -.1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M14.92 13.77Q13.98 13.93 12.67 14.16"/>
+</symbol>
+
+<!-- lane: three-lane road in one-point perspective: ink road converging on the horizon between verdigris verges, two pricked ivory lane dividers (choose another lane). --c1 verges, --c2 verge shade, --c3 road ink; the dashes are ivory ticks. -->
+<symbol id="ic-act-lane" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#3FA58C);stroke-width:var(--sw,2.4)" d="M23 17.2l-.4 1.3 -.4 .7 -.4 .7 -.4 .6 -.4 .3 -.9 .8 -.7 .4 -.7 .3 -1.2 .4 -.8 .1 -.8 0 -1.3 0 -1.3 -.4 -.8 -.3 -.4 -.3 -.9 -.6 -.3 -.3 -.5 -.7 -.7 -1.1 -.3 -.7 -.2 -.5 -.1 -.5 -.1 -.8 0 -.8 .1 -.7 .2 -.8 .2 -.7 .3 -.7 .4 -.7 .4 -.6 .3 -.4 1 -.9 1.2 -.7 .5 -.2 .7 -.2 .5 -.1 .7 0 1.3 0 .8 .2 .7 .2 .8 .4 .7 .4 .5 .2 .6 .5 .6 .6 .5 .6 .4 .7 .3 .4 .3 1 .1 .5 0 .8 0 .8z"/>
+  <path class="hs" style="fill:var(--c2,#1F6B4E)" d="M10.6 20.5l.9 .5 1.3 .4 1 .2 1.1 0 1.3 -.1 1 -.3 1.1 -.5 .9 -.6 .9 -.8 .7 -1.1 .4 -.7 .3 -.7 .2 -1.3 .1 -1.3 -.2 -1.4 -.1 -.4 -.4 -.7 -.7 -1.1 .9 .8 .7 .8 .7 1.1 .3 1 .1 1.3 -.1 1.4 -.3 1.2 -.6 1.2 -.7 1.1 -.9 .8 -.6 .5 -.7 .3 -1.2 .5 -1.6 .2 -1.3 0 -1.3 -.2 -1.3 -.5 -1.1 -.7z"/>
+  <path class="ik" style="fill:var(--c3,#1E1610);stroke-width:var(--sw,2.4)" d="M17.3 9.3l.5 2 1 3.3 1.7 6.6 -.7 .5 -.9 .5 -.7 .2 -.7 .3 -1.1 .1 -.8 .1 -.8 -.1 -.8 -.1 -.7 -.2 -.8 -.4 -.6 -.4 -.4 -.3 .3 -1.4 .5 -2 1 -3.3 1.3 -5.5 .7 0 .8 -.1z"/>
+  <path class="tk" style="stroke-width:0.7" d="M15.44 10.5L15.38 11.3"/>
+  <path class="tk" style="stroke-width:0.95" d="M15.28 12.7L15.13 13.9"/>
+  <path class="tk" style="stroke-width:1.25" d="M14.98 15.5L14.8 17.3"/>
+  <path class="tk" style="stroke-width:1.6" d="M14.67 19L14.5 21.4"/>
+  <path class="tk" style="stroke-width:0.7" d="M16.57 10.5L16.67 11.3"/>
+  <path class="tk" style="stroke-width:0.95" d="M16.73 12.7L16.83 13.9"/>
+  <path class="tk" style="stroke-width:1.25" d="M16.98 15.5L17.12 17.3"/>
+  <path class="tk" style="stroke-width:1.6" d="M17.27 19L17.54 21.4"/>
+  <path class="tk" style="stroke-width:1.0" d="M11.69 13Q10.92 14.2 10.74 15.61"/>
+</symbol>
+
+<!-- speaker: horn speaker (bister block and flared horn), three ink sound arcs (sound effects, volume). --c1 horn, --c2 shade; arcs ink. -->
+<symbol id="ic-act-speaker" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#7A5230);stroke-width:var(--sw,2.4)" d="M9.3 14.3l1.9 -.1 .5 -.2 .4 -.2 2.2 -2.2 .2 -.1 .1 .1 .1 .2 .1 5.4 0 3.1 -.1 .2 -.1 0 -.2 -.1 -2.1 -2 -.4 -.3 -.5 -.2 -2.1 -.1 -.2 0 -.1 -.1 -.1 -.2 -.1 -.2 .1 -2.6 .1 -.2 .1 -.2z"/>
+  <path class="hs" style="fill:var(--c2,#4B3B2A)" d="M13.5 19.5l.2 0 0 -.3 -.1 -6.9 .7 -.7 .3 -.1 .1 .1 0 .2 .1 8.5 -.1 .2 -.1 0zM8.8 17.2l0 -.3 1.8 .1 .5 .2 .9 .9 -.6 -.2 -2.2 -.1 -.3 -.2z"/>
+  <path class="il" style="stroke-width:1.9" d="M17.46 13.95C17.5 13.99 17.63 14.07 17.71 14.19C17.79 14.32 17.86 14.56 17.93 14.7C18 14.85 18.07 14.93 18.13 15.06C18.19 15.2 18.25 15.38 18.29 15.53C18.32 15.68 18.35 15.81 18.36 15.97C18.37 16.13 18.36 16.35 18.34 16.5C18.31 16.64 18.24 16.67 18.2 16.82C18.15 16.96 18.13 17.21 18.06 17.37C18 17.52 17.92 17.61 17.83 17.74C17.73 17.86 17.57 18.05 17.52 18.11"/><path class="il" style="stroke-width:1.9" d="M19.23 12.55C19.31 12.63 19.57 12.86 19.69 13.06C19.82 13.26 19.9 13.52 20 13.75C20.11 13.98 20.24 14.19 20.31 14.46C20.38 14.72 20.37 15.06 20.41 15.33C20.44 15.61 20.5 15.87 20.5 16.09C20.51 16.32 20.47 16.45 20.42 16.69C20.37 16.93 20.26 17.28 20.21 17.53C20.15 17.78 20.16 17.96 20.08 18.18C20.01 18.4 19.9 18.61 19.75 18.85C19.6 19.08 19.29 19.47 19.19 19.59"/><path class="il" style="stroke-width:1.9" d="M21.03 11.66C21.15 11.79 21.52 12.16 21.71 12.45C21.89 12.74 22.02 13.06 22.12 13.39C22.23 13.72 22.27 14.09 22.33 14.44C22.4 14.79 22.47 15.14 22.51 15.5C22.54 15.85 22.59 16.19 22.56 16.55C22.53 16.91 22.4 17.29 22.32 17.63C22.24 17.97 22.19 18.26 22.07 18.57C21.95 18.88 21.74 19.19 21.59 19.5C21.44 19.81 21.23 20.26 21.15 20.41"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.34 14.82Q10.91 15.24 9.88 15.5"/>
+</symbol>
+
+<!-- drum: tabor drum, plain tall gules shell with one ink hoop line and a vellum skin, two bister sticks (one raised) crossed above (battle music). --c1 shell, --c2 shell shade, --c3 sticks; the skin takes the roundel field (--f1). -->
+<symbol id="ic-act-drum" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#D8391F);stroke-width:var(--sw,2.4)" d="M11.1 14.7l9.7 0 .1 4.9 -.1 .4 -.1 .5 -.2 .2 -.2 .2 -.3 .1 -.4 .1 -2.2 -.2 -1.4 0 -1.5 0 -1.9 .2 -.4 0 -.5 -.2 -.3 -.1 -.1 -.3 -.2 -.3 0 -.4z"/>
+  <path class="hs" style="fill:var(--c2,#9A2018)" d="M11.1 19.8l1.4 -.1 2 -.1 1.9 .1 1.5 .1 .6 -.1 .3 -.1 .2 -.2 .2 -.2 .1 -.5 0 -4 1.5 0 .1 5.1 -.2 .7 -.2 .2 -.2 .2 -.3 .1 -.6 .1 -1.5 -.1 -1.9 -.1 -1.5 0 -2.1 .2 -.6 -.1 -.4 -.2 -.2 -.4z"/>
+  <path class="il" style="stroke-width:1.2" d="M11.2 19.44C11.33 19.48 11.73 19.62 12 19.7C12.27 19.78 12.53 19.85 12.8 19.92C13.07 19.98 13.33 20.04 13.6 20.08C13.87 20.13 14.13 20.17 14.4 20.2C14.67 20.24 14.93 20.26 15.2 20.28C15.47 20.29 15.73 20.3 16 20.3C16.27 20.3 16.53 20.29 16.8 20.28C17.07 20.26 17.33 20.24 17.6 20.2C17.87 20.17 18.13 20.13 18.4 20.08C18.67 20.04 18.93 19.98 19.2 19.92C19.47 19.85 19.73 19.78 20 19.7C20.27 19.62 20.67 19.48 20.8 19.44"/>
+  <path class="ik" style="fill:var(--f1,#D8D0AB);stroke-width:var(--sw,2.4)" d="M21 14.6l0 .3 -.2 .4 -.3 .3 -.4 .2 -.6 .3 -.9 .2 -.8 .1 -1.1 .1 -1.1 0 -.8 0 -1.1 -.2 -.9 -.2 -.7 -.2 -.6 -.3 -.4 -.4 -.1 -.3 .1 -.3 .2 -.3 .3 -.3 .5 -.3 .6 -.2 .9 -.2 .7 -.1 1.2 -.1 1.1 0 .8 .1 1.1 .1 .8 .2 .6 .2 .5 .3 .4 .3z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M13 11.8l1.5 1.1 2.4 1.5 -.4 .6 -2.4 -1.5 -1.6 -1.1 -.3 0 -.3 .1 -.3 -.1 -.3 -.1 -.2 -.2 0 -.2 -.1 -.3 0 -.3 .2 -.4 .3 -.2 .3 -.1 .4 0 .3 .1 .3 .3 .2 .4z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M18.4 11.3l-1.1 1.5 -1.8 2.2 -.6 -.6 1.8 -2.1 1 -1.3 -.2 -.4 0 -.2 0 -.3 .2 -.2 .2 -.3 .2 -.1 .3 -.1 .2 0 .4 .1 .2 .2 .2 .4 .1 .3 -.1 .4 -.2 .3 -.4 .2z"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.08 17.1Q12.08 18.68 12.07 19.55"/>
+</symbol>
+
+<!-- buzz: handbell (argent, hard shade) with a bister handle, ink clapper and two ink motion arcs (vibration). --c1 bell, --c2 shade, --c3 handle and clapper. -->
+<symbol id="ic-act-buzz" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="il" style="stroke-width:1.9" d="M19.82 10.04C20.04 10.3 20.78 11.04 21.12 11.58C21.46 12.11 21.71 12.67 21.88 13.26C22.05 13.86 22.1 14.83 22.14 15.15"/><path class="il" style="stroke-width:1.9" d="M12.17 10.13C11.95 10.38 11.18 11.08 10.84 11.6C10.49 12.12 10.28 12.64 10.11 13.24C9.94 13.85 9.86 14.9 9.81 15.23"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M16.9 10.9l0 1 -.1 .2 -.3 0 -1.1 0 -.2 -.1 -.1 -.1 -.1 -.1 0 -1 -.1 -.3 -.1 -.2 .1 -.4 .1 -.4 .4 -.4 .4 -.1 .5 .1 .5 .2 .3 .3 .1 .4 0 .5 -.1 .2z"/>
+  <path class="ik" style="fill:var(--c3,#1E1610);stroke-width:var(--sw,2.4)" d="M17.1 21.6l-.1 .4 -.3 .3 -.4 .2 -.4 .1 -.4 -.2 -.4 -.2 -.1 -.4 -.1 -.4 .1 -.4 .3 -.3 .4 -.2 .4 -.1 .4 .2 .3 .2 .3 .4z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB);stroke-width:var(--sw,2.4)" d="M14.2 11.6l3.6 .1 1.2 1.2 .3 .4 .2 .5 .1 .5 .2 1.3 .3 1 .8 2.4 .6 1.2 -11.3 .1 .8 -1.4 .7 -1.5 .4 -1 .2 -.8 .2 -1.5 .2 -.7 .1 -.3 .3 -.4z"/>
+  <path class="hs" style="fill:var(--c2,#8B94A8)" d="M10.9 19.1l9.2 -.1 -.6 -1.2 -.9 -2.6 -.2 -.8 -.3 -1.8 -.2 -.5 -.3 -.4 .2 0 1.2 1.2 .4 .7 .2 .7 .2 1.5 .3 .8 .8 2.4 .6 1.2 -11.3 .1z"/>
+  <path class="il" style="stroke-width:1.2" d="M11 18.5L21 18.5"/>
+  <path class="tk" style="stroke-width:1.0" d="M14.66 12.79Q13.41 13.7 13.56 15.24"/>
+</symbol>
+
+<!-- export: ivory scroll with rolled ends and ink lines, a lapis arrow leaving upward (export save). --c1 arrow, --c2 arrow shade, --c3 scroll. -->
+<symbol id="ic-act-export" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#F4ECD3);stroke-width:var(--sw,2.4)" d="M11.7 11.6l3.9 -.1 .2 0 .1 .1 .1 3.1 .1 5.4 0 .1 -.1 .1 -4.4 .2 -.2 -.1 -.1 -.1 0 -.1 0 -4.1 .1 -4.2 0 -.2z"/>
+  <path class="il" style="stroke-width:1.1" d="M12 14.3L15.1 14.3M12 16.2L15.1 16.2M12 18.1L13.8 18.1"/>
+  <path class="ik" style="fill:var(--c3,#C6B684);stroke-width:var(--sw,2.4)" d="M16.8 11.4l0 .2 -.2 .3 -.2 .2 -.4 .2 -.5 .2 -.6 .1 -1.1 .2 -1.3 -.1 -.7 -.1 -.4 -.1 -.4 -.2 -.3 -.3 -.3 -.3 0 -.2 0 -.2 .2 -.2 .3 -.3 .3 -.2 1.1 -.3 1.2 -.1 1.2 0 .9 .2 .4 .2 .4 .3 .3 .3z"/>
+  <path class="ik" style="fill:var(--c3,#C6B684);stroke-width:var(--sw,2.4)" d="M16.7 20.5l-.1 .2 -.2 .3 -.3 .3 -.4 .1 -1 .3 -1.2 .1 -1.2 -.1 -1 -.3 -.3 -.2 -.4 -.3 -.2 -.2 0 -.3 .1 -.2 .2 -.2 .4 -.3 .3 -.1 1.1 -.3 1.2 -.2 1.2 .2 1 .3 .3 .2 .3 .2 .2 .3z"/>
+  <path class="ik" style="fill:var(--c1,#22409A);stroke-width:var(--sw,2.4)" d="M20 9.9l2.4 3.7 .1 .2 0 .1 -.2 .1 -1.3 0 -.2 0 -.1 .2 .2 6 -.1 .3 -.1 .1 -.2 .1 -1.6 -.1 -.3 -.1 -.1 -.3 .2 -5.9 -.1 -.2 -.2 -.1 -1.1 .1 -.2 0 0 -.2 .1 -.2 2.3 -3.8 .1 -.1 .1 -.1 .1 .1z"/>
+  <path class="hs" style="fill:var(--c2,#14275F)" d="M18.5 19.6l1 0 .2 -.1 .1 -.2 -.2 -6.1 .1 -.2 .2 -.1 1.3 .1 .1 0 .1 -.1 -.1 -.3 -1.8 -2.7 .2 -.2 .1 0 .2 .2 .5 .8 1.9 2.9 .1 .3 -.1 .1 -.1 0 -1.3 0 -.2 0 -.1 .2 .2 6 -.1 .3 -.2 .1 -.1 .1 -1.7 -.1 -.2 -.1 -.1 -.1zM17.5 13.2l.1 .2 0 .7 -.4 0 -.1 -.1 0 -.1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M19.7 11.1Q18.89 12.42 18.39 13.24"/>
+</symbol>
+
+<!-- import: the same scroll with a gules arrow entering downward (import save). --c1 arrow, --c2 arrow shade, --c3 scroll. -->
+<symbol id="ic-act-import" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#F4ECD3);stroke-width:var(--sw,2.4)" d="M11.6 11.6l4 0 .1 .1 .1 .1 .2 8.2 0 .2 -.1 .1 -4.4 .2 -.1 0 -.1 -.1 -.1 -.2 .1 -8.3 .1 -.2z"/>
+  <path class="il" style="stroke-width:1.1" d="M12 14.3L15.1 14.3M12 16.2L15.1 16.2M12 18.1L13.8 18.1"/>
+  <path class="ik" style="fill:var(--c3,#C6B684);stroke-width:var(--sw,2.4)" d="M16.8 11.6l-.1 .2 -.3 .3 -.4 .2 -.3 .2 -1.1 .2 -1.2 .1 -1.2 -.1 -1 -.4 -.3 -.1 -.3 -.3 -.1 -.2 -.1 -.2 .1 -.2 .2 -.3 .3 -.3 .3 -.2 .4 -.1 .7 -.1 1.3 -.1 .7 0 .6 .1 1 .3 .3 .2 .3 .3 .2 .3z"/>
+  <path class="ik" style="fill:var(--c3,#C6B684);stroke-width:var(--sw,2.4)" d="M16.8 20.4l0 .2 -.1 .4 -.3 .2 -.3 .2 -.4 .1 -.6 .2 -1.2 .1 -1.2 -.1 -1.1 -.3 -.4 -.1 -.4 -.3 -.2 -.3 -.1 -.2 0 -.2 .2 -.3 .2 -.2 .3 -.1 .9 -.3 1.2 -.2 1.3 .1 1.1 .2 .3 .2 .4 .2 .3 .3z"/>
+  <path class="ik" style="fill:var(--c1,#D8391F);stroke-width:var(--sw,2.4)" d="M19.9 21.9l-.3 .2 -.2 0 -.1 -.2 -1.6 -2.7 -.5 -.8 -.1 -.1 .1 -.2 .1 0 1 0 .2 -.1 .1 -.2 0 -2.6 -.1 -3.3 .1 -.3 .1 -.2 .2 0 1.5 -.1 .1 0 .2 .1 0 .1 .1 .2 0 6 .1 .2 .2 .1 1.3 .1 .1 0 0 .1 -.1 .3z"/>
+  <path class="hs" style="fill:var(--c2,#9A2018)" d="M19.7 22l-.2 .1 -.2 -.2 -.6 -.9 2.3 -3.1 .2 .1 1.1 .1 .2 0 0 .1 0 .2zM20.8 17l-.6 0 -.3 -.1 -.2 -.3 0 -5.3 .8 0 .2 .2 .1 .2z"/>
+  <path class="tk" style="stroke-width:1.0" d="M19.33 12.17Q19.37 13.74 19.38 14.62"/>
+</symbol>
+
+<!-- copy: two overlapping vellum leaves, ink rows and a rubricated initial (copy code). --c1 front leaf, --c2 back leaf and shade, --c3 rubric. -->
+<symbol id="ic-act-copy" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c2,#C6B684);stroke-width:var(--sw,2.4)" d="M11.5 10.7l5 -.3 .2 0 .2 .1 .1 .3 .2 6.9 -.1 .2 -.1 .2 -.3 .1 -4.8 .2 -.3 0 -.1 -.1 -.2 -.3 -.3 -6.9 0 -.2 .2 -.1z"/>
+  <path class="ik" style="fill:var(--c1,#F4ECD3);stroke-width:var(--sw,2.4)" d="M15.5 13.4l4.7 .1 .2 0 .2 .2 .1 .3 0 6.8 -.1 .3 -.1 .1 -.3 .1 -5 -.2 -.2 -.1 -.2 -.1 -.1 -.3 .3 -6.7 .1 -.4 .2 0z"/>
+  <path class="hs" style="fill:var(--c2,#C6B684)" d="M14.7 20.6l.1 -.4 4.4 .2 .2 0 .2 -.1 .1 -.4 0 -6.4 .6 0 .2 .1 .2 .1 0 .3 0 6.8 -.1 .4 -.2 .1 -.2 0 -5.1 -.2 -.3 -.2z"/>
+  <path class="ik" style="fill:var(--c3,#D8391F);stroke-width:var(--sw,2.4)" d="M15.1 14l1.6 .1 .2 .1 0 .1 -.1 1.6 -.1 .2 -.1 0 -1.6 0 -.2 0 0 -.2 .1 -1.7 .1 -.1z"/>
+  <path class="il" style="stroke-width:1.2" d="M18.6 14.9L20.6 15M16 17.9L20.5 18M16 20L19 20.1"/>
+  <path class="tk" style="stroke-width:1.0" d="M16.28 14.53Q15.93 15.25 16 16.41"/>
+</symbol>
+
+<!-- restore: ink loop arrow (anticlockwise) with a lapis head around an orpiment bezant (restore purchases). --c1 head (lapis), --c2 arc (ink), --c3 bezant (gilt). -->
+<symbol id="ic-act-restore" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c2,#1E1610);stroke-width:var(--sw,2.4)" d="M13.7 20.3l.1 -.2 .9 .3 1 .1 1 0 .9 -.3 .4 -.2 .8 -.5 .6 -.7 .6 -.8 .3 -.9 .1 -.4 .1 -1 -.1 -.5 -.2 -.9 -.2 -.4 -.6 -.8 -.7 -.6 -.4 -.3 -.8 -.4 -.9 -.2 -1 0 -.9 .2 -.4 .1 -.2 -.4 1 -.3 1 -.1 .5 0 1.1 .2 .9 .5 .8 .6 .7 .8 .5 .9 .2 .5 .1 .6 .1 1 -.2 1.1 -.4 .9 -.6 .9 -.7 .7 -.9 .5 -1 .4 -1 .1 -1 0 -1 -.3z"/>
+  <path class="ik" style="fill:var(--c1,#22409A);stroke-width:var(--sw,2.4)" d="M14.5 9.5l.2 0 .1 0 0 .2 .8 3.2 0 .1 -.1 .2 -.2 .1 -.9 -.1 -4.6 -.3 -.3 -.1 0 -.1 .2 -.1z"/>
+  <path class="ik" style="fill:var(--c3,#E9B62A);stroke-width:var(--sw,2.4)" d="M17.5 15.7l0 .5 -.2 .6 -.4 .4 -.5 .2 -.6 0 -.6 -.2 -.2 -.2 -.2 -.3 -.3 -.5 0 -.6 .1 -.3 .1 -.2 .5 -.3 .5 -.2 .6 0 .5 .1 .4 .5z"/>
+  <path class="tk" style="stroke-width:1.0" d="M13.92 10.86Q13.13 11.37 11.97 12.13"/>
+</symbol>
+
+<!-- noads: framed miniature (bister frame, lapis picture, ivory sun) struck through by a gules slash (remove ads). --c1 slash and lapis picture, --c2 shades, --c3 frame (bister) and sun (ivory). -->
+<symbol id="ic-act-noads" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M10.9 12.2l4.8 -.3 4.8 -.3 .3 0 .2 .1 .2 .2 .1 .4 .4 7.3 0 .3 -.1 .2 -.2 .1 -.3 .1 -2.1 .1 -7.6 .4 -.2 -.1 -.3 -.1 -.1 -.2 -.1 -.3 -.5 -7.3 .1 -.2 .1 -.2 .2 -.2z"/>
+  <path class="hs" style="fill:var(--c2,#4B3B2A)" d="M10.7 20.1l0 -.3 8.6 -.3 .9 -.1 .3 -.1 .1 -.3 .1 -.3 -.4 -7.1 .5 0 .3 .2 .2 .5 .4 7.3 -.1 .3 -.1 .3 -.4 .1 -1.5 .1 -8.3 .4 -.3 -.1 -.2 -.2z"/>
+  <path class="ik" style="fill:var(--c1,#22409A);stroke-width:var(--sw,2.4)" d="M12.5 13.9l5.3 -.3 1.5 0 .1 0 .1 .1 0 .2 .2 4.3 -.1 .2 -.1 .1 -.6 0 -6 .4 -.2 -.1 -.1 -.1 0 -.1 -.4 -4.4 .1 -.2z"/>
+  <path class="hs" style="fill:var(--c3,#F4ECD3)" d="M15.4 15.3l-.3 .4 -.3 .3 -.3 .1 -.4 -.1 -.3 -.1 -.2 -.2 -.2 -.5 0 -.4 .2 -.3 .4 -.3 .3 -.1 .4 .1 .3 .1 .2 .2 .2 .5z"/>
+  <path class="ik" style="fill:var(--c1,#D8391F);stroke-width:var(--sw,2.4)" d="M10.4 11.5l1.2 -1 5.1 4.9 4.9 5.1 -1.1 1 -5.1 -4.9z"/>
+  <path class="hs" style="fill:var(--c2,#9A2018)" d="M20.5 21.5l-1 -.9 1.1 -1 -4.9 -5.1 -4.1 -4 5.1 4.9 4.9 5.1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.98 12.54Q12.22 11.72 11.45 11.3"/>
+</symbol>
+
+<!-- candle: lit ivory candle in a bister holder and dish with an orpiment flame (tip). --c1 wax, --c2 wax shade (flame shade), --c3 holder and flame. -->
+<symbol id="ic-act-candle" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M20 21.4l0 .3 -.1 .2 -.2 .2 -.4 .2 -.6 .2 -.6 .1 -1.4 .1 -2.1 0 -1.5 -.2 -.4 -.2 -.5 -.2 -.3 -.3 -.1 -.2 .1 -.2 .2 -.3 .3 -.1 .5 -.2 1.4 -.3 1.7 -.1 1.4 .1 1.3 .2 .5 .2 .4 .2 .2 .2z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230);stroke-width:var(--sw,2.4)" d="M13 19.6l5.7 0 .2 .1 .1 .2 -.4 1.1 -.1 .2 -.2 .1 -4.3 -.1 -.3 -.1 -.2 -.1 -.5 -1 -.1 -.2 0 -.1z"/>
+  <path class="ik" style="fill:var(--c1,#F4ECD3);stroke-width:var(--sw,2.4)" d="M14.4 13.9l3.4 -.1 .3 0 .1 .2 .1 .3 .1 5.4 0 .2 -.2 .2 -.3 .1 -3.7 .2 -.2 0 -.2 -.2 -.1 -.3 .2 -5.6 .1 -.2 .1 -.1z"/>
+  <path class="hs" style="fill:var(--c2,#C6B684)" d="M13.8 19.5l3.2 -.2 .2 -.1 .1 -.1 .1 -.3 -.1 -5 .5 0 .3 .1 .1 .1 .1 .3 .1 5.4 -.1 .3 -.1 .2 -.3 0 -3.8 .2 -.2 -.1 -.1 -.1z"/>
+  <path class="il" style="stroke-width:1.0" d="M17.1 15.6L17.1 17.8"/>
+  <path class="il" style="stroke-width:1.5" d="M16.1 13.3L16 14.6"/>
+  <path class="ik" style="fill:var(--c3,#E9B62A);stroke-width:var(--sw,2.4)" d="M16.3 9.4l1 1.2 .4 .5 .3 .6 .1 .5 -.2 .5 -.2 .3 -.2 .1 -.3 .2 -.5 .2 -.7 .1 -.4 -.1 -.5 -.1 -.4 -.2 -.4 -.3 -.2 -.2 -.2 -.3 0 -.4 -.1 -.2 .2 -.5 .3 -.4 .5 -.5z"/>
+  <path class="hs" style="fill:var(--c2,#8C3520)" d="M14 12.5l.8 .2 .7 0 .9 -.2 .3 -.2 .3 -.3 .1 -.5 0 -.5 -.3 -.7 -.6 -.8 .1 -.1 1.4 1.6 .2 .5 .1 .5 0 .5 -.3 .5 -.7 .4 -.7 .2 -.7 -.1 -.8 -.3 -.6 -.4z"/>
+  <path class="tk" style="stroke-width:1.0" d="M14.88 14.64Q14.57 15.96 14.63 16.92"/>
+</symbol>
+
+<!-- tomap: T-O map: lapis ocean ring (O) round three ivory lands (Asia above, Europe and Africa below) divided by the ink seam of the T (language). --c1 ring, --c2 ring shade, --c3 lands. -->
+<symbol id="ic-act-tomap" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#22409A);stroke-width:var(--sw,2.4)" d="M23.1 16.6l-.3 1.2 -.3 .9 -.3 .6 -.5 .8 -.4 .4 -.9 .9 -.5 .4 -.9 .4 -1.2 .5 -1.2 .2 -.6 0 -1 0 -1.3 -.2 -.6 -.2 -.5 -.3 -1.1 -.7 -.7 -.6 -.4 -.5 -.4 -.5 -.3 -.5 -.5 -1.2 -.2 -1 -.1 -.6 0 -.6 0 -.6 .1 -.6 .1 -.6 .5 -1.2 .4 -.6 .5 -.7 .9 -.9 .5 -.4 .8 -.5 1.1 -.5 .6 -.2 .6 -.1 .7 0 .9 0 1 .1 .6 .1 .6 .2 .5 .3 1.1 .7 .8 .7 .4 .5 .4 .5 .3 .5 .5 1.1 .2 1.3 .1 .9z"/>
+  <path class="hs" style="fill:var(--c2,#14275F)" d="M10.5 20.6l.9 .5 1.1 .5 1.3 .2 1.3 0 1.2 -.1 .9 -.3 1.2 -.6 .8 -.5 .9 -.9 .4 -.4 .5 -.8 .6 -1.5 .3 -1.2 0 -.6 -.1 -.9 -.2 -1.3 -.5 -1.1 -.3 -.5 -.5 -.7 .9 .8 .6 .7 .6 1 .4 1.2 .3 1.6 -.1 1.2 -.3 1.2 -.6 1.5 -.8 .9 -.9 .9 -1.4 .8 -1.2 .5 -1.2 .2 -1.3 0 -1.3 -.2 -1.1 -.4 -1.1 -.6 -.7 -.6z"/>
+  <path class="ik" style="fill:var(--c3,#F4ECD3);stroke-width:var(--sw,2.4)" d="M20.3 14.6l-3.9 .1 -4.7 0 .2 -.6 .3 -.5 .5 -.5 .6 -.6 .7 -.4 .6 -.3 .7 -.1 .7 -.1 .7 0 .7 .1 .6 .3 .6 .3 .5 .4 .5 .6 .4 .7z"/>
+  <path class="ik" style="fill:var(--c3,#F4ECD3);stroke-width:var(--sw,2.4)" d="M11.6 15.4l4 0 .1 2.5 0 2.5 -1 -.2 -.8 -.3 -.7 -.4 -.7 -.7 -.4 -.7 -.4 -.9 -.1 -.8z"/>
+  <path class="ik" style="fill:var(--c3,#F4ECD3);stroke-width:var(--sw,2.4)" d="M16.3 20.4l0 -1.2 0 -3.8 4.1 -.1 .1 .9 -.2 1 -.3 .8 -.6 .8 -.5 .6 -.7 .5 -1 .4z"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.43 11.12Q11.25 11.92 10.57 13.17"/>
+</symbol>
+
+<!-- target: archery butt (ivory rings, gules eye) pierced by an ink arrow with fletching (objective). --c1 butt, --c2 butt shade, --c3 eye (gules); arrow ink. -->
+<symbol id="ic-act-target" viewBox="0 0 32 32">
+  <use href="#ct-round" style="--k1:var(--f1,#D8D0AB);--k2:var(--f2,#9A2018)"/>
+  <path class="ik" style="fill:var(--c1,#F4ECD3);stroke-width:var(--sw,2.4)" d="M19.5 16.2l.2 1.1 0 .9 -.2 .9 -.3 .7 -.6 .8 -.5 .5 -.3 .3 -.8 .4 -.8 .3 -1 .1 -1.1 -.1 -1 -.2 -1.1 -.5 -.6 -.5 -.7 -.9 -.6 -1 -.2 -.8 -.1 -1.1 .1 -.8 .2 -.8 .4 -.8 .7 -.9 .7 -.5 .8 -.4 1.1 -.4 .9 -.1 .8 .1 .9 .2 1 .6 .6 .5 .6 .6 .6 1z"/>
+  <path class="hs" style="fill:var(--c2,#C6B684)" d="M10.8 20.3l.8 .4 .9 .3 .7 .1 .8 0 1 -.1 .6 -.2 .6 -.3 .6 -.4 .6 -.6 .6 -.8 .3 -.7 .2 -.9 0 -.9 -.2 -1.1 -.4 -1 -.5 -.8 .6 .5 .6 .6 .6 1 .3 .8 .2 1.1 0 .9 -.2 .9 -.3 .7 -.6 .8 -.6 .6 -.8 .5 -.8 .3 -.9 .2 -1.1 0 -.9 -.2 -1.1 -.4 -.9 -.6z"/>
+  <path class="il" style="stroke-width:1.2" d="M17.6 17.9l-.2 .5 -.3 .6 -.3 .5 -.3 .2 -.6 .3 -.6 .2 -.6 .1 -.5 -.1 -.6 -.2 -.5 -.3 -.5 -.4 -.4 -.5 -.3 -.5 -.2 -.6 0 -.5 0 -.6 .2 -.6 .3 -.4 .4 -.4 .5 -.4 .5 -.3 .6 -.1 .6 0 .6 0 .6 .2 .5 .3 .4 .5 .4 .4 .1 .4 .2 .6 0 .5z"/>
+  <path class="ik" style="fill:var(--c3,#D8391F);stroke-width:var(--sw,2.4)" d="M16.2 17.6l-.2 .5 -.4 .4 -.6 .3 -.6 0 -.5 -.3 -.5 -.4 -.2 -.5 -.1 -.4 .1 -.2 .1 -.3 .1 -.3 .5 -.4 .5 -.2 .6 0 .6 .3 .4 .4 .2 .5z"/>
+  <path class="ia" d="M19.4 9.9l0 -.1 .1 -.1 1 .7 .1 .1 0 .1 -.4 1.1 -1.1 1.1 -.1 .1zM22.1 12.6l-1.3 .2 -4.5 4.4 -.8 -.8 5.1 -5 .2 .1 .7 -.1 .1 0 .6 1 0 .1z"/>
+  <path class="tk" style="stroke-width:1.0" d="M12.69 13.95Q11.45 14.7 10.94 16.06"/>
+</symbol>
+
+<!-- pointer: naked down-pointing gilt pennon head: orpiment on bole, an ink binding band across the hoist, the pointer of the fortune wheel. --c1 gilt, --c2 shade (bole). -->
+<symbol id="ic-act-pointer" viewBox="0 0 32 32">
+  <path class="ik" style="fill:var(--c1,#E9B62A)" d="M11.2 4.8l9.9 0 .4 .1 .3 .1 .2 .2 .1 .4 0 .5 -.4 1.4 -.2 1.1 0 1.4 .1 1.1 -.7 1.5 -.4 1.1 -.3 1 -.3 1.1 -.2 1.1 -.2 1.7 -1.1 2.4 -.8 1.8 -.9 2.5 -.7 1.9 -.8 -2.4 -.7 -1.8 -1 -2.3 -.8 -1.7 -.4 -2.2 -.5 -1.6 -.5 -1.6 -1 -2 .1 -1.6 0 -1.2 -.2 -1.6 -.3 -1.1 0 -.4 .2 -.4 .2 -.3 .4 -.2z"/>
+  <path class="hs" style="fill:var(--c2,#8C3520)" d="M14.8 23.6l1.2 -3.1 1.6 -3.6 .2 -1.7 .5 -2.2 .7 -2.1 .7 -1.5 -.1 -1.1 0 -1.1 .1 -1.1 .4 -1.3 1 0 .5 .1 .4 .3 .1 .4 0 .3 -.4 1.6 -.2 1.1 0 1.4 .1 1.1 -.7 1.5 -.7 2.1 -.5 2.2 -.2 1.7 -1.1 2.4 -.8 1.8 -.9 2.5 -.7 1.9z"/>
+  <path class="ia" d="M11.1 8l10.1 -.2 .3 .1 .1 .2 -.2 1 -.1 .2 -.3 .1 -10.1 .3 -.2 -.1 -.1 -.2 .1 -1 .1 -.3z"/>
+  <path class="tk" d="M12.86 12.01Q13.73 13.92 14.24 15.97"/>
+</symbol>
+

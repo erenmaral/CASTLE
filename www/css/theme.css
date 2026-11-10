@@ -34,7 +34,10 @@ body{font:600 26px/1.3 var(--f-body)}
 /* vellum uzerindeki metinde eski yazi degiskenleri koyu tonlara doner (ui.js satir ici var(--gold|--green|--red) hala okunur) */
 .story,.slip,.rule-box,.tbl,#toast,#info-title,#tut-bubble,textarea{--gold:#6E5008;--green:#17553B;--red:#8E1F12;--mut:var(--ink2);--ud:var(--ink2);color:var(--ink)}
 /* orp / yaldiz yuz uzerinde de ayni (murekkep yazi) */
-.btn.gold,.daily-card,.chip.gold,.tab.active,.day.today,.diff.on,.bchip.on,.smile.can,.pk-badge{--gold:#6E5008;--green:#17553B;--red:#8E1F12;--mut:var(--ink2);--ud:var(--ink2)}
+.btn.gold,.daily-card,.chip.gold,.tab.active,.day.today,.diff.on,.bchip.on,.smile.can,.pk-badge,.realm{--gold:#6E5008;--green:#17553B;--red:#8E1F12;--mut:var(--ink2)}
+.btn.gold.off,.btn.gold.soft,.btn.gold[disabled]{--ud:var(--vel2)}
+/* elmas desenli lapis yuzeylerde (sayfa, pencere, birlik karti) ikincil yazi fildisi: vel2 elmas cizgisi (#2F52B0) uzerinde 3.5:1'e duser */
+.modal,.ucard,.mode-card{--mut:var(--ivo)}
 /* malakit / zincifre kartlarda ikincil yazi fildisi (ivo yalniz mal ve mad uzerinde 5.4+ verir; orp 3.4/4.3 verir) */
 .quest,.ach,.pack,.offer{--mut:var(--ivo);--ud:var(--ivo);--gold:var(--ivo)}
 
@@ -52,10 +55,11 @@ h2{font:700 38px/1.1 var(--f-rub);font-variant-numeric:lining-nums;color:var(--i
 h3{font:700 26px/1.15 var(--f-body)}
 .logo{font:700 30px/1.05 var(--f-rub);font-variant-numeric:lining-nums;color:var(--ivo);letter-spacing:0;text-shadow:0 3px 0 var(--ink)}
 .logo.big{font-size:56px;letter-spacing:2px;text-align:center;line-height:1.05}
-#hub-top .logo{font-size:22px;line-height:1.05;text-shadow:none;white-space:normal;letter-spacing:0;flex:0 1 190px;min-width:0}
+#hub-top .logo{font-size:22px;line-height:1.05;text-shadow:none;white-space:normal;letter-spacing:0;flex:0 1 196px;min-width:0}
 .sect{display:flex;align-items:center;gap:14px;margin:22px 0 10px;font:400 36px/1.1 var(--f-top);color:var(--orp)}
 .sect::after{content:"";flex:1;height:36px;background:var(--ivy) left center/72px 36px repeat-x}
-.mut,small,.small{color:var(--mut)}
+.sect small{font:600 22px/1.2 var(--f-body);color:var(--vel2);white-space:nowrap}
+.mut,small,.small:not(.btn){color:var(--mut)}
 .bignum{color:var(--orp)}
 b{font-weight:800}
 /* canli sayaclar ve savas sayilari system-ui 800 tabular (Texturina rakamlari oldstyle/orantili: kullanma); sabit plaka rakamlari EB Garamond */
@@ -64,8 +68,8 @@ b{font-weight:800}
 /* ---------- yuzeyler: gouache kartlar, murekkep kontur + sert 5u alt golge ---------- */
 .panel,.ucard,.pack,.offer,.quest,.ach,.perk{--dp:none;--dpz:144px;background:var(--dp) 0 0/var(--dpz),var(--card,var(--lapisd));color:var(--ivo);border:3px solid var(--ink);border-radius:var(--r1);box-shadow:var(--sh5)}
 .ucard{--card:var(--lapis);--dp:var(--dp-lapis);--dpz:144px}
-.quest,.ach{--card:var(--mal);--dp:var(--dp-vine);--dpz:40px}
-.pack,.offer{--card:var(--mad);--dp:var(--dp-quat);--dpz:56px}
+.quest,.ach{--card:var(--mal);--dp:var(--dp-vine);--dpz:40px;background:linear-gradient(rgba(31,107,78,.55),rgba(31,107,78,.55)),var(--dp) 0 0/var(--dpz),var(--card)}
+.pack,.offer{--card:var(--mad);--dp:var(--dp-quat);--dpz:56px;background:linear-gradient(rgba(154,32,24,.4),rgba(154,32,24,.4)),var(--dp) 0 0/var(--dpz),var(--card)}
 .perk{--card:var(--pur)}
 .mode-card:active,.daily-card:active{transform:translateY(4px);box-shadow:none}
 .panel.indeck,.ucard.indeck{border:4px solid var(--orp);box-shadow:0 0 0 3px var(--ink),0 8px 0 3px var(--ink)}
@@ -115,15 +119,18 @@ textarea{font-size:22px;padding:12px}
 .btn.green{background:var(--mal)}
 .btn:active{transform:translateY(4px);box-shadow:none}
 .btn.gold:active{box-shadow:var(--gilt)}
-.btn[disabled],.btn.off,.btn.soft{background:none;color:var(--ud);border:3px dashed var(--ud);box-shadow:none;filter:none}
+.btn[disabled],.btn.off,.btn.soft,.btn.gold.off,.btn.gold.soft,.btn.gold[disabled]{background:var(--card,none);color:var(--ud);border:3px dashed var(--ud);box-shadow:none;filter:none}
 .btn.soft{pointer-events:auto}
-.btn.gold.off,.btn.gold.soft,.btn.gold[disabled]{background:none}
+.ucard .btn{background:var(--lapisd)}
+.ucard .btn.gold{background:var(--orp)}.ucard .btn.green{background:var(--mal)}.ucard .btn.red{background:var(--mad)}
+.ucard .btn.off,.ucard .btn.soft{background:var(--card,none)}
 .round{min-width:var(--hit);min-height:var(--hit);background:var(--night);color:var(--ivo);border:3px solid var(--ink);border-radius:50% 46% 50% 48%/48% 50% 46% 50%;box-shadow:var(--sh4)}
 .round:active{transform:translateY(3px);box-shadow:none}
 .round .i{width:32px;height:32px}
 .curr,.hbtn,.fbtn,#rule-chip,#obj-chip,#combo-chip,#hint,#perk-row i,#gold-chip{background:var(--night);color:var(--ivo);border:3px solid var(--ink);border-radius:var(--r3);box-shadow:var(--sh4)}
 .curr{gap:10px;padding:6px 16px 6px 12px;min-width:0}
 .curr .ico{font-size:34px}
+.curr.plus{min-height:var(--hit)}
 .curr.plus i{background:var(--mal);color:var(--ivo);border:3px solid var(--ink);border-radius:var(--r4);font-family:var(--f-num)}
 .hbtn,.fbtn,.tab,.diff,.lang-btn,.bchip,.smile .btn,.ach .btn,#btn-home,#home-settings,.btn.small{min-width:var(--hit);min-height:var(--hit)}
 .hbtn:active,.fbtn:active{transform:translateY(3px);box-shadow:none}
@@ -136,7 +143,7 @@ textarea{font-size:22px;padding:12px}
 /* ---------- ana menu: gece plakasi, tek parlatilmis plaka = CTA, opak --diap sayfa ayagi ---------- */
 #home{background:none}
 #home.opaque{background:var(--dp-lapis) 0 0/144px,var(--diap)}
-#home-col{padding-left:18px;padding-right:18px}
+#home-col{--pb:calc(var(--sbp) + 40px);padding:calc(var(--stp) + 14px) 18px var(--pb)}
 #home-logo{display:flex;align-items:flex-end;gap:18px;text-align:left;margin-top:0;padding:16px 20px 14px;background:var(--dp-lapis) 0 0/144px,var(--night);border:3px solid var(--ink);border-radius:var(--r1);box-shadow:var(--sh5)}
 .tug{width:128px;height:290px;flex:none;overflow:visible}
 .tug .pole,.tug .bar,.tug .moon{fill:none;stroke:var(--leaf);stroke-width:6;stroke-linecap:round}
@@ -149,10 +156,12 @@ textarea{font-size:22px;padding:12px}
 .tug .t2{animation-delay:-2.4s!important}.tug .t5{animation-delay:-4.8s!important}
 @keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
 .hl-text{padding-bottom:4px;min-width:0}
-.hl-name{font:700 62px/.95 var(--f-rub);font-variant-numeric:lining-nums;letter-spacing:0;white-space:nowrap;color:var(--ivo);text-shadow:0 4px 0 var(--ink)}
+.hl-name{font:700 62px/.95 var(--f-rub);font-variant-numeric:lining-nums;letter-spacing:0;color:var(--ivo);text-shadow:0 4px 0 var(--ink);overflow-wrap:break-word}
+/* ad uzun diller 2 satirda kalsin (sigma payi 492u); gerisi kelime sarar */
+:lang(ru) .hl-name{font-size:58px}
 .band{height:36px;margin:8px 0 6px;width:100%;background:var(--ivy) left center/72px 36px repeat-x}
 .hl-tag{font:600 25px/1.2 var(--f-body);color:var(--ivo);letter-spacing:0}
-#home-btns{gap:10px;margin:0 -18px calc(-1*(var(--sbp) + 22px));padding:16px 18px calc(var(--sbp) + 26px);background:var(--diap);border-top:4px solid var(--orp);box-shadow:0 -3px 0 var(--ink)}
+#home-btns{gap:10px;margin:0 -18px calc(-1*var(--pb));padding:16px 18px var(--pb);background:var(--diap);border-top:4px solid var(--orp);box-shadow:0 -3px 0 var(--ink)}
 .hbig{height:auto;min-height:124px;padding:10px 30px;align-items:flex-start;text-align:left;font:700 42px/1.05 var(--f-rub);font-variant-numeric:lining-nums;color:var(--ink);background:var(--leaf-g);border:3px solid var(--ink);border-radius:var(--r2);box-shadow:var(--gilt),var(--sh5);animation:none}
 .hbig small{font:600 24px/1.2 var(--f-body);color:var(--ink);margin-top:6px;text-align:left}
 .hbig:active{transform:translateY(5px);box-shadow:var(--gilt)}
@@ -166,7 +175,7 @@ textarea{font-size:22px;padding:12px}
 .hrow.three button span{font-size:24px}
 .hrow .shopbtn .i{color:var(--vdg)}
 #home [data-home] .dot{right:12px;top:12px}
-#home-ver{color:var(--vel2);font:600 22px/1 var(--f-body)}
+#home-ver{color:var(--vel2);font:600 22px/1 var(--f-body);bottom:calc(var(--sbp) + 6px)}
 #home-cur{align-items:center}
 #home-settings{width:var(--hit);height:var(--hit)}
 
@@ -226,7 +235,7 @@ textarea{font-size:22px;padding:12px}
 .rd-dash{stroke:var(--vel);stroke-dasharray:1 14}
 .rd-done{stroke:var(--orp)}
 /* dugum: madalyon (kale) / baklava (acik alan) / patron = x1.25 cift halka; renk = diyar */
-.node{--nf:var(--lapis);--nc:var(--ivo);--rim:0 0 0 0 #0000;--sh:var(--sh5);--bs:solid;--bc:var(--ink);width:88px;height:96px;margin:-52px 0 0 -44px;padding-top:8px;background:none;border:0;box-shadow:none;color:var(--nc)}
+.node{--nf:var(--lapis);--nc:var(--ivo);--rim:0 0 0 0 #0000;--sh:var(--sh5);--bs:solid;--bc:var(--ink);width:88px;height:96px;margin:-52px 0 0 -44px;padding:8px 0 15px;background:none;border:0;box-shadow:none;color:var(--nc)}
 .node::before{content:"";position:absolute;inset:8px 0 0;border-radius:50%;background:var(--nf);border:4px var(--bs) var(--bc);box-shadow:var(--rim),var(--sh)}
 .node>*{position:relative}
 .node .nm,.node .rl,.node .st{position:absolute}
@@ -238,21 +247,27 @@ textarea{font-size:22px;padding:12px}
 .node.r5{--nf:var(--pur)}
 .node.r6{--nf:var(--ink);--nc:var(--orp)}
 .node.done{--rim:inset 0 0 0 4px var(--nf),inset 0 0 0 8px var(--orp)}
+.node.r1.done{--rim:inset 0 0 0 4px var(--nf),inset 0 0 0 8px var(--ink)}
 .node.s3{--nf:var(--orp);--nc:var(--ink);--rim:inset 3px 3px 0 var(--bole)}
-.node.boss{width:110px;height:120px;margin:-65px 0 0 -55px;padding-top:10px}
+.node.boss{width:110px;height:120px;margin:-65px 0 0 -55px;padding:10px 0 19px}
 .node.boss::before{inset:10px 0 0;--rim:inset 0 0 0 4px var(--nf),inset 0 0 0 8px var(--ink)}
 .node.boss.done::before{--rim:inset 0 0 0 4px var(--nf),inset 0 0 0 8px var(--ink),inset 0 0 0 12px var(--nf),inset 0 0 0 16px var(--orp)}
+.node.boss.r1.done::before{--rim:inset 0 0 0 4px var(--nf),inset 0 0 0 8px var(--ink),inset 0 0 0 12px var(--nf),inset 0 0 0 16px var(--ink)}
 .node.boss.fld::before{inset:26px 17px 17px}
 .node.cur::before{--sh:0 0 0 5px var(--orp),0 0 0 9px var(--ink),0 5px 0 9px var(--ink)}
-.node.locked{--nf:rgba(216,208,171,.35);--nc:var(--ud);--bs:dashed;--bc:var(--ud);--sh:0 0 0 0 #0000;--rim:0 0 0 0 #0000}
-.node .ty{font-size:24px;margin-top:-2px}
-.node .nn{font:700 36px/1 var(--f-body);font-family:var(--f-body)}
+.node.locked{--nf:var(--vel);--nc:var(--ink2);--bs:dashed;--bc:var(--ink2);--sh:0 0 0 0 #0000;--rim:0 0 0 0 #0000}
+.node .ty{font-size:22px;margin-top:-2px}
+.node.fld:not(.boss) .ty{display:none}
+.node .nn{font:700 34px/1 var(--f-body)}
 .node .st{bottom:-12px;padding:3px 8px;background:var(--night);color:var(--orp);border:3px solid var(--ink);border-radius:var(--r3);font:700 22px/1 var(--f-num);letter-spacing:1px}
-.node.locked .st{background:none;border:0;color:var(--ud)}
+.node.locked .st{background:none;border:0;color:var(--ink2);font-size:22px}
 .node .nm{background:var(--grain) 0 0/96px,var(--vel);color:var(--ink);border:3px solid var(--ink);border-radius:var(--r4);padding:3px 10px;font:600 22px/1.1 var(--f-body);--mut:var(--ink2)}
-.node.locked .nm{background:none;border:0;color:var(--ud);padding:3px 0}
-.realm{--mut:var(--ink2);margin-top:-30px;padding:8px 22px 8px 12px;background:var(--orp);color:var(--ink);border:3px solid var(--ink);border-radius:var(--r4);box-shadow:var(--gilt),var(--sh5);z-index:1}
-.realm .ri{display:flex;align-items:center;justify-content:center;width:62px;height:62px;flex:none;font-size:34px;background:var(--dp-gold) 0 0/24px,var(--leaf);border:3px solid var(--ink);border-radius:50% 50% 4px 4px/42% 42% 4px 4px}
+.node.locked .nm{border:3px dashed var(--ink2);color:var(--ink2)}
+.realm{--mut:var(--ink2);margin-top:-34px;padding:7px 20px 7px 10px;background:var(--orp);color:var(--ink);border:3px solid var(--ink);border-radius:var(--r4);box-shadow:var(--gilt),var(--sh5);z-index:3}
+/* kartus patron dugumunun (onceki diyarin son dugumu) ustunu kapatmasin diye diyara gore sola / saga yaslanir (dugum x konumlari ui.js'te sabit) */
+.realm.r0,.realm.r4,.realm.r5,.realm.r6{left:12px;transform:none}
+.realm.r1,.realm.r2,.realm.r3{left:auto;right:12px;transform:none}
+.realm .ri{display:flex;align-items:center;justify-content:center;width:58px;height:58px;flex:none;font-size:32px;background:var(--dp-gold) 0 0/24px,var(--leaf);border:3px solid var(--ink);border-radius:50% 50% 4px 4px/42% 42% 4px 4px}
 .realm b{font:400 34px/1 var(--f-top);color:var(--mad)}
 .realm small{font:600 22px/1.15 var(--f-body);color:var(--ink);margin-top:3px}
 .flagmark{animation:flagb 1.2s ease-in-out infinite}
@@ -260,8 +275,7 @@ textarea{font-size:22px;padding:12px}
 
 /* ---------- ordu / hazine / magaza / gorevler ---------- */
 .ucard .info h3{font-size:26px}
-.ucard small{color:var(--ivo)}
-.ucard .small{color:var(--vel2)}
+.ucard small,.ucard .small:not(.btn){color:var(--ivo)}
 .wheel{border:6px solid var(--ink);box-shadow:0 0 0 6px var(--leaf),0 0 0 10px var(--ink);background:repeating-conic-gradient(var(--ink) 0 2deg,#0000 2deg 45deg),conic-gradient(var(--lapis) 0 45deg,var(--mad) 45deg 90deg,var(--mal) 90deg 135deg,var(--pur) 135deg 180deg,var(--lapis) 180deg 225deg,var(--mad) 225deg 270deg,var(--mal) 270deg 315deg,var(--pur) 315deg 360deg)!important}
 .wheel span{color:var(--ivo);text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink)}
 .wheel-ptr{color:var(--orp);text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),0 5px 0 var(--ink)}
@@ -287,7 +301,7 @@ textarea{font-size:22px;padding:12px}
 #btn-mine:active{transform:translateY(3px);box-shadow:none}
 #btn-mine.off{background:var(--night);color:var(--ud);border:3px dashed var(--ud);box-shadow:none}
 #btn-auto.on{background:var(--mal);color:var(--ivo)}
-#info-title{padding:2px 14px;border-radius:var(--r4);line-height:1.3}
+#info-title{padding:2px 14px;border-radius:var(--r4);line-height:1.3;flex:0 1 auto;max-width:100%}
 #rule-chip,#obj-chip,#combo-chip{border-radius:var(--r3);font-family:var(--f-body);box-shadow:var(--sh4)}
 #rule-chip,#obj-chip{color:var(--ivo)}
 #combo-chip{color:var(--orp)}
@@ -327,9 +341,11 @@ textarea{font-size:22px;padding:12px}
 .modal h1::after{content:"";display:block;width:min(100%,360px);height:12px;margin:12px auto 0;background:linear-gradient(var(--ink) 0 3px,var(--orp) 3px 9px,var(--ink) 9px 12px);transform-origin:50% 50%;animation:rule .5s .1s ease-out both}
 @keyframes rule{from{transform:scaleX(0)}}
 .modal p{color:var(--ivo);font-size:25px}
-.modal p.mut,.modal .mut{color:var(--vel2)}
-.modal .small{color:var(--vel2);font-size:22px}
-.modal .row-lines{color:var(--vel2)}
+.modal p.mut,.modal .mut,.modal .small:not(.btn),.modal .row-lines{color:var(--mut)}
+.modal .small:not(.btn){font-size:22px}
+.modal .story,.modal .rule-box,.modal .tbl{color:var(--ink)}
+.modal .story{font:600 26px/34px var(--f-body)}
+.modal .rule-box .small:not(.btn){color:var(--ink2)}
 .modal .actions{margin-top:18px}
 .big-stars span{color:transparent;-webkit-text-stroke:3px var(--ud);text-shadow:none}
 .big-stars span.on{color:var(--orp);-webkit-text-stroke:4px var(--ink);text-shadow:none;animation:starin .5s ease-out both}
@@ -363,7 +379,7 @@ textarea{font-size:22px;padding:12px}
 .boost-row .bl{color:var(--vel2);font-family:var(--f-body)}
 .new-list b{color:var(--orp)}
 .lang-btn{justify-content:flex-start;gap:16px;padding:6px 20px;min-height:max(84px,var(--hit));font-size:28px;text-align:left}
-.lang-btn.on{background:var(--orp);color:var(--ink);box-shadow:var(--gilt),var(--sh5)}
+.lang-btn.on{box-shadow:inset 0 0 0 5px var(--orp),var(--sh5)}
 .lang-btn[data-act]::before{content:attr(data-code);flex:none;min-width:64px;padding:6px 6px;text-align:center;background:var(--night);color:var(--orp);border:3px solid var(--ink);border-radius:var(--r4);font:700 24px/1 var(--f-rub);letter-spacing:1px}
 .lang-btn[data-act="l_tr"]:not([data-code])::before{content:"TR"}
 .lang-btn[data-act="l_en"]:not([data-code])::before{content:"EN"}
@@ -373,7 +389,7 @@ textarea{font-size:22px;padding:12px}
 .lang-btn[data-act="l_zh"]:not([data-code])::before{content:"ZH"}
 .lang-btn>span{display:none}
 .settings-links{text-align:center;font-size:22px;color:var(--vel2);margin-top:14px}
-.settings-links a{text-decoration:underline;padding:10px 6px;cursor:pointer}
+.settings-links a,.shop-misc .links a{display:inline-flex;align-items:center;min-height:var(--hit);padding:0 8px;text-decoration:underline;cursor:pointer}
 .modal .actions .btn.gold:last-of-type:not(.small){background:var(--leaf-g);box-shadow:var(--gilt),var(--sh5)}
 .modal .actions .btn.gold.off{background:none}
 .modal .row-lines .uico{margin:0 -4px}
