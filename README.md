@@ -35,7 +35,7 @@ node tests/e2e-v03.js                 # dikey format, koridor seçimi, sefer kur
 node tests/e2e-v04.js                 # günlük sefer, zorluk, pazar, kayıt taşıma, yeni diyarlar
 node tests/gallery.js                 # tüm birliklerin yakın plan görsel galerisi (3 diyar)
 node tests/perf.js                    # çizim maliyeti ölçümü
-python3 scripts/make-icons.py         # ikon / açılış ekranı yeniden üret
+node scripts/make-icons.js         # ikon / açılış ekranı yeniden üret
 ```
 
 ## Yeni içerik eklemek

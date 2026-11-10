@@ -217,11 +217,44 @@
       navigator.serviceWorker.register('sw.js').catch(function () { /* sessizce gec */ });
     }
   }
+  // ---- Acilis hazirligi (sanat yonu bolum 3-4): simge sprite'i + 3 yazi ailesi (en cok 1.5 sn) + Z.Art boot dokulari; bitince cb() tam bir kez ----
+  // fonts.css: Rub = Texturina 700 (baslik/dugme), Top = Pirata One 400 (versal), Hand = EB Garamond (govde; tek dosya, 400-800 araligi).
+  // document.fonts.load(ozellik, ornek) yalniz ornekteki harflerin unicode-range alt kumesini indirir (varsayilan ornek ' ' sadece latin'i getirir):
+  // Turkce icin latin-ext harfleri (tr: A a Ğ İ Ş ı ğ ş), Rusca icin kiril (ru: A a Ж щ я) eklenir; 'Aa' latin alt kumesini her dilde garantiler.
+  var FONT_SPECS = ['700 30px Rub', '400 36px Top', '600 26px Hand'];
+  var FONT_SAMPLE = { tr: 'AaĞİŞığş', ru: 'AaЖщя' };
+  var FONT_WAIT = 1500; // yavas ag ya da eksik dosyada oyun en gec 1.5 sn sonra acilir (font-display:block: metin yazi tipi gelince gorunur)
+  function loadFonts() { // Promise: yazi tipleri inince ya da sure dolunca cozulur, asla reddedilmez
+    var timer, fonts, sample = FONT_SAMPLE[Z.lang] || 'Aa';
+    var timeout = new Promise(function (res) { timer = setTimeout(res, FONT_WAIT); });
+    try {
+      fonts = Promise.all(FONT_SPECS.map(function (s) { return document.fonts.load(s, sample).catch(function () { return 0; }); }));
+    } catch (e) { fonts = Promise.resolve(); } // document.fonts yok: sistem yazi tipiyle devam
+    return Promise.race([fonts, timeout]).then(function () { clearTimeout(timer); });
+  }
+  function prepare(cb) {
+    var left = 2, last;
+    function part() { var d = false; return function () { if (d) return; d = true; if (--left === 0) { clearTimeout(last); cb(); } }; }
+    var fontsDone = part(), baked = part();
+    try {
+      if (Z.Icons && Z.Icons.inject) Z.Icons.inject();
+      // Eski satir ici sprite (i-coin, i-gem ...) index.html'de durdukca onun id'leri kazansin: yeni sprite'taki ayni adli takma adlar (i-coin -> ic-cur-bezant ...)
+      // sayfadaki sirada onun ardinda kalir, gorunum degismez. Eski sprite index.html'den silinince bu satir bir sey yapmaz ve takma adlar devralir.
+      var ic = $('z-icons'), old = document.querySelector('#stage > svg:not(#z-icons)');
+      if (ic && old && old.nextSibling !== ic) old.parentNode.insertBefore(ic, old.nextSibling);
+    } catch (e) { /* simgesiz de acilir */ }
+    loadFonts().then(fontsDone); // yazi dosyalari agdan inerken ...
+    try { if (Z.Art && Z.Art.bake) Z.Art.bake(baked); else baked(); } catch (e) { baked(); } // ... boot dokulari (senkron, ~25 ms) pisirilir; dokusuz da acilir
+    last = setTimeout(function () { fontsDone(); baked(); }, FONT_WAIT + 1000); // son care: hicbir parca (ornegin geri cagirmayan bir bake) oyunu sonsuza dek bekletmesin
+  }
   // APK'da Cordova eklentileri (Play Faturalandirma: CdvPurchase) sayfa yuklendikten biraz sonra gelir: 'deviceready' beklenir (en cok 3 sn), sonra oyun acilir.
+  // Acilis hazirligi bununla paralel calisir; ikisi de bitince boot() calisir (Z.ready ancak o zaman true olur).
   function start() {
-    var waitCordova = globalThis.cordova && !globalThis.CdvPurchase, fired = false;
-    if (!waitCordova) return boot();
-    function go() { if (fired) return; fired = true; boot(); }
+    var waitCordova = globalThis.cordova && !globalThis.CdvPurchase, fired = false, left = 2;
+    function join() { if (--left === 0) setTimeout(boot, 0); } // boot() hatalari promise zincirinde yutulmasin: ayri gorevde calisir
+    prepare(join);
+    if (!waitCordova) return join();
+    function go() { if (fired) return; fired = true; join(); }
     document.addEventListener('deviceready', go, { once: true });
     setTimeout(go, 3000);
   }

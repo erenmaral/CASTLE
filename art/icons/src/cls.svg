@@ -1,0 +1,25 @@
+<!-- cls family: S glyphs (28u, flat, no shade or tick) for the counter-chain hint: spearman > cavalry > archer.
+     Tokens: --c1 argent head, --c2 gules, --c3 bister. Underdrawn state works as for the rest of the kit. -->
+<!-- cls spearhead: argent leaf-shaped spearhead (--c1) with a bister collar and short bister shaft (--c3), tilted. S glyph, no shade or tick. -->
+<symbol id="ic-cls-spearhead" viewBox="0 0 32 32">
+  <path class="ik" style="fill:var(--c3,#7A5230)" d="M15.98 14.8L17.33 15.86Q17.73 16.16 17.42 16.56L10.17 25.72Q9.86 26.11 9.5 25.76L8.17 24.47Q7.81 24.12 8.12 23.74L15.27 14.88Q15.58 14.49 15.98 14.8Z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB)" d="M23.93 6.05C23.71 7.89 23.72 10.07 23.27 11.57C22.82 13.07 22.15 14.08 21.21 15.05C20.28 16.01 18.68 17 17.66 17.36C16.64 17.72 15.63 17.64 15.11 17.2C14.59 16.77 14.44 15.85 14.54 14.77C14.64 13.68 15 11.82 15.69 10.68C16.39 9.55 17.33 8.73 18.7 7.96C20.07 7.18 22.18 6.68 23.93 6.05Z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230)" d="M14.13 14.99L17.22 17.58Q17.6 17.9 17.32 18.32L16.29 19.81Q16.01 20.22 15.61 19.91L12.44 17.44Q12.05 17.13 12.33 16.72L13.46 15.08Q13.75 14.67 14.13 14.99Z"/>
+  <path class="il" style="stroke-width:1.6" d="M21.54 8.91L16.86 14.9"/>
+</symbol>
+
+<!-- cls lance: long diagonal bister shaft (--c3), argent head (--c1) and a gules swallow-tail pennon (--c2). S glyph, no shade or tick. -->
+<symbol id="ic-cls-lance" viewBox="0 0 32 32">
+  <path class="ik" style="fill:var(--c2,#D8391F)" d="M16.03 15.09L26.01 15.06Q26.41 15.06 26.1 15.32L23.58 17.47Q23.27 17.73 23.58 17.99L26.04 19.96Q26.35 20.22 25.95 20.22L12.42 20.31Q12.02 20.31 12.25 19.98L15.4 15.42Q15.63 15.09 16.03 15.09Z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230)" d="M6.71 27.55L5.41 26.47Q5.03 26.15 5.36 25.77L20.06 9.24Q20.39 8.87 20.77 9.2L21.93 10.22Q22.31 10.55 21.98 10.92L7.42 27.5Q7.09 27.87 6.71 27.55Z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB)" d="M27.26 4.11C26.73 5.33 26.4 6.59 25.67 7.76C24.95 8.93 23.8 10.69 22.89 11.11C21.97 11.53 20.49 10.88 20.2 10.27C19.9 9.67 20.44 8.38 21.11 7.48C21.78 6.57 23.2 5.4 24.22 4.84C25.25 4.28 26.25 4.36 27.26 4.11Z"/>
+</symbol>
+
+<!-- cls bow: slender bister bow (--c3) with a gules grip wrap (--c2), ink string, bister arrow nocked with an argent head (--c1). S glyph, no shade or tick. -->
+<symbol id="ic-cls-bow" viewBox="0 0 32 32">
+  <path class="il" style="stroke-width:1.8" d="M13.53 5.55L13.53 26.45"/>
+  <path class="ik" style="fill:var(--c3,#7A5230)" d="M13.07 15.12L23.92 15.19Q24.22 15.19 24.22 15.49L24.2 16.53Q24.2 16.83 23.9 16.84L13.1 16.9Q12.8 16.9 12.8 16.6L12.78 15.41Q12.77 15.11 13.07 15.12Z"/>
+  <path class="ik" style="fill:var(--c3,#7A5230)" d="M13.1 4.5l-2.5 1.4 -2.1 1.3 -1.1 .9 -.8 .9 -1.2 1.8 -.8 2.1 -.4 2 0 1.1 .1 1 .2 1.1 .2 1 .3 1 .4 1 .5 1 .7 .9 .9 1 2 1.5 3.6 2 .9 -1.3 -4.1 -3.3 -1.2 -1.4 -.7 -1.4 -.3 -.9 -.3 -1.6 -.2 -1.6 .1 -1.6 .2 -.8 .5 -1.7 .7 -1.4 .5 -.7 .7 -.7 1.9 -1.5 2.2 -1.7z"/>
+  <path class="ij" style="fill:var(--c2,#D8391F);stroke-width:2.4" d="M4.84 14.18L8.73 14.19Q9.23 14.19 9.22 14.69L9.19 17.47Q9.19 17.97 8.69 17.97L4.84 17.98Q4.34 17.98 4.34 17.48L4.34 14.68Q4.34 14.18 4.84 14.18Z"/>
+  <path class="ik" style="fill:var(--c1,#CDD2DB)" d="M22.7 12.6L27.65 15.66Q28.33 16.08 27.65 16.5L22.83 19.48Q22.15 19.9 22.14 19.1L22.03 12.98Q22.01 12.18 22.7 12.6Z"/>
+</symbol>

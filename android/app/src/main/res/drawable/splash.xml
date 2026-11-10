@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Launch background (theme item android:background): solid night with the emblem centred. On Android 12+ the system splash
-     shows the same emblem (values-v31). splash_emblem is drawn per density on a 288 dp canvas; the letter is 34% of the short side of a 360 dp phone. -->
+     shows the same emblem (values-v31). splash_emblem is drawn per density on a 288 dp canvas; the lapis roundel is 34% of the short side of a 360 dp phone. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
