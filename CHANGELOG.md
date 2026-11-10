@@ -2,6 +2,17 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.12.0 — Yaldızlı el yazması: yeni görsel kimlik
+Mağaza ziyaretçileri grafiklerin "belli ki yapay zekâ işi" olduğunu söyledi. Oyunun tüm görsel dili **13. yüzyıl resimli savaş İncil'i (Morgan/Maciejowski) yönünde, tamamen kodla** yeniden kuruldu (`docs/ART_DIRECTION.md`).
+- 🎨 **Palet ve doku:** doygun lacivert / vermilyon / malakit zeminler, baklava-nokta (diaper) desenler, parşömen yalnızca metin bloklarında, tek parlatılmış yaldız plaka; Almendra ve keçe/kilim teması kaldırıldı. Yeni yazı tipleri (SIL OFL): Texturina (başlık/düğme), Pirata One (süslü baş harfler), EB Garamond (gövde, Kiril destekli). Doku ve çerçeveler `www/js/art.js` (`Z.Art`) ile açılışta bir kez üretilir (≈19 ms).
+- 🛡️ **~100 emoji ve 12 çizgi ikon yerine 135 özel ikon:** elle çizilmiş arma figürleri (haç, zambak, kule, miğfer...), kahramanlar kalkan üzerinde arma (aslan yüzü, yıldız ve şimşek, büyük miğfer, çarkıfelek, ejder başı), 7 diyar için arma, kural/avantaj/eylem ikonları, harita süsleri (dönemine uygun bitki örtüsü). Kaynaklar `art/icons/src/*.svg`, derleme `node scripts/build-icons.js` → `www/js/icons.js`; kilitli/sahip olunmayan hâller kesikli "alt çizim" durumuyla gösterilir.
+- ⚔️ **Savaş alanı:** düz guaş birlikler + kalın mürekkep kontur, vellum haleli; takım kimliği yalnızca renkle değil miğfer/kalkan/arma ile (ev sahibi: lacivert + altın, haç; kale: vermilyon + gümüş, çapraz). Zemin düz renk + baklava desen, mürekkep çimen ve ağaçlar, altın baklava ufuk bandı; kale sırlı çatılı kuleler, kamp yurt ve tuğ yerine çizgili ortaçağ çadırları; sarmaşık-çivi savaş çerçevesi. Kare süresi önceki sürümden iyi (60 birimde ≈8-9 ms).
+- 🗺️ **Arayüz:** harita (diyar zeminleri, noktalı yol, kazanılan yol yaldızlı, kilitli = alt çizim), brifing (baş harfli hikâye, mühür tabletleri), sonuç ekranı, dil seçimi bayraksız (TR/EN/... plaketleri), ayarlar (işaret kutuları, noktalı kaydırıcı). Okuma metni artık baklava deseninin üstünde değil, düz plakalarda.
+- 📱 **Uygulama ikonu ve açılış ekranı:** altın varaklı Lombardik **"C" baş harfi içinde vermilyon zeminde gümüş bir kule**, lacivert baklava zeminde; uyarlanabilir + tek renk (temalı) simge, Android 12 açılış ekranı.
+- 🖼️ **Mağaza görselleri yenilendi:** 1024×500 öne çıkan görsel (başlığı başlatan altın "C", "alt çizimden boyaya" resim), 6 dilde 6'şar altyazılı ekran görüntüsü (harita, kuşatma, brifing, kale önü, ordu, zafer). `node store/make-graphics.js` canlı oyundan yeniden üretir.
+- 🐞 Çince ve Portekizce çevirilerde yüzde işareti sayıdan önce yazılmıştı ("%60"), düzeltildi ("60%").
+- 🧪 Yeni araçlar/testler: `tests/unit-v12.js` (bütünlük), `tests/art-audit.js` (emoji kalıntısı + dokunma hedefi), `tests/art-sheet.js`, `tests/icon-sheet.js`, `tests/ui-shots.js`, `node scripts/build-icons.js --check|--selftest`.
+
 ## 0.11.0 — Google Play yayına hazırlık
 - 📦 **Paket adı:** `com.dmdigital.castlesiege` (eski `com.zafarion.game` yerine; Play'e ilk yüklemeden önce değiştirilmesi gerekiyordu, yüklendikten sonra değişmez). Geliştirici adı DM Digital. Yeni uygulama eskisinin yanına ayrı kurulur; ilerleme için **Ayarlar → Kaydı dışa aktar / İçe aktar**.
 - 🧱 **AAB:** CI artık hem APK (yan yükleme) hem imzalı **AAB** (Play Console) üretir; ikisi de Releases'e eklenir. Dil bölünmesi kapalı (oyun dilini uygulama içinden değiştirir). `targetSdk 36`, tek izin `INTERNET` (+eklentilerin faturalandırma/reklam izinleri), açık HTTP yok, Android yedekleme kuralları.

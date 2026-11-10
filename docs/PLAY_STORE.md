@@ -35,7 +35,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 - [x] Gerçek **Google Play Faturalandırma** (Billing Library 9) ve **AdMob** bağlayıcıları, **UMP onay formu**, Ayarlar'da *Reklam gizlilik tercihleri*
 - [x] **Gizlilik Politikası + Kullanım Şartları** (`www/privacy.html`, tr/en); Ayarlar ve Mağaza'dan açılır
 - [x] Veri silme: Ayarlar → *Kaydı sıfırla* (hesap/sunucu verisi yok); *Kaydı dışa/içe aktar*
-- [x] Mağaza metinleri (başlık ≤30, kısa ≤80, tam ≤4000) 6 dilde, simge 512, öne çıkan görsel 1024×500, 6 ekran görüntüsü 1080×1920 → `store/metadata/android/<yerel>/`
+- [x] Mağaza metinleri (başlık ≤30, kısa ≤80, tam ≤4000) 6 dilde, simge 512 (altın "C" içinde kule), öne çıkan görsel 1024×500 (başlığı başlatan altın baş harf), 6 altyazılı ekran görüntüsü 1080×1920 (harita, kuşatma, brifing, kale önü, ordu, zafer) → `store/metadata/android/<yerel>/`
 - [x] Otomatik testler (`tests/unit-v11.js`) paket adı, manifest, mağaza sınırları, gizlilik sayfası, reklam ayarı betiğini denetler
 
 ## 3) Sizin yapmanız gerekenler (kod bunları yapamaz)
@@ -109,4 +109,4 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 - Eklentiler (AdMob, Faturalandırma) bu ortamda **gerçek cihazda sınanamadı**; CI yalnızca derlemenin geçtiğini gösterir. İç test kanalında mutlaka deneyin.
 - Satın almalar **istemci tarafında** işlenir (makbuz sunucuda doğrulanmaz); bkz. `docs/MONETIZATION.md → Güvenlik`.
 - Gizlilik/şartlar metinleri bir hukuk danışmanlığı değildir; bölgenize ve işletme biçiminize göre gözden geçirin.
-- Mağaza girişini yeniden üretmek için: `python3 store/build-listing.py` (metinler) ve `node store/make-graphics.js` (görseller, Playwright gerekir).
+- Mağaza girişini yeniden üretmek için: `python3 store/build-listing.py` (metinler) ve `node store/make-graphics.js` (öne çıkan görsel + ekran görüntüleri canlı oyundan; Playwright gerekir; arayüz değişince yeniden çalıştırın). Görsel boyutları `node tests/unit-v12.js` ile denetlenir.

@@ -3,7 +3,8 @@
 Oyunun adı **dile göre** değişir: Türkçe *Kale Kuşatması: Tarih*, English *Castle Siege: History*, Español *Asedio de Castillos: Historia*, Português *Cerco de Castelos: História*, Русский *Осада замков: История*, 简体中文 *城堡围攻：历史* (`Z.NAME`, `www/js/data.js`; Android uygulama adı `res/values-<dil>/strings.xml`).
 
 **Dikey (portre)** 2D strateji ve savaş oyunu (Android). Tamamen HTML5 canvas ile yazılmıştır, Capacitor ile APK'ya sarılır.
-Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok).
+Hiçbir harici görsel/ses dosyası kullanılmaz — her şey kodla üretilir (telif sorunu yok; yalnızca SIL OFL yazı tipleri dosya olarak gelir).
+**Sanat yönü: yaldızlı el yazması** (13. yy resimli savaş İncil'i): doygun lacivert/vermilyon/malakit, baklava desenli zeminler, kalın mürekkep kontur, arma ikonları. Stil kılavuzu: **[docs/ART_DIRECTION.md](docs/ART_DIRECTION.md)**.
 
 **6 dil** (Türkçe, English, Español, Português-BR, Русский, 简体中文), **mağaza ve reklam altyapısı** (bkz. `docs/MONETIZATION.md`).
 
@@ -35,7 +36,14 @@ node tests/e2e-v03.js                 # dikey format, koridor seçimi, sefer kur
 node tests/e2e-v04.js                 # günlük sefer, zorluk, pazar, kayıt taşıma, yeni diyarlar
 node tests/gallery.js                 # tüm birliklerin yakın plan görsel galerisi (3 diyar)
 node tests/perf.js                    # çizim maliyeti ölçümü
-node scripts/make-icons.js         # ikon / açılış ekranı yeniden üret
+node scripts/make-icons.js         # uygulama ikonu / açılış ekranı / PWA simgeleri yeniden üret (SVG ana çizim: store/art/emblem.svg)
+node scripts/build-icons.js        # art/icons/src/*.svg + art/icons/manifest.json -> www/js/icons.js (--check, --selftest, --list)
+node tests/icon-sheet.js out.png   # ikon temas sayfası (tüm zeminlerde, 16-96 px)
+node tests/art-sheet.js out.png    # doku/çerçeve (Z.Art) temas sayfası + süre ölçümü
+node tests/ui-shots.js dir tr      # tüm ekranların görsel incelemesi (dil, boyut seçilebilir)
+node tests/art-audit.js tr         # arayüzde emoji kalıntısı ve küçük dokunma hedefi denetimi
+node tests/unit-v12.js             # bütünlük: sw önbelleği, betik sırası, yazı tipleri, Android kaynakları, mağaza görselleri
+node store/make-graphics.js        # mağaza öne çıkan görseli + 6 ekran görüntüsü (canlı oyundan)
 ```
 
 ## Yeni içerik eklemek
@@ -47,6 +55,9 @@ node scripts/make-icons.js         # ikon / açılış ekranı yeniden üret
 | `www/js/data.js` | Birlikler, kahramanlar, bölümler, **denge sayıları** |
 | `www/js/sim.js` | Savaş simülasyonu (DOM'dan bağımsız, Node'da test edilir) |
 | `www/js/field.js` | **Açık alan** savaş simülasyonu (2D, arazi, komutan; Node'da test edilir) |
+| `www/js/art.js` | `Z.Art`: palet, baklava/doku/çerçeve üretimi (açılışta bir kez) |
+| `www/js/icons.js` | **Üretilmiş** (`scripts/build-icons.js`): arma ikon seti, `Z.ico`, `Z.Icons` |
+| `art/icons/` | İkon kaynakları (SVG) + manifest (emoji→ikon eşleme) + çizim araçları |
 | `www/js/render.js` | Canvas çizimi: birlikler, kaleler, efektler |
 | `www/js/fieldrender.js` | Açık alan çizimi: arazi, bayraklar, komutan, yerleştirme önizlemesi |
 | `www/js/i18n.js`, `www/js/lang/*.js` | Çok dilli destek (`Z.t`), dil paketleri; araç: `scripts/i18n.js` |

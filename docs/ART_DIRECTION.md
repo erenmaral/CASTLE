@@ -145,3 +145,12 @@ Construction, all families: symbol ic-<set>-<name>, viewBox 0 0 32 32, 28u live 
 - /home/user/erenmaral/www/js/ui.js
 - /home/user/erenmaral/www/js/scenery.js
 - /home/user/erenmaral/www/index.html
+
+---
+## Uygulama notları (v0.12.0) — kılavuzdan sapmalar ve gerçek dosyalar
+- **Dosya yolları:** ikon kaynakları `art/icons/` altında (APK'ya girmez); `www/js/icons.js` ve `www/js/art.js` çalışma zamanı. Mağaza komut dosyaları `store/make-feature.js`, `store/make-screens.js` (sarmalayıcı: `store/make-graphics.js`); uygulama ikonu `scripts/make-icons.js` (ana çizim `store/art/emblem.svg`).
+- **Parlatılmış yaldız plaka** (bölüm 1-2): CSS'te metalik "specular şerit" yerine iki tonlu sert kenarlı degrade + bole kayması kullanıldı (eleştirmen: fırçalanmış-metal düğme izlenimi); tek plaka kuralı `.primary` sınıfıyla.
+- **Sessiz bölgeler:** okuma metni baklava deseni üzerinde durmaz; `.qp` (tek paragraf plakası), `.qz` (cetvelli defter), `.setbox` düz gece plakalarıdır. 22u yerine gövde küçük metin tabanı 24u.
+- **Ayarlar:** aç/kapa anahtarları mürekkep işaret kutusu, kaydırıcı noktalı cetvel + baklava başlı; dil seçimi bayraksız plaka (`data-code`).
+- **Savaş:** birlik konturu sekiz kaydırmalı genişletme ile (kılavuzdaki gibi); köşelerde sekizgen eğilme küçük boyutta görünebilir. Kale/kamp ve sahne bir kez çizilip önbelleğe alınır. Yurt/tuğ kampı ortaçağ çadırlarıyla değişti.
+- **Bilinen sınırlar:** ünlü emojiler yalnızca `art/icons/manifest.json` eşlemesindekiler kadar değiştirilir (68 eşleme, 30 bırakma, 15 metin olarak kalan); `ic-dec-rocks` renk tonu `ui.js` içinde ayarlanır; 360×640 ekranda bazı pencereler kayar (alt çubuk sabit).
