@@ -3,7 +3,7 @@
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
 ## 0.11.0 — Google Play yayına hazırlık
-- 📦 **Paket adı:** `com.dmdigital.castlesiege` (eski `com.zafarion.game` yerine; Play'e ilk yüklemeden önce değiştirilmesi gerekiyordu, yüklendikten sonra değişmez). Geliştirici adı DM DİGİTAL. Yeni uygulama eskisinin yanına ayrı kurulur; ilerleme için **Ayarlar → Kaydı dışa aktar / İçe aktar**.
+- 📦 **Paket adı:** `com.dmdigital.castlesiege` (eski `com.zafarion.game` yerine; Play'e ilk yüklemeden önce değiştirilmesi gerekiyordu, yüklendikten sonra değişmez). Geliştirici adı DM Digital. Yeni uygulama eskisinin yanına ayrı kurulur; ilerleme için **Ayarlar → Kaydı dışa aktar / İçe aktar**.
 - 🧱 **AAB:** CI artık hem APK (yan yükleme) hem imzalı **AAB** (Play Console) üretir; ikisi de Releases'e eklenir. Dil bölünmesi kapalı (oyun dilini uygulama içinden değiştirir). `targetSdk 36`, tek izin `INTERNET` (+eklentilerin faturalandırma/reklam izinleri), açık HTTP yok, Android yedekleme kuralları.
 - 💳 **Gerçek Google Play Faturalandırma** (`cordova-plugin-purchase` 13.20, Billing Library 9) ve **Google AdMob** (`@capacitor-community/admob` 8.3) eklentileri kuruldu. Reklam kimlikleri GitHub **Variables**'tan (`ADMOB_*`) CI'da yazılır; yoksa Google TEST reklamları (uyarıyla).
 - 🛡️ **Onay (UMP):** AB/İngiltere/İsviçre'de reklamdan önce Google onay formu; Ayarlar'da **Reklam gizlilik tercihleri**.

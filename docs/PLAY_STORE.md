@@ -20,12 +20,12 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 | İzinler | Yalnızca `INTERNET` (faturalandırma ve reklam eklentileri kendi izinlerini ekler) |
 | Web sitesi | https://erenmaral.github.io/erenmaral/ (bkz. 3. madde, Pages notu) |
 | Gizlilik politikası URL'si | https://erenmaral.github.io/erenmaral/privacy.html |
-| Geliştirici adı (Play Console'da görünür) | **DM DİGİTAL** |
+| Geliştirici adı (Play Console'da görünür) | **DM Digital** |
 | Geliştirici e-postası | Play Console'da **sizin e-postanız** (zorunlu, herkese açık görünür) |
 
 **Neden varsayılan dil İngilizce?** Mağaza girişi, çevirisi olmayan her dil (Almanca, Fransızca, Arapça…) için varsayılan dile düşer; İngilizce en geniş kitleye uyar. Oyun içinde de cihaz dili listede yoksa İngilizce açılır (`www/js/i18n.js`); Türkçe, Türkçe cihazlarda otomatik seçilir. İsterseniz varsayılan dili Türkçe yapabilirsiniz, ama o zaman çevirisiz dillerdeki kullanıcılar Türkçe açıklama görür.
 
-**Paket adı kalıcıdır:** ilk AAB'yi Play Console'a yükledikten sonra değiştirilemez. `com.dmdigital.castlesiege`, geliştirici adınız **DM DİGİTAL**'den türetilmiştir (Android paket adlarında boşluk, büyük harf ve `İ` gibi harfler kullanılamaz; bu yüzden küçük harfli `dmdigital`). Başka bir ad isterseniz **yüklemeden önce** `capacitor.config.json`, `android/app/build.gradle` (iki yer), `MainActivity.java` (paket satırı + klasör yolu) ve `res/values/strings.xml` içinde değiştirin; `node tests/unit-v11.js` tutarlılığı denetler.
+**Paket adı kalıcıdır:** ilk AAB'yi Play Console'a yükledikten sonra değiştirilemez. `com.dmdigital.castlesiege`, geliştirici adınız **DM Digital**'den türetilmiştir (Android paket adlarında boşluk, büyük harf ve `İ` gibi harfler kullanılamaz; bu yüzden küçük harfli `dmdigital`). Başka bir ad isterseniz **yüklemeden önce** `capacitor.config.json`, `android/app/build.gradle` (iki yer), `MainActivity.java` (paket satırı + klasör yolu) ve `res/values/strings.xml` içinde değiştirin; `node tests/unit-v11.js` tutarlılığı denetler.
 
 ## 2) Kodda hazır olanlar
 
