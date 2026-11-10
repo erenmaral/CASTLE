@@ -37,7 +37,7 @@ const PKG = 'com.dmdigital.castlesiege';
 // 4) Gizlilik sayfasi ve baglantilar
 { const h = read('www', 'privacy.html'); ['AdMob', 'Google Play', 'com.dmdigital.castlesiege', 'terms-en', 'terms-tr'].forEach(k => assert(h.includes(k), 'gizlilik: ' + k));
   assert(/class="tr"/.test(h) && /class="en"/.test(h), 'iki dil');
-  const L = Z.MONEY.links; assert(/^https:\/\/.+\/privacy\.html$/.test(L.privacy) && /privacy\.html#terms$/.test(L.terms) && /^https:\/\//.test(L.support), 'baglantilar dolu');
+  const L = Z.MONEY.links; ['privacy', 'terms', 'support'].forEach(k => assert(/^https:\/\/[^\s?]+$/.test(L[k]), 'baglanti dolu ve https (sorgu parametresiz): ' + k + ' ' + L[k]));
   assert(Z.MONEY.allowTestMode === false, 'yayinda test modu kapali');
   ok('Gizlilik politikası + şartlar sayfası (tr/en) hazır, uygulama içi bağlantılar dolu, test modu kapalı'); }
 

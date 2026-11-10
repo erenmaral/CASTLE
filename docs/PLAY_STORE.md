@@ -19,7 +19,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 | Yön | Dikey (portre) |
 | İzinler | Yalnızca `INTERNET` (faturalandırma ve reklam eklentileri kendi izinlerini ekler) |
 | Web sitesi | https://erenmaral.github.io/erenmaral/ (bkz. 3. madde, Pages notu) |
-| Gizlilik politikası URL'si | https://erenmaral.github.io/erenmaral/privacy.html |
+| Gizlilik politikası URL'si | https://sites.google.com/view/castle-siege-history/ana-sayfa (Google Sites; herkese açık yayınlanmış olmalı) |
 | Geliştirici adı (Play Console'da görünür) | **DM Digital** |
 | Geliştirici e-postası | Play Console'da **sizin e-postanız** (zorunlu, herkese açık görünür) |
 
@@ -41,7 +41,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 ## 3) Sizin yapmanız gerekenler (kod bunları yapamaz)
 
 ### 3.1 GitHub tarafı (bir kez)
-1. **Gizlilik sayfasının yayında olması (Play zorunlu kılar).** Pages yalnızca **varsayılan daldan** yayınlanır (`.github/workflows/pages.yml`). Bu dal birleştirilip varsayılan dal olmadan `…/privacy.html` adresi açılmaz. Depoyu iki oyun paylaşıyorsa (bu dal ve `claude/new-game-idea-vqcujr`) Pages tek siteyi gösterir; ya bu oyun için ayrı bir depo açın ya da `privacy.html` adresini sizin sitenizde yayınlanan bir adresle değiştirin (`www/js/monetize-config.js` → `links`, ve Play Console). Adres **herkese açık, giriş istemeyen ve PDF olmayan** bir sayfa olmalı.
+1. **Gizlilik sayfası:** Google Sites sayfası kullanılıyor (adres yukarıda; uygulamada `www/js/monetize-config.js` → `links`). Sayfa **yayınlanmış** olmalı: Google Sites'ta *Yayınla* → *Görüntüleyebilecek kişiler: herkes*; adreste `?authuser=` parametresi olmamalı. Gizli pencerede açıp metnin göründüğünü doğrulayın. Play, adresin herkese açık, giriş istemeyen ve PDF olmayan bir sayfa olmasını ister; politika metni ayrı bir sayfada (ör. `/gizlilik`) ise o sayfanın adresini hem Play Console'a hem `links.privacy` alanına yazın.
 2. **İmza (yükleme) anahtarı — önemli.** Secret tanımlamazsanız anahtar Actions önbelleğinde durur ve 7 gün derleme yapılmazsa silinebilir; Play'e yüklenen uygulama için anahtar tutarlı olmalıdır. Bir kez kendi anahtarınızı üretin (README → *İmza anahtarı*; **takma ad `zafarion` kalmalı**) ve `ZAFARION_KEYSTORE_B64`, `ZAFARION_KEYSTORE_PASSWORD` secret'larını ekleyin. Anahtar dosyasını güvenli yere yedekleyin. (*Play Uygulama İmzalama* açıkken bu anahtar yalnızca **yükleme anahtarı**dır; kaybederseniz Google desteği sıfırlayabilir. İmzalama anahtarını Google tutar.)
 3. **AdMob kimlikleri (Variables):** Settings → Secrets and variables → Actions → **Variables**: `ADMOB_APP_ID` (`ca-app-pub-…~…`), `ADMOB_REWARDED_ID`, `ADMOB_INTERSTITIAL_ID`, `ADMOB_BANNER_ID` (`ca-app-pub-…/…`). Dördü de geçerliyse CI `testMode=false` yapar; yoksa Google TEST reklamları kalır ve derleme günlüğünde uyarı görürsünüz. **Test kimlikli bir sürümü Production'a göndermeyin.**
 
@@ -70,7 +70,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 
 ## 4) Play Console form cevapları
 
-**Gizlilik politikası:** `https://erenmaral.github.io/erenmaral/privacy.html`
+**Gizlilik politikası:** `https://sites.google.com/view/castle-siege-history/ana-sayfa`
 
 **Reklamlar:** *Evet, uygulamam reklam içeriyor* (AdMob).
 
@@ -95,7 +95,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 
 ## 5) Yayın öncesi son kontrol
 
-- [ ] Pages (veya başka) üzerinde `privacy.html` herkese açık ve yükleniyor
+- [ ] Google Sites gizlilik sayfası **yayınlandı** ve giriş yapmadan (gizli pencerede) açılıyor; metin sayfada görünüyor
 - [ ] `ADMOB_*` Variables tanımlı; derleme günlüğünde "reklam: gerçek kimlikler yazıldı" (uyarı yok)
 - [ ] `ZAFARION_KEYSTORE_*` secret'ları tanımlı ve anahtar yedeklendi
 - [ ] Ürünler Play Console'da **Etkin**; iç testte satın alma + geri yükleme denendi

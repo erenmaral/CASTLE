@@ -31,6 +31,6 @@ Z.MONEY = {
   ],
   // Test modunu (sahte reklam/odeme) YAYIN surumunde denemek isterseniz gecici olarak true yapin ve adrese ?monetize=test ekleyin. Yayinlamadan once false birakin!
   allowTestMode: false,
-  // Gizlilik politikasi / sartlar / destek (Play Store icin zorunlu). Sayfa www/privacy.html; GitHub Pages ile yayinlanir.
-  links: { privacy: 'https://erenmaral.github.io/erenmaral/privacy.html', terms: 'https://erenmaral.github.io/erenmaral/privacy.html#terms', support: 'https://github.com/erenmaral/erenmaral/issues' }
+  // Gizlilik politikasi / sartlar / destek (Play Store icin zorunlu): Google Sites sayfasi (herkese acik yayinda olmali; ?authuser parametresi kullanilmaz).
+  links: { privacy: 'https://sites.google.com/view/castle-siege-history/ana-sayfa', terms: 'https://sites.google.com/view/castle-siege-history/ana-sayfa', support: 'https://sites.google.com/view/castle-siege-history/ana-sayfa' }
 };
