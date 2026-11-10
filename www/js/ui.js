@@ -198,7 +198,7 @@
     if (!IC || !IC.dataUrl || !document.head) return;
     (IC.by.dec || []).forEach(function (row) { row.forEach(function (id) { miRule(id, '.dec.m-' + id.slice(7), id, TINT[id]); }); });
     miRule('tower', '.mi-tower', 'ic-chg-tower'); miRule('camp', '.mi-camp', 'ic-nav-camp'); miRule('crown', '.mi-crown', 'ic-cur-crown'); miRule('lock', '.mi-lock', 'ic-act-lock', udVars());
-    miRule('mul', '.mi-mul', 'ic-cur-mullet'); miRule('mul0', '.mi-mul0', 'ic-cur-mullet-empty');
+    miRule('mul', '.mi-mul', 'ic-cur-mullet', '--tk:none'); miRule('mul0', '.mi-mul0', 'ic-cur-mullet-empty');
     Object.keys(IC.by.rule || {}).forEach(function (k) { miRule('r-' + k, '.mi-r-' + k, IC.by.rule[k]); });
     [1, 2].forEach(function (t) { miRule('t' + t, '.mi-t' + t, (IC.by.tier || [])[t]); });
     if (miCss) { var st = document.createElement('style'); st.id = 'map-icons'; st.textContent = miCss; document.head.appendChild(st); }
@@ -218,7 +218,8 @@
   function renderMap(c) {
     var t0 = performance.now(), d = S.data, N = Z.MAX_LEVEL, stepY = 168, topPad = 190, GAP = 140, i, html = '', pts = [], realms = Z.REALMS.length, r, k2;
     mapStyle();
-    for (i = 1; i <= N; i++) pts.push([360 + Math.sin(i * 0.78) * 200 + Math.sin(i * 0.31) * 38, topPad + (i - 1) * stepY + Z.realmOf(i) * GAP]);
+    // patron dugumunun etrafinda nefes payi: oncesinde 6u, sonrasinda 12u (patron etiketi + sonraki dugumun kural madalyonu carpismasin)
+    for (i = 1; i <= N; i++) pts.push([360 + Math.sin(i * 0.78) * 200 + Math.sin(i * 0.31) * 38, topPad + (i - 1) * stepY + Z.realmOf(i) * GAP + 6 * Math.floor(i / 5) + 12 * Math.floor((i - 1) / 5)]);
     var h = pts[N - 1][1] + 170, yb = [0];
     for (r = 1; r < realms; r++) yb.push(pts[r * 15 - 1][1] + 112); // diyar siniri: onceki diyarin patron dugumunun etiketi bittikten sonra
     // Catmull-Rom -> kubik Bezier: yumusak kivrimli yol
@@ -275,6 +276,12 @@
     if (d.cleared < N) html += '<div class="flagmark' + (Z.isBoss(upto) ? ' boss' : '') + (upto > 1 && pts[upto - 2][0] > pts[upto - 1][0] ? ' l' : ' r') + '" style="left:' + (pts[upto - 1][0] / 7.2).toFixed(2) + '%;top:' + pts[upto - 1][1] + 'px">' + icoId('ic-mar-pennon', '🚩') + '</div>';
     html += '</div>';
     c.innerHTML = html;
+    // uzun etiketler (Mont-Saint-Michel 1424) harita kenarindan tasmasin: once tum olculer okunur, sonra kaydirma yazilir (tek yerlesim)
+    var mt = c.querySelector('#maptrack'), mb = mt.getBoundingClientRect(), labs = mt.querySelectorAll('.nm'), sc2 = UI.game.stage.scale || 1, sh = [], li, lr;
+    if (mb.width > 10) {
+      for (li = 0; li < labs.length; li++) { lr = labs[li].getBoundingClientRect(); sh[li] = lr.left < mb.left + 8 ? (mb.left + 8 - lr.left) / sc2 : lr.right > mb.right - 8 ? (mb.right - 8 - lr.right) / sc2 : 0; }
+      for (li = 0; li < labs.length; li++) if (sh[li]) labs[li].style.transform = 'translateX(' + sh[li].toFixed(1) + 'px)';
+    }
     var cur = c.querySelector('.node.cur') || c.querySelector('.node.done:last-of-type');
     if (cur) {
       var rc = cur.getBoundingClientRect(), cr = c.getBoundingClientRect(), sc = UI.game.stage.scale || 1;
@@ -346,15 +353,15 @@
       (info.rule !== 'none' ? '<div class="rule-box"><b>' + rl.icon + (' ' + $t('Sefer kuralı') + ': ') + rl.name + '</b><br><span class="small">' + rl.desc + '</span></div>' : '') +
       (field ? goalHtml(n, [info.rule]) : '') +
       // sessiz bolge: hedef, yildiz, hazirlik, dusman/odul ve onerilen seviye tek duz --night defterde (elmas desenin ustunde okuma metni yok); satirlar kesik (pricked) cizgiyle ayrilir
-      '<div class="qz">' + (field ? '' : '<div>' + goalHtml(n, [info.rule]) + '</div>') +
-      '<div><div class="big-stars" style="font-size:54px;margin:0">' + star3(st) + '</div>' +
+      '<div class="qz"><div>' + (field ? '' : goalHtml(n, [info.rule])) +
+      '<div class="big-stars" style="font-size:54px;margin:0">' + star3(st) + '</div>' +
       '<p class="small">' + (field ? $t('3 yıldız için ordunun en az %65\'i hayatta kalsın') : $t('3 yıldız için kamp canı %70\'in üstünde kalsın')) + '</p></div>' +
       (bro || hro ? '<div>' + bro + hro + '</div>' : '') +
       ('<div><div class="row-lines"><span>' + $t('Düşman') + ': ') + info.tiers.map(function (u) { return UI.unitImg(u, 1, 52); }).join(' ') + '</span>' +
       ('<span>' + $t('Ödül') + ': 🪙 ') + info.rewardCoins * D.coin + '+ · 💎 ' + info.rewardGems + '</span></div>' +
-      ('<p>' + $t('Önerilen birlik seviyesi') + ': <b>') + rec + ('</b> · ' + $t('Senin ortalaman') + ': <b style="color:') + (ok ? 'var(--green)' : 'var(--red)') + '">' + avg.toFixed(1) + '</b></p>' +
+      ('<p>' + $t('Önerilen birlik seviyesi') + ': <b>') + rec + ('</b> · ' + $t('Senin ortalaman') + ': <b class="') + (ok ? 'ok' : 'bad') + '">' + avg.toFixed(1) + '</b></p>' +
       (ok ? '' : ('<p class="small warn">' + $t('Ordu sekmesinden birliklerini yükseltmek işini kolaylaştırır.') + '</p>')) + '</div></div>' +
-      '<p class="deck">' + d.deck.map(function (u) { return UI.unitImg(u, 0, 62); }).join(' ') + '</p>' +
+      '<p class="deck">' + d.deck.map(function (u) { return UI.unitImg(u, 0, 56); }).join(' ') + '</p>' +
       ('<div class="actions"><button class="btn small" data-act="close">' + $t('Geri') + '</button><button class="btn small" data-act="army">🛡️ ' + $t('Ordu') + '</button><button class="btn gold primary" data-act="fight">⚔ ' + $t('SEFERE ÇIK') + '</button></div>'),
       Object.assign({
         close: UI.closeModal,
@@ -769,11 +776,12 @@
       html = '<h1 class="ban">' + (b.mode === 'daily' ? $t('GÜNLÜK SEFER TAMAM!') : $t('ZAFER!')) + '</h1>' + (b.diff > 0 ? '<p style="margin:0;color:var(--gold);font-weight:800">' + Z.DIFFS[b.diff].icon + ' ' + Z.DIFFS[b.diff].name + (' ' + $t('kademe') + '</p>') : '') + '<div class="big-stars">' + [1, 2, 3].map(function (i) { return '<span class="' + (i <= r.stars ? 'on' : 'off') + '" style="animation-delay:' + (0.25 + i * 0.35) + 's">' + (i <= r.stars ? icoId('ic-cur-mullet', '★') : icoId('ic-cur-mullet-empty', '★')) + '</span>'; }).join('') + '</div>' +
         '<p class="mut">' + (b.kind === 'field' ? $t('Süre {time} · Ordu korundu %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills }) : $t('Süre {time} · Kamp canı %{pct} · {kills} düşman', { time: Z.fmtTime(r.time), pct: Math.round(r.basePct * 100), kills: r.kills })) + '</p>' +
         '<div class="rewards"><span class="coin">🪙 ' + base + '</span>' + (bg > 0 ? '<span class="gem">💎 ' + bg + '</span>' : '') + '</div>' +
-        (out.chest ? ('<div id="chest-area"><button class="chest" data-act="chest">' + icoId('ic-cur-coffer', '🎁') + '</button><p class="small qp">' + $t('Sandığı aç!') + '</p></div>') : '') +
-        (b.mode === 'daily' && !out.dailyFirst ? ('<p class="small">' + $t('Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).') + '</p>') : '') +
-        (out.firstHard ? ('<p class="small" style="color:var(--green)">' + $t('İlk kez bu kademede kazandın: bonus elmas!') + '</p>') : '');
-      if (out.booster) html += '<p style="color:var(--gold);font-weight:800;font-size:28px">🎁 ' + $t('Hazırlık kartı kazandın') + ': ' + Z.BOOSTERS[out.booster].icon + ' ' + Z.BOOSTERS[out.booster].name + '</p>';
-      if (out.newUnits.length) html += ('<p style="color:var(--green);font-weight:800;font-size:30px">🎉 ' + $t('Yeni birlik') + ': ') + out.newUnits.map(function (u) { return Z.UNITS[u].icon + ' ' + Z.UNITS[u].name; }).join(', ') + '</p>';
+        (out.chest ? ('<div id="chest-area"><button class="chest" data-act="chest">' + icoId('ic-cur-coffer', '🎁') + '</button><p class="small qp">' + $t('Sandığı aç!') + '</p></div>') : '');
+      var notes = (b.mode === 'daily' && !out.dailyFirst ? ('<p class="small">' + $t('Bugünkü ödül zaten alınmıştı (ödülsüz tekrar).') + '</p>') : '') +
+        (out.firstHard ? ('<p class="small gold">' + $t('İlk kez bu kademede kazandın: bonus elmas!') + '</p>') : '') +
+        (out.booster ? '<p class="gold">🎁 ' + $t('Hazırlık kartı kazandın') + ': ' + Z.BOOSTERS[out.booster].icon + ' ' + Z.BOOSTERS[out.booster].name + '</p>' : '') +
+        (out.newUnits.length ? ('<p class="gold">🎉 ' + $t('Yeni birlik') + ': ') + out.newUnits.map(function (u) { return Z.UNITS[u].icon + ' ' + Z.UNITS[u].name; }).join(', ') + '</p>' : '');
+      if (notes) html += '<div class="qz">' + notes + '</div>';
       acts.chest = function () {
         var a = $('chest-area'); if (!a || !out.chest) return;
         a.innerHTML = '<div class="chest open">' + icoId('ic-cur-coffer-open', '🎁') + '</div>'; A.chest();

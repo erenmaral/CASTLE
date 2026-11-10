@@ -50,7 +50,7 @@ small,.small{font-size:24px}
 .node .nn{font-size:36px;line-height:1}
 .node .st{position:absolute;bottom:-12px;font-size:22px;line-height:1;white-space:nowrap}
 .node .st:empty{display:none}
-.node .nm{position:absolute;z-index:3;top:100%;margin-top:10px;width:max-content;max-width:250px;text-align:center;font-size:24px;line-height:1.1;pointer-events:none}
+.node .nm{position:absolute;z-index:3;top:100%;margin-top:10px;width:max-content;max-width:272px;text-align:center;font-size:24px;line-height:1.1;pointer-events:none}
 .node.boss .nm{margin-top:6px}
 .node .rl{position:absolute;bottom:100%;margin-bottom:2px;font-size:22px;line-height:1;pointer-events:none;white-space:nowrap}
 .realm{position:absolute;left:50%;transform:translateX(-50%);z-index:1;display:flex;align-items:center;gap:14px;white-space:nowrap;text-align:left}
@@ -136,7 +136,7 @@ small,.small{font-size:24px}
 .card.skill{flex:1;height:88px;flex-direction:row;gap:12px;justify-content:flex-start;padding:0 16px}
 .card.skill .c-ico{font-size:44px}
 .card.skill .s-txt{text-align:left;min-width:0}
-.card.skill .c-name{font-size:22px}
+.card.skill .c-name{font-size:24px}
 .card.skill .c-cost{font-size:24px}
 .drag-ghost{position:absolute;z-index:40;font-size:68px;pointer-events:none;transform:translate(-50%,-70%)}
 
@@ -170,7 +170,7 @@ small,.small{font-size:24px}
 .rule-box{margin:8px 0;padding:8px 16px;text-align:left}
 .daily-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:6px 0}
 .daily-card .big{font-size:46px}.daily-card .grow{flex:1;min-width:0}.daily-card h3{font-size:25px}
-.diffrow{display:flex;gap:14px;justify-content:center;margin:4px 0}
+.diffrow{display:flex;gap:14px;justify-content:center;margin:2px 0}
 .diff{flex:1;max-width:190px;height:70px;font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center;gap:8px}
 .diff .di{font-size:28px}
 .mrow{display:flex;align-items:center;gap:14px;margin-bottom:10px}.mrow .big{font-size:44px}.mrow .grow{flex:1;min-width:0}.mrow h3{font-size:24px}

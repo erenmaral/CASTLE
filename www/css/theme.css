@@ -32,8 +32,6 @@
 html,body{background:var(--bg)}
 body{font:600 26px/1.3 var(--f-body)}
 :lang(zh),:lang(zh) *{letter-spacing:0!important}
-/* CJK sistem yazisi hafif: yalniz basliklarda kalin agirlik (sentetik) acik; govdede font-synthesis kapali kalir */
-:lang(zh) h1,:lang(zh) h2,:lang(zh) .logo,:lang(zh) .hl-name,:lang(zh) .sect{font-weight:900;font-synthesis:weight}
 /* vellum uzerindeki metinde eski yazi degiskenleri koyu tonlara doner (ui.js satir ici var(--gold|--green|--red) hala okunur) */
 .story,.slip,.rule-box,.tbl,#toast,#info-title,#tut-bubble,textarea{--gold:#6E5008;--green:#17553B;--red:#8E1F12;--mut:var(--ink2);--ud:var(--ink2);color:var(--ink)}
 /* orp / yaldiz yuz uzerinde de ayni (murekkep yazi) */
@@ -60,6 +58,8 @@ h3{font:700 26px/1.15 var(--f-body)}
 #hub-top .logo{font-size:22px;line-height:1.05;text-shadow:none;white-space:normal;letter-spacing:0;flex:0 1 196px;min-width:0}
 .sect{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:22px 0 10px;font:400 36px/1.1 var(--f-top);color:var(--orp)}
 .sect::after{content:"";order:2;flex:1;min-width:96px;height:36px;background:var(--ivy) left center/72px 36px round no-repeat}
+/* sureklenme yok (bible: ekran basina TEK cubuk cerceve): ilk basligin altinda ivy cubugu, sonrakilerde ince delik delik (pricked) cizgi */
+.sect~.sect::after{height:0;background:none;border-top:5px dotted var(--vel2)}
 /* not satiri (haftalik gorevler): basligin altinda kendi duz plakasinda; dar dilde (ru) bile ivy cubugu 0'a dusmez */
 .sect.has-note::before{content:"";order:3;flex:0 0 100%;height:0}
 .sect small{order:4;flex:none;max-width:100%;padding:0 12px;font:600 24px/1.35 var(--f-body);color:var(--ivo);background:var(--night);border:3px solid var(--ink);border-radius:var(--r4)}
@@ -92,7 +92,7 @@ b{font-weight:800}
 /* kapak harfi: Texturina 700 (Pirata One buyuk harfleri tek basina okunmuyor: E = "t"); kutu İ noktasi ve Ş/Ç kuyrugu icin pay birakir (kutu 2 satir = 68u) */
 .story.dc::first-letter{float:left;font:700 2.2em/.8 var(--f-rub);font-variant-numeric:lining-nums;color:var(--mad);background:var(--orp);border:3px solid var(--ink);padding:10px 10px 8px;margin:2px 10px 0 0}
 .story:lang(zh)::first-letter{float:none;font:inherit;color:inherit;background:none;border:0;padding:0;margin:0}
-.rule-box{padding:8px 16px;font-size:24px;line-height:1.3}
+.rule-box{margin:6px 0;padding:8px 16px;font-size:24px;line-height:1.3}
 /* kirmizi (rubrik) paragraf isareti: kenar cubugu yerine murekkep levhanin basinda; saha kutusunda lapis */
 .rule-box::before{content:"\00B6";float:left;height:34px;margin:0 10px 0 0;font:700 36px/34px var(--f-rub);color:var(--mad)}
 .rule-box b{color:var(--mad)}
@@ -107,19 +107,26 @@ textarea{font-size:22px;padding:12px}
    .qp = tek paragraf plakasi (UI.modal otomatik ekler), .qz = gruplu defter (satirlar kesik/pricked cizgiyle ayrilir), .setbox = ayar satirlari, .new-list = yenilikler.
    Duz --night + 3u murekkep kontur, golge yok (boyali yaprakta golge olmaz). Parsomen levhalar (.story/.rule-box) ve yenilgi penceresi (vellum) bunun disindadir. */
 .qp,.qz,.setbox,.new-list{background:var(--night);color:var(--ivo);border:3px solid var(--ink);border-radius:var(--r4);--mut:var(--vel2)}
-.modal .qp{margin:8px 0;padding:5px 16px}
+.modal .qp{margin:6px 0;padding:5px 16px}
 .qp{margin:12px 0 0;padding:5px 16px}
 .bhead .qp{display:inline-block;max-width:100%;margin:2px 0 0;padding:2px 12px;text-align:left}
-.qz,.setbox{margin:8px 0;padding:2px 16px}
-.qz>*,.setbox>*{margin:0;padding:8px 0}
-.qz>*+*,.setbox>*+*{border-top:4px dotted var(--bis)}
-.modal .qz p,.qz p{margin:0;padding:8px 0;font-size:25px;line-height:1.3;color:var(--ivo)}
+.qz,.setbox{margin:6px 0;padding:2px 16px}
+.qz>*,.setbox>*{margin:0;padding:5px 0}
+.qz>*+*,.setbox>*+*{border-top:3px dotted var(--bis)}
+.modal .qz p,.qz p{margin:0;padding:0;font-size:24px;line-height:1.3;color:var(--ivo)}
+.modal .qz>p,.qz>p{padding:6px 0}
+.qz p+p{margin-top:6px}
 .modal .qz p.small,.qz p.small{font-size:24px;color:var(--vel2)}
 .qz p.goal{color:var(--ivo);font-weight:800}
 .qz p.bdesc{margin:6px 0 0;padding:0;min-height:0}
-.qz .big-stars{padding:2px 0}
-.qz .row-lines{font-size:24px}
-.qz .warn{color:var(--red)}
+.qz .big-stars{padding:0;line-height:1}
+.qz .row-lines{align-items:flex-start;font-size:24px}
+/* uyari / durum renkleri: pastel somon-nane yerine palet tonlari; uyari = fildisi yazi + zincifre baklava boncuk */
+.modal .qz p.gold,.qz p.gold{color:var(--orp)}
+.qz b.ok{color:var(--vdg)}
+.qz b.bad{color:#F0705A}
+.modal .qz p.warn,.qz p.warn{color:var(--ivo)}
+.qz .warn::before{content:"";display:inline-block;width:14px;height:14px;margin:0 12px 2px 0;background:var(--verm);border:3px solid var(--ink);transform:rotate(45deg)}
 .qz .boost-row{margin:0}
 .qz .boost-row+.boost-row{margin-top:8px}
 .qz .bchip{background:var(--lapis)}
@@ -212,7 +219,7 @@ textarea{font-size:22px;padding:12px}
 .hrow.three button span{font-size:24px}
 .hrow .shopbtn .i{color:var(--vdg)}
 #home [data-home] .dot{right:12px;top:12px}
-#home-ver{color:var(--vel2);font:600 22px/1 var(--f-body);bottom:calc(var(--sbp) + 6px)}
+#home-ver{color:var(--vel2);font:600 24px/1 var(--f-body);bottom:calc(var(--sbp) + 6px)}
 #home-cur{align-items:center}
 #home-settings{width:var(--hit);height:var(--hit)}
 
@@ -314,12 +321,12 @@ textarea{font-size:22px;padding:12px}
 .node.locked .st{background:none;border:0;padding:0;bottom:-10px}
 .node.locked .st .mi{width:34px;height:34px}
 .node .nm{margin-top:16px;background:var(--grain) 0 0/96px,var(--vel);color:var(--ink);border:3px solid var(--ink);border-radius:var(--r4);padding:3px 10px;font:600 24px/1.1 var(--f-body);--mut:var(--ink2)}
-.node.boss .nm{margin-top:22px}
+.node.boss .nm{margin-top:18px}
 .node.locked .nm{border:3px dashed var(--ink2);color:var(--ink2)}
 /* kural madalyonu: ic-rule-* zaten gece zeminli orp halkali yuvarlak (36u); dugumun sol-ust kosesinde */
 .node .rl{display:flex;left:-32px;top:-12px;width:52px;height:52px;font-size:30px;line-height:1;align-items:center;justify-content:center}
 .node .rl.mi{width:52px;height:52px}
-.node.boss .rl{left:-26px;top:-10px}
+.node.boss .rl{left:-26px;top:-6px}
 .node.locked .rl{opacity:.6}
 /* diyar kartusu: yeni diyar zemininin tepesine asili duz orpiment levha (--dp-gold oyuk icinde 46u arma + "Diyar n" Pirata One --mad); z=2: yolun ustunde, dugumlerin altinda kalir.
    kapali diyar = bos (underdrawn): kesikli cerceve, parsomen zemin, murekkep yazi, cizgi arma. */
@@ -346,7 +353,7 @@ textarea{font-size:22px;padding:12px}
 .wheel span{color:var(--ivo);text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink)}
 .wheel-ptr{color:var(--orp);text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),0 5px 0 var(--ink)}
 .wheel-hub{background:var(--orp);border:4px solid var(--ink);box-shadow:var(--gilt)}
-.rewards .gem{color:var(--green)}.rewards .coin{color:var(--orp)}
+.rewards .gem{color:var(--ivo)}.rewards .coin{color:var(--orp)}
 .pk-badge{background:var(--orp);color:var(--ink);border:3px solid var(--ink);border-radius:var(--r4);box-shadow:var(--gilt);font-family:var(--f-rub);font-variant-numeric:lining-nums}
 .pk-gems{color:var(--ivo)}
 .offer small,.pack small{color:var(--ivo)}
@@ -388,7 +395,7 @@ textarea{font-size:22px;padding:12px}
 .card.sel{border-color:var(--orp);box-shadow:inset 0 0 0 3px var(--orp),var(--sh5);transform:translateY(-6px)}
 .card.skill{border-radius:var(--r2);justify-content:flex-start;padding:0 14px;gap:12px;border-color:var(--ink)}
 .card.skill .c-ico{width:64px;height:64px;margin:0;border-radius:50%;background:var(--pur);overflow:visible;font-size:38px;flex:none}
-.card.skill .c-name{color:var(--ivo);font-size:22px}
+.card.skill .c-name{color:var(--ivo);font-size:24px}
 .card.skill .c-cost{font-size:24px;color:var(--orp)}
 .card.skill.ready{background:var(--orp);color:var(--ink);box-shadow:var(--gilt),var(--sh5)}
 .card.skill.ready .c-name,.card.skill.ready .c-cost{color:var(--ink)}
@@ -416,8 +423,9 @@ textarea{font-size:22px;padding:12px}
 .modal .rule-box .small:not(.btn){color:var(--ink2)}
 .modal .actions{margin-top:14px}
 /* son eylem satiri: pencere kayarsa (kucuk ekran, uzun dil) ana dugme hep gorunsun; opak --diap ayak + orp 4u / murekkep 3u kenar (sayfa ayagi ile ayni) */
-.modal .actions:last-child{position:sticky;bottom:0;z-index:2;margin:14px -16px -10px;padding:12px 16px;background:var(--diap);border-top:4px solid var(--orp);box-shadow:0 -3px 0 var(--ink)}
-.modal .actions .btn:not(.small){font-size:26px;padding:6px 22px}
+.modal .actions:last-child{position:sticky;bottom:0;z-index:2;margin:10px -16px -10px;padding:10px 16px;background:var(--diap);border-top:4px solid var(--orp);box-shadow:0 -3px 0 var(--ink)}
+.modal .actions .btn:not(.small){font-size:26px;padding:6px 16px}
+.modal .actions .btn.small{padding:6px 16px}
 .big-stars .i{--tk:none}
 .big-stars span{color:transparent;-webkit-text-stroke:3px var(--ud);text-shadow:none}
 .big-stars span.on{color:var(--orp);-webkit-text-stroke:4px var(--ink);text-shadow:none;animation:starin .55s steps(6,end) both}
@@ -427,7 +435,7 @@ textarea{font-size:22px;padding:12px}
 .chest.open{animation:none}
 @keyframes nudge{50%{transform:translateX(8px)}}
 .rewards{font-size:40px}
-.toggle{min-height:var(--hit);color:var(--ivo);padding:10px 0}
+.toggle{min-height:var(--hit);color:var(--ivo);padding:4px 0}
 .toggle>span:first-child{flex:1;min-width:0;text-align:left}
 .toggle b{color:var(--orp);font-family:var(--f-rub)}
 /* anahtar = murekkep isaret kutusu (iOS dugmesi degil): kapali = bos (kesikli, dolgusuz), acik = malakit yuz + fildisi tik */
@@ -436,7 +444,7 @@ textarea{font-size:22px;padding:12px}
 .sw.on{background:var(--mal);border:3px solid var(--ink);box-shadow:var(--sh4)}
 .sw.on::after{left:16px;top:3px;width:15px;height:31px;background:none;border:solid var(--ivo);border-width:0 7px 7px 0;transform:rotate(40deg)}
 /* kaydirici = delik delik (pricked) cetvel + baklava (elmas) kulp; etiket anahtar etiketleriyle ayni sol kenarda */
-.slider{padding:10px 0}
+.slider{padding:0}
 .slider>span{text-align:left}
 .slider input[type=range]{-webkit-appearance:none;appearance:none;height:var(--hit);background:none;accent-color:var(--orp)}
 .slider input[type=range]::-webkit-slider-runnable-track{height:0;background:none;border:0;border-top:6px dotted var(--vel2);border-radius:0}
@@ -464,26 +472,26 @@ textarea{font-size:22px;padding:12px}
 .lang-btn .tk .i{width:46px;height:46px}
 .toggle b.lc{display:inline-flex;align-items:center;gap:12px;white-space:nowrap}
 /* baglantilar: duz --night plaka (sessiz bolge), ayirac = baklava (elmas) boncuk, link basina >= 44 css px dokunma alani; ayirac metin dugumu degil: satir sararken yetim kalmaz */
-.settings-links{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;margin:10px 0;padding:0 10px;font-size:24px;color:var(--vel2);background:var(--night);border:3px solid var(--ink);border-radius:var(--r4)}
-.settings-links a,.shop-misc .links a{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:var(--hit);min-height:var(--hit);margin:0 12px;padding:0 4px;text-decoration:underline;cursor:pointer}
-.settings-links a+a::before,.shop-misc .links a+a::before{content:"";position:absolute;left:-14px;top:50%;width:12px;height:12px;margin-top:-6px;background:var(--orp);border:3px solid var(--ink);transform:rotate(45deg);pointer-events:none}
+.settings-links{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;margin:6px 0;padding:0 10px;font-size:24px;color:var(--vel2);background:var(--night);border:3px solid var(--ink);border-radius:var(--r4)}
+.settings-links a,.shop-misc .links a{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:var(--hit);min-height:var(--hit);margin:0 16px;padding:0 4px;text-decoration:underline;cursor:pointer}
+.settings-links a+a::before,.shop-misc .links a+a::before{content:"";position:absolute;left:-22px;top:50%;width:12px;height:12px;margin-top:-6px;background:var(--orp);border:3px solid var(--ink);transform:rotate(45deg);pointer-events:none}
 .shop-misc .links{display:flex;flex-wrap:wrap;justify-content:center;align-items:center}
 /* ana eylem: tek parlatilmis yaldiz plaka (acik .primary; eski :last-of-type kirilgandi: duraklat penceresinde Devam duz orp kaliyordu) */
 .modal .actions .btn.gold.primary{background:var(--leaf-g);box-shadow:var(--gilt),var(--sh5)}
 .modal .actions .btn.gold.off{background:none}
 .modal .row-lines .uico{margin:0 -4px}
 /* brifing: dusman frizi = verm/ivo chequy bandi, kendi kadron = lapis/orp chequy kaide (bible 8); karolar dogal boyutunda (24u) */
-.row-lines>span:first-child{position:relative;padding-bottom:36px}
-.row-lines>span:first-child::after{content:"";position:absolute;left:0;right:0;bottom:4px;height:24px;background:var(--chequy-enemy) 0 0/24px 24px;box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink);pointer-events:none}
-.modal .deck{margin:6px 0}
+.row-lines>span:first-child{position:relative;padding-bottom:34px}
+.row-lines>span:first-child::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:24px;background:var(--chequy-enemy) 0 0/24px 24px;box-shadow:0 -3px 0 var(--ink),0 3px 0 var(--ink);pointer-events:none}
+.modal .deck{margin:4px 0}
 .modal .deck .uico{box-sizing:content-box;border-bottom:12px solid transparent;border-image:var(--chequy-host) 0 0 24 0/0 0 12px 0 round}
 #toast{padding:12px 26px;font-size:25px;line-height:1.25;border-radius:var(--r4);box-shadow:var(--sh4);animation:toastin .2s ease-out}
 @keyframes toastin{from{opacity:0;margin-top:-8px}}
 
 /* brifing basligi: diyar armasi (altin oyuk) + sefer no + rozetler; kural cizgisi sola hizali */
-.bhead{display:flex;align-items:center;gap:16px;margin:4px 0 6px;text-align:left}
-.bz{display:flex;align-items:center;justify-content:center;width:86px;height:98px;flex:none}
-.bz .i{width:62px;height:62px}
+.bhead{display:flex;align-items:center;gap:16px;margin:2px 0 4px;text-align:left}
+.bz{display:flex;align-items:center;justify-content:center;width:80px;height:90px;flex:none}
+.bz .i{width:56px;height:56px}
 .bt{flex:1;min-width:0}
 .bhead h1{margin:0 0 4px;font-size:42px}
 .bhead h1::after{margin:8px 0 0}
@@ -520,6 +528,9 @@ textarea{font-size:22px;padding:12px}
 .uico{width:auto;max-width:84px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none}
 .ucard .big .uico{max-width:88px;max-height:100%}
 .row-lines .uico{margin:0 -6px}
+
+/* CJK sistem yazisi hafif: yalniz basliklarda kalin agirlik (sentetik) acik; govdede font-synthesis kapali kalir (font: kisayollarindan sonra gelmeli) */
+:lang(zh) h1,:lang(zh) h2,:lang(zh) .logo,:lang(zh) .hl-name,:lang(zh) .sect{font-weight:900;font-synthesis:weight}
 
 @media (prefers-reduced-motion:reduce){
   .tug .tails path,.flagmark,.chest,.modal,.modal h1::after,#boot .boot-rule,.card.skill.ready::after,.big-stars span.on,#toast,#tut-hand,.hbig{animation:none!important}
