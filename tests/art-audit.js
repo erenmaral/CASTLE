@@ -7,11 +7,13 @@
 //   RAPOR (yalniz bilgi, cikis kodunu etkilemez): 44 css px altindaki dugme / baglanti dokunma hedefleri; satir sonunda yetim kalan simge / sayi ciftleri (simge bir satirda, sayisi ya da
 //                   etiketi sonrakinde); yanindaki harfin baslik yuksekligi ortasindan >2.5 css px kayik simgeler.
 //   AUDIT_SHOTS=<klasor> node tests/art-audit.js ... : her taramanin ekran goruntusunu de yazar (gorsel inceleme).
+//   AUDIT_NOICONS=1 node tests/art-audit.js ... : DEGRADE yol - js/icons.js engellenir (Z.Icons yok): emoji yedekleri gorunur (pictograf / muhur denetimi kapali), ama hicbir ekran hata vermemeli.
 // Her bulgu: ekran adi + secici yolu + metin yazdirilir. Ekranlar: tests/ui-shots.js tablosu + modallar (brifing serit/acik alan/patron, ayarlar, dil, needGems, ganimet,
 // sonuc zafer/yenilgi), ordu (kahraman kartlari), magaza, hazine, gorevler, cark, ogretici, savas HUD durumlari, toast akislari, test saglayici ekranlari.
 const { chromium } = require('playwright'), path = require('path'), fs = require('fs');
 const lang = process.argv[2] || 'tr', [W, H] = (process.argv[3] || '412x915').split('x').map(Number), only = (process.argv[4] || '').split(',').filter(Boolean);
 const SHOTS = process.env.AUDIT_SHOTS || ''; // klasor verilirse her tarama ayrica <klasor>/<ekran>.png olarak kaydedilir (gorsel inceleme, 2x)
+const NOICONS = !!process.env.AUDIT_NOICONS; // degrade yol: icons.js yuklenemezse oyun yine acilir (emoji yedekleri), hata yok
 const ROOT = path.join(__dirname, '..'), URL = 'file://' + path.join(ROOT, 'www', 'index.html');
 const LOC = { tr: 'tr-TR', en: 'en-US', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU', zh: 'zh-CN' };
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'art', 'icons', 'manifest.json'), 'utf8'));
@@ -177,17 +179,18 @@ def('result-field-lose', async p => { await ev(p, () => { Z.Game.startBattle('ca
       const ctx = await b.newContext({ locale: LOC[lang] || 'tr-TR', viewport: { width: W, height: H }, deviceScaleFactor: SHOTS ? 2 : 1, hasTouch: true, isMobile: true });
       const save = JSON.stringify(Object.assign({}, BASE, sc.save || {}));
       await ctx.addInitScript(([l, s, mon]) => { try { if (!localStorage.getItem('__i')) { localStorage.setItem('__i', '1'); localStorage.setItem('sefervakti.lang', l); localStorage.setItem('zafarion.save.v1', s); if (mon) localStorage.setItem('sv.monetize', 'test'); } } catch (e) {} }, [lang, save, !!sc.mon]);
+      if (NOICONS) await ctx.route('**/js/icons.js', r => r.abort());
       const p = await ctx.newPage();
       p.on('pageerror', e => errors.push(sc.name + ': pageerror ' + e.message));
-      p.on('console', m => { if (m.type() === 'error') errors.push(sc.name + ': console ' + m.text().slice(0, 160)); });
+      p.on('console', m => { if (m.type() === 'error' && !(NOICONS && /icons\.js|ERR_FAILED|ERR_BLOCKED|Failed to load resource/i.test(m.text()))) errors.push(sc.name + ': console ' + m.text().slice(0, 160)); });
       const scan = async (label) => {
         const r = await p.evaluate(pageScan, { cps: CPS, keep: KEEP }); screens++;
         if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await p.screenshot({ path: path.join(SHOTS, label + '.png') }); }
-        r.bad.forEach(o => fails.push({ screen: label, o }));
+        if (!NOICONS) r.bad.forEach(o => fails.push({ screen: label, o }));
         r.small.forEach(o => { const k = o.where + ' ' + o.size; if (!smalls.has(k)) smalls.set(k, { screen: label, o }); });
         r.orphans.forEach(o => { const k = o.where + ' ' + o.text; if (!orphs.has(k)) orphs.set(k, { screen: label, o }); });
         r.offc.forEach(o => { const k = o.where + ' ' + o.id; if (!offs.has(k)) offs.set(k, { screen: label, o }); });
-        r.tiny.forEach(o => { const k = o.where + ' ' + o.id; if (!tinies.has(k)) tinies.set(k, { screen: label, o }); });
+        if (!NOICONS) r.tiny.forEach(o => { const k = o.where + ' ' + o.id; if (!tinies.has(k)) tinies.set(k, { screen: label, o }); });
       };
       try {
         await p.goto(URL); await p.waitForFunction(() => globalThis.Z && Z.ready, null, { timeout: 15000 }); await wait(p, 900);
@@ -205,6 +208,6 @@ def('result-field-lose', async p => { await ev(p, () => { Z.Game.startBattle('ca
   offs.forEach(s => console.log('REPORT icon-offcentre [' + s.screen + '] ' + s.o.where + ' ' + s.o.id + ' ' + s.o.dy + 'px'));
   tinies.forEach(s => console.log('FAIL roundel<18px [' + s.screen + '] ' + s.o.where + ' ' + s.o.id + ' ' + s.o.size + 'px'));
   errors.forEach(e => console.log('ERROR ' + e));
-  console.log('Denetim (' + lang + ' ' + W + 'x' + H + '): ' + screens + ' tarama, ' + uniq.size + ' simge ihlali, ' + smalls.size + ' kucuk dokunma hedefi (rapor), ' + orphs.size + ' yetim simge/sayi (rapor), ' + offs.size + ' kayik simge (rapor), ' + tinies.size + ' kucuk muhur simgesi, ' + errors.length + ' hata');
+  console.log('Denetim (' + lang + ' ' + W + 'x' + H + (NOICONS ? ', DEGRADE: icons.js yok' : '') + '): ' + screens + ' tarama, ' + uniq.size + ' simge ihlali, ' + smalls.size + ' kucuk dokunma hedefi (rapor), ' + orphs.size + ' yetim simge/sayi (rapor), ' + offs.size + ' kayik simge (rapor), ' + tinies.size + ' kucuk muhur simgesi, ' + errors.length + ' hata');
   process.exit(uniq.size || tinies.size || errors.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });
