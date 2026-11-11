@@ -53,6 +53,13 @@ const ids = (plan) => plan.map(p => p.kind).join(',');
     calls.length = 0; const c = await N.onBackground(); assert(c >= 4 && c <= 5, 'planlandi: ' + c); assert.deepStrictEqual(calls.filter(x => !x.startsWith('channel')), ['cancel:5', 'schedule'], 'once iptal sonra planla: ' + calls.join());
     mock.last.notifications.forEach(x => { assert.strictEqual(x.isExactNotification, false, 'tam zamanli alarm yok'); assert.strictEqual(x.isExactMandatory, false); assert(x.schedule.at instanceof Date && x.schedule.allowWhileIdle === true, 'yaklasik + uyku modunda calisir'); assert(x.smallIcon === 'ic_stat_castle' && x.channelId === 'reminders' && x.id >= 7101 && x.id <= 7105 && x.title && x.body, 'alanlar'); });
     calls.length = 0; await N.onForeground(); assert.deepStrictEqual(calls, ['cancel:5'], 'one gelince iptal');
+    // hizli gidip-gelme (pause+resume): yavas schedule, sonraki iptali ezmemeli -> son islem hep iptal
+    { const orig = mock.schedule; mock.schedule = async (o) => { await new Promise(r => setTimeout(r, 40)); calls.push('schedule'); mock.last = o; };
+      calls.length = 0; const p1 = N.onBackground(), p2 = N.onForeground(); await Promise.all([p1, p2]);
+      assert.strictEqual(calls.filter(x => !x.startsWith('channel')).pop(), 'cancel:5', 'yaris yok: son islem iptal: ' + calls.join());
+      calls.length = 0; const q1 = N.onBackground(), q2 = N.disable(); await Promise.all([q1, q2]); Z.Save.data.settings.notify = true;
+      assert.strictEqual(calls.filter(x => !x.startsWith('channel')).pop(), 'cancel:5', 'kapatma bekleyen planlamadan sonra iptal eder: ' + calls.join());
+      mock.schedule = orig; }
     await N.disable(); assert(!N.enabled(), 'kapatildi'); calls.length = 0; assert.strictEqual(await N.onBackground(), 0, 'kapaliyken planlama yok'); assert(!calls.includes('schedule'));
     delete globalThis.Capacitor;
     ok('İzin akışı (verilmedi/verildi), arka planda iptal+planla, öne gelince iptal, kapalıyken planlama yok; tam zamanlı alarm istenmiyor');

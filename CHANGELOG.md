@@ -2,6 +2,21 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.13.1 — Hata taraması
+Bağımsız kod incelemesi + tam test seti (birim, e2e, maymun, fuzz, denge, performans, sanat denetimi) sonrası düzeltmeler. Eski WebView (Chrome 87) uyumluluk taraması temiz çıktı.
+- 💎 **Elmas yetmeyen düğmeler artık dokunulabilir:** Pazar ve kahraman açma düğmeleri "kapalı" (`off`, dokunmayı yutuyordu) yerine "soft" çiziliyor; dokununca "Elmas yetmiyor" penceresi ve önerilen paket açılıyor. Önerilen paketin fiyatı artık Play'den gelen yerel fiyatı gösteriyor.
+- 🎡 **Şans çarkı:** durunca başa sıçramıyor — çark ödülün gösterdiği dilimde kalıyor, sayılar dik okunuyor.
+- 📜 Sekme değiştirince içerik en başa kayıyor; Ayarlar'da anahtar değişince pencere kaydırması korunuyor.
+- 🏠 Brifingteki **Ordu** düğmesi ana ekrandan da Ordu sekmesini açıyor; günlük ödül alınınca ana ekran da tazeleniyor.
+- ⚙️ **Kaydı sıfırla / içe aktar** sonrası ses–müzik–ses seviyesi ve hatırlatıcı durumu yeni ayarlara eşitleniyor.
+- 🛒 Reklam/satın alma sürerken çift dokunuş yanlış "bitti/tamamlanmadı" mesajı göstermiyor.
+- 🔔 **Bildirim yarışı:** arka plana gidip hemen dönünce geciken planlama, ön plandaki iptali ezemiyor — arka plan/ön plan/kapatma işlemleri sıraya alındı.
+- 🌋 **Kale önü savaşı (volkan/çöl):** lav çatlağı ve kum izi süslemeleri iki kez ötelendiği için saha dışına (kamp şeridinin altına) taşıyordu; düzeltildi.
+- 🔋 **Pil:** duraklatılmış savaş artık 60 yerine ~10 kare/sn çiziyor (resim zaten değişmiyor); devam edince tam hız.
+- ⚡ Sprite ısınması meşgul karede de çalışıyor (ilk kullanım takılması azalır); `SEFER n` başlık kartları önbelleği 8 ile sınırlı (bellek).
+- 🛟 Açılışta tuval bağlamı alınamazsa (bellek yetersizliği) açılış ekranda takılmıyor; menüler yine açılır.
+- 🧪 `tests/e2e-v14.js` (yeni düzeltmeler) ve `tests/unit-v13.js` içine yarış testi.
+
 ## 0.13.0 — Hatırlatıcı bildirimleri
 - 🔔 **Yerel hatırlatıcılar** (`@capacitor/local-notifications`, sunucu yok): **hazine dolunca**, her sabah 10:00'da **günlük ödül + bedava şans çarkı (+ günlük sefer)**, bugünkü ödül alınmadıysa 19:00'da bir yoklama, 3 ve 7 gün gelinmezse 18:30'da "geri dön". Sessiz saat 22:00-08:00. Oyundayken bekleyen hatırlatıcılar iptal edilir; arka plana geçince yenileri planlanır.
 - ⚙️ **Ayarlar → Hatırlatıcı bildirimleri** (yalnızca APK'da görünür; Android 13+ izin penceresi açılır). 3. galibiyetten sonra menüye dönünce **bir kez** nazik soru çıkar ("Hatırlatıcılar açılsın mı?"); varsayılan KAPALI.

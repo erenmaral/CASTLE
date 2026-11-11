@@ -65,11 +65,20 @@
         .then(function (st) { done(st && st.display === 'granted'); }, function () { done(false); });
     } catch (e) { done(false); }
   };
-  N.disable = function () { if (Z.Save && Z.Save.data) { Z.Save.data.settings.notify = false; save(); } return N.cancelAll(); };
+  N.disable = function () { if (Z.Save && Z.Save.data) { Z.Save.data.settings.notify = false; save(); } return queue(function () { return N.cancelAll(); }); };
+
+  // Arka plan / on plan gecisleri SIRAYLA calisir: hizli gidip-gelmede (pause+resume) geciken bir schedule, sonraki iptali ezip
+  // oyuncu uygulamadayken bildirim birakamasin. Her gecis kuyruga eklenir; zincir hata yutarak devam eder.
+  var chain = Promise.resolve();
+  function queue(fn) { var r = chain.then(fn); chain = r.then(function () {}, function () {}); return r; }
 
   // Arka plana gidince: eskileri iptal et, yenilerini planla
   N.onBackground = function () {
     var P = N.plugin(); if (!P || !N.enabled()) return Promise.resolve(0);
+    return queue(function () { return schedule(P); });
+  };
+  function schedule(P) {
+    if (!N.enabled()) return 0;
     var now = Date.now(), data = Z.Save.data, list = N.plan(now, data);
     var notes = list.map(function (p) {
       var t = N.text(p.kind, data);
@@ -77,9 +86,9 @@
         schedule: { at: new Date(p.at), allowWhileIdle: true }, isExactNotification: false, isExactMandatory: false };
     });
     return N.cancelAll().then(function () { return channel(P); }).then(function () { return P.schedule({ notifications: notes }); }).then(function () { return notes.length; }, function () { return 0; });
-  };
-  // Geri donunce: bekleyen hatirlaticilari iptal et (oyuncu zaten burada)
-  N.onForeground = function () { return N.enabled() ? N.cancelAll() : Promise.resolve(); };
+  }
+  // Geri donunce: bekleyen hatirlaticilari iptal et (oyuncu zaten burada); bekleyen planlamadan SONRA calisir
+  N.onForeground = function () { return N.enabled() ? queue(function () { return N.cancelAll(); }) : Promise.resolve(); };
 
   // Bildirime dokunma: ilgili sekmeyi ac
   N.listen = function () {

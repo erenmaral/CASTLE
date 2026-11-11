@@ -1061,7 +1061,7 @@
         self._warmBusy = false;
         if (!self.active || !self.warmQ) return;
         do { w = self.warmQ.shift(); if (!w) break; self.getSprite(w[0], w[1], w[2], w[3], w[4]); }
-        while (self.warmQ.length && performance.now() - t0 < 5 && (!dl || !dl.timeRemaining || dl.timeRemaining() > 2));
+        while (self.warmQ.length && performance.now() - t0 < 5 && (!dl || !dl.timeRemaining || dl.didTimeout || dl.timeRemaining() > 2)); // didTimeout: mesgul karede bos sure hic kalmaz, yine de 5 ms butcesi kullanilir
         if (self.warmQ.length) self.warmIdle();
       };
       if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 250 }); else setTimeout(run, 20);
@@ -1234,6 +1234,7 @@
         st = bannerStyle(bn.col); st.size = size;
         g.setTransform(px, 0, 0, px, 0, 0); banderole(g, cv.width / px / 2, 6 + h / 2, w, h, bn.text, st); // folds reach 17u beside and 15u below the 64u body
         e = bc[key] = { cv: cv, w: cv.width / px, h: cv.height / px, oy: 6 + h / 2 };
+        st = Object.keys(bc); if (st.length > 8) delete bc[st[0]]; // her 'SEFER n' ayri kart: onbellek sinirli (kart basina ~0.2 MB)
       }
       c.globalAlpha = bn.t < 0.25 ? Math.max(0, bn.t / 0.25) : 1; c.drawImage(e.cv, cx - e.w / 2, cy - e.oy, e.w, e.h); c.globalAlpha = 1;
     },

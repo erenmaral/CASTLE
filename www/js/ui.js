@@ -73,14 +73,17 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.add('hidden'); }, 2200);
   };
   UI.modal = function (html, acts) {
-    var layer = $('modal-layer'), ps, pi;
+    var layer = $('modal-layer'), ps, pi, prev = layer.firstChild, prevTitle = '', prevTop = 0, h1, nm;
+    if (prev && !layer.classList.contains('hidden')) { h1 = prev.querySelector('h1'); prevTitle = h1 ? h1.textContent : ''; prevTop = prev.scrollTop; }
     layer.innerHTML = '<div class="modal">' + zi(html) + '</div>';
     // sessiz bolge (S2): elmas desenin ustune oturan okuma paragraflari duz --night plakaya (.qp) alinir; vellum hikaye/kural kutusu, sprite satiri ve gruplanmis .qz hariclenir
     ps = layer.querySelectorAll('.modal p');
     for (pi = 0; pi < ps.length; pi++) if (!ps[pi].closest('.qz,.rule-box,.tbl') && !/(^|\s)(story|deck)(\s|$)/.test(ps[pi].className)) ps[pi].classList.add('qp');
     layer.classList.remove('hidden');
     handlers = acts || {};
-    return layer.firstChild;
+    nm = layer.firstChild; h1 = nm.querySelector('h1');
+    if (prevTop && h1 && h1.textContent === prevTitle) nm.scrollTop = prevTop;
+    return nm;
   };
   UI.closeModal = function () { $('modal-layer').classList.add('hidden'); $('modal-layer').innerHTML = ''; handlers = {}; };
   UI.modalOpen = function () { return !$('modal-layer').classList.contains('hidden'); };
@@ -145,7 +148,7 @@
     var need = Math.max(1, price - (S.data.gems || 0)), packs = ((Z.MONEY && Z.MONEY.products) || []).filter(function (p) { return p.type === 'gems'; }).sort(function (a, b) { return a.gems - b.gems; });
     var pick = packs.filter(function (p) { return p.gems >= need; })[0] || packs[packs.length - 1];
     UI.modal('<h1>💎 ' + $t('Elmas yetmiyor') + '</h1><div class="qz"><p>' + $t('Bunun için {n} elmas daha gerekiyor.', { n: need }) + '</p>' +
-      (pick ? '<p class="small">' + $t('Önerilen paket') + ': <b style="color:var(--gold)">💎 ' + pick.gems + ' · ' + pick.price + '</b></p>' : '') + '</div>' +
+      (pick ? '<p class="small">' + $t('Önerilen paket') + ': <b style="color:var(--gold)">💎 ' + pick.gems + ' · ' + M.price(pick) + '</b></p>' : '') + '</div>' +
       '<div class="actions"><button class="btn small" data-act="close">' + $t('Vazgeç') + '</button><button class="btn gold primary" data-act="shop">💎 ' + $t('Elmas al') + '</button></div>',
       { close: UI.closeModal, shop: function () { UI.closeModal(); UI.showHub('shop'); var c = $('tab-content'); if (c) c.scrollTop = 0; } });
   };
@@ -161,7 +164,9 @@
     });
     $('tabs').addEventListener('click', function (e) {
       var b = e.target.closest('[data-tab]'); if (!b) return;
-      A.click(); UI.tab = b.getAttribute('data-tab'); UI.renderHub();
+      var nt = b.getAttribute('data-tab'), changed = nt !== UI.tab;
+      A.click(); UI.tab = nt; UI.renderHub();
+      if (changed && nt !== 'map') $('tab-content').scrollTop = 0;
     });
     $('tab-content').addEventListener('click', onTabClick);
     $('btn-settings').addEventListener('click', function () { A.click(); UI.settingsModal(); });
@@ -456,7 +461,7 @@
       ('<div class="actions"><button class="btn small" data-act="close">' + $t('Geri') + '</button><button class="btn small" data-act="army">🛡️ ' + $t('Ordu') + '</button><button class="btn gold primary" data-act="fight">⚔ ' + $t('SEFERE ÇIK') + '</button></div>'),
       Object.assign({
         close: UI.closeModal,
-        army: function () { UI.closeModal(); UI.tab = 'army'; UI.renderHub(); },
+        army: function () { UI.closeModal(); UI.showHub('army'); },
         diff0: function () { levelModal(n, 0); },
         diff1: function () { if (Z.diffUnlocked(d, n, 1)) levelModal(n, 1); else { A.deny(); UI.toast($t('Önce bu seferi Normal kademede kazan')); } },
         diff2: function () { if (Z.diffUnlocked(d, n, 2)) levelModal(n, 2); else { A.deny(); UI.toast($t('Önce bu seferi Zor kademede kazan')); } },
@@ -503,7 +508,7 @@
         '<div class="row" style="margin-top:10px;gap:10px">' +
         (owned ? (lvl >= Z.MAX_HERO_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + gilt(d.coins >= cost) + '" data-hup="' + id + '">' + nw('⬆ 🪙 ' + Z.fmt(cost)) + '</button>') +
           '<button class="btn small ' + (sel ? 'green' : '') + '" data-hsel="' + id + '">' + (sel ? ('✔ ' + $t('Seçili')) : $t('Seç')) + '</button>'
-          : '<button class="btn small ' + gilt(d.gems >= h.gems) + '" data-hbuy="' + id + '">' + nw('💎 ' + h.gems) + (' ' + $t('ile aç') + '</button>')) +
+          : '<button class="btn small ' + (d.gems >= h.gems ? gilt(true) : 'soft') + '" data-hbuy="' + id + '">' + nw('💎 ' + h.gems) + (' ' + $t('ile aç') + '</button>')) +
         '</div></div></div>';
     });
     var cc = Z.castleUpgradeCost(d.castleLvl); gt = 0;
@@ -524,19 +529,20 @@
       ('<div style="display:flex;flex-direction:column;gap:10px"><button class="btn gold" data-collect="1" id="vault-btn">' + $t('Topla') + '</button>') +
       (d.treasuryLvl >= Z.MAX_TREASURY_LVL ? ('<button class="btn small off">' + $t('MAKS') + '</button>') : '<button class="btn small ' + (d.coins >= uc ? '' : 'off') + ('" data-tup="1">⬆ ' + $t('Sv.')) + d.treasuryLvl + ' · ' + nw('🪙 ' + Z.fmt(uc)) + '</button>') + '</div></div></div>';
     var free = S.wheelFree(), wl = '', gm = 0;
-    // cark dilimlerinin renkleri theme.css .wheel'de (palet jetonlari); etiket dilimle doner ama kendi ekseninde geri doner: sayilar hep dik okunur.
+    // cark dilimlerinin renkleri theme.css .wheel'de (palet jetonlari); etiket dilimle doner, kendi ekseninde de dinlenme acisi kadar geri doner: cark durunca sayilar dik okunur.
     // Dilim i, i*45 derecede ORTALANIR (gradyanlar -22.5deg'den baslar): isaretci dururken de bir dilimin ortasini gosterir, sinirini degil
+    var rest = UI.wheelRest || 0;
     Z.WHEEL.forEach(function (sg, i) {
       var a = i * 45;
-      wl += '<span style="transform:rotate(' + a + 'deg) translateY(-104px) rotate(' + (-a) + 'deg)">' + (sg.gems ? '💎' + sg.gems : '🪙' + sg.coins) + '</span>';
+      wl += '<span style="transform:rotate(' + a + 'deg) translateY(-104px) rotate(' + (-a - rest) + 'deg)">' + (sg.gems ? '💎' + sg.gems : '🪙' + sg.coins) + '</span>';
     });
     html += ('<div class="sect">' + $t('Şans Çarkı') + '</div><div class="panel"><div class="wheel-box"><div class="wheel-wrap"><div class="wheel-ptr">' + icoBy('ui', 'wheelPointer', '▼') + '</div>') +
-      '<div class="wheel" id="wheel">' + wl + '</div><div class="wheel-hub"></div></div>' +
+      '<div class="wheel" id="wheel" style="transform:rotate(' + rest + 'deg)">' + wl + '</div><div class="wheel-hub"></div></div>' +
       '<div style="flex:1"><h3>' + (free ? $t('Bugünkü bedava hakkın hazır!') : $t('Bedava hakkını kullandın')) + '</h3><p class="small" style="margin:6px 0 16px">' + $t('Her gün 1 bedava çevirme. Sonrası {n} 💎. En büyük ödül: 💎 40!', { n: Z.WHEEL_COST }) + '</p>' +
       '<button class="btn gold" data-spin="1" id="spin-btn">' + (free ? ('🎡 ' + $t('Bedava Çevir')) : ('🎡 ' + $t('Çevir') + ' · ') + Z.WHEEL_COST + ' 💎') + '</button></div></div></div>';
     html += ('<div class="sect">' + $t('Pazar') + '</div>');
     Z.MARKET.forEach(function (m) {
-      html += '<div class="panel mrow"><span class="big">' + UI.marketIco(m) + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? (gm++ ? '' : 'gold') : 'off') + '" data-buy="' + m.id + '">' + nw('💎 ' + m.gems) + '</button></div>';
+      html += '<div class="panel mrow"><span class="big">' + UI.marketIco(m) + '</span><div class="grow"><h3>' + m.name + '</h3><small>' + m.desc(d) + '</small></div><button class="btn small ' + (d.gems >= m.gems ? (gm++ ? '' : 'gold') : 'soft') + '" data-buy="' + m.id + '">' + nw('💎 ' + m.gems) + '</button></div>';
     });
     html += ('<div class="sect">' + $t('Günlük Giriş Ödülü') + '</div><div class="panel"><div class="daily">');
     var idx = S.dailyIndex();
@@ -647,12 +653,13 @@
       if (!S.wheelFree() && d.gems < Z.WHEEL_COST) { A.deny(); return UI.needGems(Z.WHEEL_COST); }
       var res = S.spin(); if (!res) { A.deny(); return UI.toast($t('Yeterli elmas yok')); }
       UI.spinning = true; A.chest();
-      var wheel = $('wheel'), turn = 360 * 6 + (360 - res.idx * 45);
+      var wheel = $('wheel'), rest = (360 - res.idx * 45) % 360, turn = 360 * 6 + rest;
+      UI.wheelRest = rest;
       wheel.style.transition = 'transform 3.4s cubic-bezier(.12,.7,.15,1)'; wheel.style.transform = 'rotate(' + turn + 'deg)';
       setTimeout(function () {
         UI.spinning = false; A.win();
         UI.toast(($t('Çarktan') + ': ') + (res.seg.coins ? '🪙' + res.seg.coins : '💎' + res.seg.gems) + '!');
-        if (UI.tab === 'vault') UI.renderHub(); else { $('cur-coins').textContent = Z.fmt(S.data.coins); $('cur-gems').textContent = Z.fmt(S.data.gems); }
+        if (UI.tab === 'vault' && !$('hub').classList.contains('hidden')) UI.renderHub(); else { $('cur-coins').textContent = Z.fmt(S.data.coins); $('cur-gems').textContent = Z.fmt(S.data.gems); }
       }, 3600);
       return;
     }
@@ -704,6 +711,7 @@
       A.win(); UI.toast(($t('Günlük ödül') + ': ') + (r.coins ? '🪙' + r.coins + ' ' : '') + (r.gems ? '💎' + r.gems : '')); return UI.renderHub();
     }
     if ((el = t.closest('[data-ad]'))) {
+      if (M.busy) return;
       if (!M.adsOn()) { A.deny(); return UI.toast($t('Reklamlar şu an kullanılamıyor')); }
       if (!M.canRewarded()) { A.deny(); return UI.toast($t('Bugünlük reklam ödülü hakkın bitti')); }
       var kind = el.getAttribute('data-ad');
@@ -714,6 +722,7 @@
     }
     if ((el = t.closest('[data-iap]'))) {
       var pid = el.getAttribute('data-iap'), prod = M.product(pid);
+      if (M.busy) return;
       if (!prod || M.owned(prod)) return A.deny();
       if (!M.iapOn()) { A.deny(); return UI.toast($t('Satın alma henüz etkin değil')); }
       return M.purchase(pid, function (res) {
@@ -756,6 +765,12 @@
   };
 
   // ---------------------------------------------------------------- Ayarlar
+  // Kayit degisince (sifirla / ice aktar) ses ve hatirlatici durumu yeni ayarlara esitlenir
+  function syncSettings() {
+    var st = S.data.settings; A.enabled = st.sound; A.musicOn = st.music; if (!st.sound || !st.music) A.musicStop();
+    UI.applyVolumes();
+    if (Z.Notify && Z.Notify.available() && !st.notify) Z.Notify.cancelAll();
+  }
   UI.settingsModal = function () {
     var st = S.data.settings;
     function row(k, label) { return '<div class="toggle" data-act="t_' + k + '"><span>' + label + '</span><span class="sw' + (st[k] ? ' on' : '') + '"></span></div>'; }
@@ -786,13 +801,13 @@
         back: UI.settingsModal,
         load: function () {
           if (!S.importSave($('save-code').value)) { A.deny(); return UI.toast($t('Geçersiz kayıt kodu')); }
-          var st2 = S.data.settings; A.enabled = st2.sound; A.musicOn = st2.music; A.win(); UI.closeModal(); UI.showHub('map'); UI.toast($t('Kayıt yüklendi!'));
+          syncSettings(); A.win(); UI.closeModal(); UI.showHub('map'); UI.toast($t('Kayıt yüklendi!'));
         }
       });
     };
     acts.reset = function () {
       UI.modal(('<h1>' + $t('Emin misin?') + '</h1><p>' + $t('Tüm ilerlemen silinecek. Bu işlem geri alınamaz.') + '</p><div class="actions"><button class="btn" data-act="close">' + $t('Vazgeç') + '</button><button class="btn red" data-act="yes">' + $t('Evet, sıfırla') + '</button></div>'),
-        { close: UI.closeModal, yes: function () { S.reset(); UI.closeModal(); UI.showHub('map'); } });
+        { close: UI.closeModal, yes: function () { S.reset(); syncSettings(); UI.closeModal(); UI.showHub('map'); } });
     };
     acts.lang = function () { UI.langModal(false); };
     ['privacy', 'terms', 'support'].forEach(function (k) { acts['u_' + k] = function () { UI.openLink(k); }; });
@@ -836,7 +851,7 @@
       UI.modal(('<h1>🎁 ' + $t('Günlük Ödül') + '</h1><p>' + $t('Seri') + ': <b>') + $t('{n}. gün', { n: d.daily.streak + 1 }) + '</b></p><div class="rewards">' +
         (r.coins ? '<span class="coin">🪙 ' + r.coins + '</span>' : '') + (r.gems ? '<span class="gem">💎 ' + r.gems + '</span>' : '') + '</div>' +
         ('<p class="small">' + $t('Her gün gir, seri bozulmasın — 7. gün büyük ödül!') + '</p><div class="actions"><button class="btn gold primary" data-act="claim">' + $t('Ödülü Al') + '</button></div>'),
-        { claim: function () { S.claimDaily(); A.win(); UI.closeModal(); UI.renderHub(); var p = S.treasuryPending(); if (p >= 100) UI.toast(($t('Hazinende') + ' ') + p + (' ' + $t('altın birikti!'))); } });
+        { claim: function () { S.claimDaily(); A.win(); UI.closeModal(); UI.renderHub(); if (UI.renderHome) UI.renderHome(); var p = S.treasuryPending(); if (p >= 100) UI.toast(($t('Hazinende') + ' ') + p + (' ' + $t('altın birikti!'))); } });
       return;
     }
     var p = S.treasuryPending();

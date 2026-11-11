@@ -632,7 +632,7 @@
     // 1) ground over the whole canvas (the world sits at fx, fy); tufts live in world coordinates
     g.save(); g.translate(fx, fy);
     var nT = groundLayerField(g, { W: FW, H: H, theme: theme, kind: kind, rnd: rnd, avoid: function (x, y) { return nearPoly(x, y, 44) || riverNear(y, 12) || hitObj(x, y); }, fx: fx, fy: fy, FW: FW, FH: FH, cvW: W, cvH: H });
-    g.save(); g.translate(fx, fy); decals(g, { kind: kind, theme: theme, rnd: rnd, n: kind === 'volcano' ? 12 : 7, big: true, x0: 24, x1: FW - 24, y0: 80, y1: FH - 60, avoid: function (x, y) { return nearPoly(x, y, 56) || riverNear(y, 24) || hitObj(x, y); } }); g.restore();
+    g.save(); decals(g, { kind: kind, theme: theme, rnd: rnd, n: kind === 'volcano' ? 12 : 7, big: true, x0: 24, x1: FW - 24, y0: 80, y1: FH - 60, avoid: function (x, y) { return nearPoly(x, y, 56) || riverNear(y, 24) || hitObj(x, y); } }); g.restore();
     g.restore();
     // 2) horizon: lapis page margin above, gold band (110u) with the ink hill line right above the enemy wall
     var y1 = top + 14, y0 = Math.max(0, y1 - 14 - 110);

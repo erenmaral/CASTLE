@@ -152,8 +152,8 @@
             }
           }
         }
-        R.frame(Game.paused ? 0 : dt);
-        UI.hudUpdate(b);
+        // duraklatilmis savasta resim degismez: pil icin ~10 fps yeter (yeniden boyutlandirma/menu degisikligi 100 ms icinde tazelenir)
+        if (!Game.paused || ((Game._pauseTick = ((Game._pauseTick | 0) + 1) % 6) === 0)) { R.frame(Game.paused ? 0 : dt); UI.hudUpdate(b); }
       } else if (Game.demo) Game.demoStep(dt);
     },
 
@@ -184,13 +184,14 @@
     Z.Monetize.detect();
     var st = S.data.settings;
     A.enabled = st.sound; A.musicOn = st.music;
-    R.init($('game'));
+    try { R.init($('game')); } catch (e) { /* tuval baglami yoksa menuler yine acilir */ }
     Z.i18nDom();
     UI.init(Game);
     UI.applyVolumes();
-    Game.resize();
-    globalThis.addEventListener('resize', function () { Game.resize(); });
-    globalThis.addEventListener('orientationchange', function () { setTimeout(function () { Game.resize(); }, 200); });
+    function safeResize() { try { Game.resize(); } catch (e) { /* tuval hazir degil: acilis takilmasin */ } }
+    safeResize();
+    globalThis.addEventListener('resize', safeResize);
+    globalThis.addEventListener('orientationchange', function () { setTimeout(safeResize, 200); });
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) { Game.pause(); A.musicStop(); if (Z.Notify) Z.Notify.onBackground(); return; }
       if (Z.Notify) Z.Notify.onForeground();
