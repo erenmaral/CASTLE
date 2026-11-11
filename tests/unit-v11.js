@@ -19,7 +19,7 @@ const PKG = 'com.dmdigital.castlesiege';
 { const m = read('android', 'app', 'src', 'main', 'AndroidManifest.xml');
   assert(m.includes('com.google.android.gms.ads.APPLICATION_ID') && m.includes('${admobAppId}'), 'AdMob app id yer tutucusu');
   assert(m.includes('usesCleartextTraffic="false"') && m.includes('data_extraction_rules') && m.includes('backup_rules'), 'guvenlik/yedek');
-  const perms = (m.match(/uses-permission android:name="([^"]+)"/g) || []); assert(perms.length === 1 && /INTERNET/.test(perms[0]), 'tek izin: INTERNET ' + perms.join());
+  const perms = (m.match(/<uses-permission android:name="[^"]+"(?![^>]*tools:node="remove")[^>]*>/g) || []); // (tools:node=remove: eklentinin ekledigi izni kaldirir) assert(perms.length === 1 && /INTERNET/.test(perms[0]), 'tek izin: INTERNET ' + perms.join());
   ['data_extraction_rules.xml', 'backup_rules.xml'].forEach(f => assert(fs.existsSync(R('android', 'app', 'src', 'main', 'res', 'xml', f)), f));
   assert(/CASTLESIEGE_VERSION_CODE/.test(read('android', 'app', 'build.gradle')) && /language\s*\{\s*enableSplit = false/.test(read('android', 'app', 'build.gradle')), 'surum kodu + dil bolunmesi kapali');
   const pj = JSON.parse(read('package.json')).dependencies; assert(pj['@capacitor-community/admob'] && pj['cordova-plugin-purchase'], 'AdMob ve Faturalandirma eklentileri kurulu');

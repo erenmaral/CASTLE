@@ -17,7 +17,7 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 | Sürüm adı / kodu | `0.11.0.<derleme no>` / `<derleme no>` (CI otomatik verir; her derleme bir öncekinden büyüktür) |
 | Minimum / hedef Android | Android 7.0 (API 24) / hedef API 36 |
 | Yön | Dikey (portre) |
-| İzinler | Yalnızca `INTERNET` (faturalandırma ve reklam eklentileri kendi izinlerini ekler) |
+| İzinler | `INTERNET`; eklentilerle: faturalandırma, reklam kimliği, ağ durumu, bildirim (`POST_NOTIFICATIONS`, yalnızca oyuncu açarsa sorulur), açılışta yeniden planlama (`RECEIVE_BOOT_COMPLETED`), `WAKE_LOCK`. Tam zamanlı alarm izni (`SCHEDULE_EXACT_ALARM`) KULLANILMAZ ve manifestten çıkarılmıştır. |
 | Web sitesi | https://sites.google.com/view/castle-siege-history/ana-sayfa |
 | Gizlilik politikası URL'si | https://sites.google.com/view/castle-siege-history/ana-sayfa (Google Sites; herkese açık yayınlanmış olmalı) |
 | Geliştirici adı (Play Console'da görünür) | **DM Digital** |

@@ -46,6 +46,7 @@
     toMenu: function (tab) {
       A.musicStop(); R.stop(); this.battle = null; this.demo = null; this.paused = false; this.ending = false; this.perkOpen = false;
       UI.tutStop(false); UI.closeModal(); UI.showHub(tab || (UI.tab || 'map'));
+      if (Z.Notify && Z.Notify.shouldAsk()) setTimeout(function () { if (!Game.battle && Z.Notify.shouldAsk()) Z.Notify.ask(); }, 1200); // 3. galibiyetten sonra tek seferlik nazik soru
     },
 
     // ---- Ana menu: arkada savasin surdugu canli sahne + savas muzigi ----
@@ -191,7 +192,8 @@
     globalThis.addEventListener('resize', function () { Game.resize(); });
     globalThis.addEventListener('orientationchange', function () { setTimeout(function () { Game.resize(); }, 200); });
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) { Game.pause(); A.musicStop(); return; }
+      if (document.hidden) { Game.pause(); A.musicStop(); if (Z.Notify) Z.Notify.onBackground(); return; }
+      if (Z.Notify) Z.Notify.onForeground();
       S.rollDay(); // uygulama gece yarisini asarak acik kaldiysa gunluk durumu yenile
       if (!Game.battle) Game.menuMusic(); else if (!Game.paused && !Game.battle.over) A.musicStart();
     });
@@ -202,10 +204,12 @@
       var App = globalThis.Capacitor && globalThis.Capacitor.Plugins && globalThis.Capacitor.Plugins.App;
       if (App && App.addListener) {
         App.addListener('backButton', function () { Game.onBack(); });
-        App.addListener('pause', function () { Game.pause(); });
+        App.addListener('pause', function () { Game.pause(); if (Z.Notify) Z.Notify.onBackground(); });
+        App.addListener('resume', function () { if (Z.Notify) Z.Notify.onForeground(); });
       }
     } catch (e) { /* tarayici */ }
     UI.showHome();
+    if (Z.Notify) Z.Notify.listen();
     var bootEl = $('boot'); bootEl.style.opacity = 0; setTimeout(function () { bootEl.remove(); }, 600);
     UI.welcome();
     Game.last = performance.now();

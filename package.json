@@ -1,6 +1,6 @@
 {
   "name": "seferhan",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Castle Siege: History (Sefer Vakti) - 2D strateji ve savas oyunu (mobil)",
   "scripts": {
@@ -12,6 +12,7 @@
     "@capacitor/android": "^8.6.0",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.6.0",
+    "@capacitor/local-notifications": "^8.3.1",
     "cordova-plugin-purchase": "^13.20.0"
   },
   "devDependencies": {

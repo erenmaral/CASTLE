@@ -766,6 +766,10 @@
         UI.settingsModal();
       };
     });
+    acts.t_notify = function () {
+      if (Z.Notify.enabled()) { Z.Notify.disable(); UI.settingsModal(); return; }
+      Z.Notify.enable(function (ok) { if (!ok) UI.toast($t('Bildirim izni verilmedi. Telefon ayarlarından açabilirsin.')); UI.settingsModal(); });
+    };
     acts.exp = function () {
       var code = S.exportSave();
       UI.modal(('<h1>📤 ' + $t('Kayıt Kodu') + '</h1><p>' + $t('Kodu kopyala; başka cihazda “Kaydı içe aktar”a yapıştır.') + '</p><textarea id="save-code" readonly rows="6">') + code + ('</textarea><div class="actions"><button class="btn small" data-act="back">' + $t('Geri') + '</button><button class="btn gold primary" data-act="copy">📋 ' + $t('Kopyala') + '</button></div>'), {
@@ -797,7 +801,7 @@
     function slider(k, label) { return '<div class="slider"><span>' + label + '</span><input type="range" min="0" max="100" step="5" value="' + (st[k] === undefined ? 100 : st[k]) + '" data-vol="' + k + '"><b>' + (st[k] === undefined ? 100 : st[k]) + '</b></div>'; }
     // sessiz bolge: dil, anahtarlar ve kaydiricilar tek duz --night defterde (kesik cizgiyle ayrilir); altbilgi (ipucu + surum) ayri defter.
     // Son satir (Sifirla / Tamam) en sonda: pencere kayarsa yapisik (sticky) ayakta hep gorunur. Baglanti ayiraclari CSS'te (metin dugumu yok: satir sararken '·' yetim kalmaz).
-    UI.modal(('<h1>' + $t('Ayarlar') + '</h1>') + '<div class="setbox">' + ('<div class="toggle" data-act="lang"><span>🌐 ' + $t('Dil') + '</span><b class="lc" data-code="' + li.id.toUpperCase() + '">' + li.name + ' ›</b></div>') + row('sound', ('🔊 ' + $t('Ses efektleri'))) + row('music', ('🥁 ' + $t('Savaş müziği'))) + row('vibrate', ('📳 ' + $t('Titreşim'))) + row('menuBattle', (icoId('ic-act-swords', '⚔️') + ' ' + $t('Menüde canlı savaş (pil/performans için kapatılabilir)'))) + slider('musicVol', '🥁 ' + $t('Müzik ses düzeyi')) + slider('sfxVol', '🔊 ' + $t('Efekt ses düzeyi')) + '</div>' +
+    UI.modal(('<h1>' + $t('Ayarlar') + '</h1>') + '<div class="setbox">' + ('<div class="toggle" data-act="lang"><span>🌐 ' + $t('Dil') + '</span><b class="lc" data-code="' + li.id.toUpperCase() + '">' + li.name + ' ›</b></div>') + row('sound', ('🔊 ' + $t('Ses efektleri'))) + row('music', ('🥁 ' + $t('Savaş müziği'))) + row('vibrate', ('📳 ' + $t('Titreşim'))) + (Z.Notify && Z.Notify.available() ? row('notify', ('⏳ ' + $t('Hatırlatıcı bildirimleri'))) : '') + row('menuBattle', (icoId('ic-act-swords', '⚔️') + ' ' + $t('Menüde canlı savaş (pil/performans için kapatılabilir)'))) + slider('musicVol', '🥁 ' + $t('Müzik ses düzeyi')) + slider('sfxVol', '🔊 ' + $t('Efekt ses düzeyi')) + '</div>' +
       ('<div class="actions"><button class="btn small" data-act="exp">📤 ' + $t('Kaydı dışa aktar') + '</button><button class="btn small" data-act="imp">📥 ' + $t('İçe aktar') + '</button></div>') +
       (Z.Monetize.adsOn() ? ('<div class="actions"><button class="btn small" data-act="adprivacy">🔒 ' + $t('Reklam gizlilik tercihleri') + '</button></div>') : '') +
       ('<div class="links settings-links"><a data-act="u_privacy">' + $t('Gizlilik Politikası') + '</a><a data-act="u_terms">' + $t('Kullanım Şartları') + '</a><a data-act="u_support">' + $t('Destek') + '</a></div>') +

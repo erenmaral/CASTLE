@@ -2,6 +2,13 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.13.0 — Hatırlatıcı bildirimleri
+- 🔔 **Yerel hatırlatıcılar** (`@capacitor/local-notifications`, sunucu yok): **hazine dolunca**, her sabah 10:00'da **günlük ödül + bedava şans çarkı (+ günlük sefer)**, bugünkü ödül alınmadıysa 19:00'da bir yoklama, 3 ve 7 gün gelinmezse 18:30'da "geri dön". Sessiz saat 22:00-08:00. Oyundayken bekleyen hatırlatıcılar iptal edilir; arka plana geçince yenileri planlanır.
+- ⚙️ **Ayarlar → Hatırlatıcı bildirimleri** (yalnızca APK'da görünür; Android 13+ izin penceresi açılır). 3. galibiyetten sonra menüye dönünce **bir kez** nazik soru çıkar ("Hatırlatıcılar açılsın mı?"); varsayılan KAPALI.
+- 🛡️ **Tam zamanlı alarm yok:** eklentinin eklediği `SCHEDULE_EXACT_ALARM` izni manifestten çıkarıldı (Play özel beyan ister) ve her bildirim `isExactNotification:false` ile planlanır (yaklaşık saat); aksi halde eklenti kullanıcıyı sistem "Alarmlar ve hatırlatıcılar" ekranına yönlendirirdi.
+- 🌍 Bildirim metinleri 6 dilde; küçük bildirim ikonu (C + kule siluet, 5 yoğunluk), kanal "Hatırlatıcılar".
+- 🧪 `tests/unit-v13.js` (plan, sessiz saat, izin akışı, tam zamanlı alarm yok, manifest) ve `tests/e2e-v13.js` (sahte yerel platformla ayar/izin/planlama/iptal/nazik soru).
+
 ## 0.12.0 — Yaldızlı el yazması: yeni görsel kimlik
 Mağaza ziyaretçileri grafiklerin "belli ki yapay zekâ işi" olduğunu söyledi. Oyunun tüm görsel dili **13. yüzyıl resimli savaş İncil'i (Morgan/Maciejowski) yönünde, tamamen kodla** yeniden kuruldu (`docs/ART_DIRECTION.md`).
 - 🎨 **Palet ve doku:** doygun lacivert / vermilyon / malakit zeminler, baklava-nokta (diaper) desenler, parşömen yalnızca metin bloklarında, tek parlatılmış yaldız plaka; Almendra ve keçe/kilim teması kaldırıldı. Yeni yazı tipleri (SIL OFL): Texturina (başlık/düğme), Pirata One (süslü baş harfler), EB Garamond (gövde, Kiril destekli). Doku ve çerçeveler `www/js/art.js` (`Z.Art`) ile açılışta bir kez üretilir (≈19 ms).

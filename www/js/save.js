@@ -32,7 +32,7 @@
       stats: { battles: 0, wins: 0, kills: 0, totalStars: 0, maxCombo: 0, perks: 0, spins: 0, hardWins: 0, legendWins: 0, dailyWins: 0, purchases: 0, fieldWins: 0, castleWins: 0, bossWins: 0 },
       achClaimed: {}, starClaimed: {}, wheel: { day: '', used: false },
       hardCleared: {}, dailySefer: { day: '', won: false },
-      settings: { sound: true, music: true, vibrate: true, menuBattle: true, musicVol: 70, sfxVol: 100 },
+      settings: { sound: true, music: true, vibrate: true, menuBattle: true, musicVol: 70, sfxVol: 100, notify: false, notifyAsked: false },
       seenUnlock: { spear: true, archer: true, cav: true },
       tutorialDone: false, seenVersion: '', langChosen: false,
       boost: { gold: 1, skill: 1, shield: 1 }, iap: { noAds: false, starter: false, tokens: [] }, ads: { day: '', rewarded: 0, battles: 0, lastInter: 0 }

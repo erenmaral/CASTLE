@@ -3,5 +3,13 @@
   "appName": "Castle Siege: History",
   "webDir": "www",
   "backgroundColor": "#0F1838",
-  "android": { "backgroundColor": "#0F1838" }
+  "android": {
+    "backgroundColor": "#0F1838"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_castle",
+      "iconColor": "#22409A"
+    }
+  }
 }
