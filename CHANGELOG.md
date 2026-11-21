@@ -2,6 +2,11 @@
 
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
+## 0.13.2 — İmza anahtarı gizliliği + AdMob ayarı
+- 🔐 CI'a **gizli dosya denetimi** (depoya keystore/sertifika/şifre dosyası girerse derleme durur), `.gitignore` genişletildi; **"Imza anahtarini guvenle disa aktar"** elle çalışan iş akışı: önbellekteki anahtarı AES-256 şifreli dosya olarak verir, böylece kalıcı Secrets'a taşınır (`docs/IMZA_VE_ADMOB.md`).
+- 📺 AdMob kimlikleri `config/admob.json` dosyasından da okunur (GitHub Variables öncelikli); dört kimlik geçerliyse `testMode=false`, Google test kimlikleri yayın sürümüne yazılmaz; `ADMOB_APP_ID` manifest yer tutucusuna da aktarılır.
+- 🧪 `tests/unit-v14.js`.
+
 ## 0.13.1 — Hata taraması
 Bağımsız kod incelemesi + tam test seti (birim, e2e, maymun, fuzz, denge, performans, sanat denetimi) sonrası düzeltmeler. Eski WebView (Chrome 87) uyumluluk taraması temiz çıktı.
 - 💎 **Elmas yetmeyen düğmeler artık dokunulabilir:** Pazar ve kahraman açma düğmeleri "kapalı" (`off`, dokunmayı yutuyordu) yerine "soft" çiziliyor; dokununca "Elmas yetmiyor" penceresi ve önerilen paket açılıyor. Önerilen paketin fiyatı artık Play'den gelen yerel fiyatı gösteriyor.

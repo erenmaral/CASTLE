@@ -9,3 +9,11 @@ android/local.properties
 signing/
 *.keystore
 *.jks
+*.p12
+*.pfx
+*.pem
+*.pepk
+*.keystore.b64
+keystore.b64
+pass.txt
+key.properties

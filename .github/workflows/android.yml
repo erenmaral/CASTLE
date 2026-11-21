@@ -43,6 +43,7 @@ jobs:
           node tests/unit-v11.js | tail -3
           node tests/unit-v12.js | tail -3
           node tests/unit-v13.js | tail -3
+          node tests/unit-v14.js | tail -3
           node scripts/build-icons.js --selftest | tail -1
           node tests/fuzz-sim.js 120 1 | tail -2
           node scripts/i18n.js check
@@ -58,6 +59,13 @@ jobs:
           BASE=$(node -p "require('./package.json').version")
           echo "name=${BASE}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           sed -i "s/Z.BUILD = 'dev'/Z.BUILD = '${{ github.run_number }}'/" www/js/version.js
+
+      # Gizli dosya korumasi: imza anahtari/sertifika/sifre dosyasi depoya girerse derleme DURUR (anahtar yalnizca GitHub Secrets'ta durur)
+      - name: Gizli dosya denetimi
+        run: |
+          BAD=$(git ls-files | grep -i -E '\.(jks|keystore|p12|pfx|pem|pepk)$|(^|/)(pass|password|key)\.(txt|properties)$|signing/' || true)
+          if [ -n "$BAD" ]; then echo "::error::Depoda gizli dosya var, KALDIRIN: $BAD"; exit 1; fi
+          echo "Depoda anahtar/sifre dosyasi yok."
 
       - name: Reklam kimlikleri (varsa)
         env:
@@ -131,7 +139,7 @@ jobs:
         env:
           CASTLESIEGE_VERSION_CODE: ${{ github.run_number }}
           CASTLESIEGE_VERSION_NAME: ${{ steps.ver.outputs.name }}
-          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
+          ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || env.ADMOB_APP_ID }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace

@@ -1,0 +1,39 @@
+name: Imza anahtarini guvenle disa aktar (elle calistirilir)
+# Amac: CI'in kendi urettigi (Actions onbellegindeki) imza anahtarini KALICI GitHub Secrets'a tasimak.
+# Anahtar sifreli (AES-256, KEYSTORE_EXPORT_PASSPHRASE) bir dosya olarak 1 gun saklanan ARTIFACT'a konur; duz metin hicbir yerde yazilmaz.
+# Adimlar: docs/IMZA_VE_ADMOB.md bolum 1.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Onbellekteki anahtari geri yukle
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/kscache
+          key: castlesiege-keystore-v1
+          restore-keys: zafarion-keystore-v1
+      - name: Sifreleyerek disa aktar
+        env:
+          EXP: ${{ secrets.KEYSTORE_EXPORT_PASSPHRASE }}
+        run: |
+          set +x
+          CD="$RUNNER_TEMP/kscache"
+          if [ ${#EXP} -lt 16 ]; then echo "::error::KEYSTORE_EXPORT_PASSPHRASE secret'i en az 16 karakter olmali (Settings > Secrets > Actions)."; exit 1; fi
+          KS=$(ls "$CD"/*.keystore 2>/dev/null | head -1)
+          if [ -z "$KS" ] || [ ! -f "$CD/pass.txt" ]; then echo "::error::Onbellekte anahtar yok (silinmis olabilir). Yeni anahtar bir sonraki derlemede uretilir."; exit 1; fi
+          ALIAS=$(keytool -list -keystore "$KS" -storepass "$(cat "$CD/pass.txt")" 2>/dev/null | grep -E 'PrivateKeyEntry|^[a-z0-9_-]+,' | head -1 | cut -d, -f1)
+          mkdir -p out
+          { echo "ALIAS=$ALIAS"; echo "PASSWORD=$(cat "$CD/pass.txt")"; echo "KEYSTORE_B64=$(base64 -w0 "$KS")"; } > "$RUNNER_TEMP/bundle.txt"
+          openssl enc -aes-256-cbc -pbkdf2 -iter 300000 -salt -pass env:EXP -in "$RUNNER_TEMP/bundle.txt" -out out/anahtar.enc
+          shred -u "$RUNNER_TEMP/bundle.txt" 2>/dev/null || rm -f "$RUNNER_TEMP/bundle.txt"
+          echo "Sifreli dosya hazir (alias: $ALIAS)."
+      - name: Sifreli dosyayi 1 gun sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: anahtar-sifreli
+          path: out/anahtar.enc
+          retention-days: 1
