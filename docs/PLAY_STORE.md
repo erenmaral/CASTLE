@@ -96,8 +96,8 @@ Bu belge, oyunu Google Play'e yüklemek için **kodda hazır olanı** ve **sizin
 ## 5) Yayın öncesi son kontrol
 
 - [ ] Google Sites gizlilik sayfası **yayınlandı** ve giriş yapmadan (gizli pencerede) açılıyor; metin sayfada görünüyor
-- [ ] `ADMOB_*` Variables tanımlı; derleme günlüğünde "reklam: gerçek kimlikler yazıldı" (uyarı yok)
-- [ ] `CASTLESIEGE_KEYSTORE_*` secret'ları tanımlı ve anahtar yedeklendi
+- [x] AdMob kimlikleri `config/admob.json` içinde (build-41: "reklam: gercek kimlikler yazildi"); AB onay formu AdMob'da yayınlanacak
+- [x] İmza anahtarı mühürlendi (`config/signing.enc` + `KEYSTORE_PASSPHRASE` secret'ı; parola yedeği parola yöneticisinde) — bkz. `docs/IMZA_VE_ADMOB.md`
 - [ ] Ürünler Play Console'da **Etkin**; iç testte satın alma + geri yükleme denendi
 - [ ] AdMob'da uygulama Play'e bağlandı (yayın sonrası), AB onay iletisi yayında
 - [ ] Gerçek cihazda: açılış, savaş, mağaza, ödüllü reklam, geçiş reklamı, Ayarlar → gizlilik bağlantıları, dil değişimi
