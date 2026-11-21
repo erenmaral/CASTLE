@@ -2,13 +2,17 @@
 const assert = require('assert'), { spawnSync } = require('child_process'), fs = require('fs'), path = require('path');
 const R = (...p) => path.join(__dirname, '..', ...p);
 let n = 0; const ok = m => { n++; console.log('  ✓', m); };
-const run = env => spawnSync('node', [R('scripts', 'play-config.js'), '--check'], { env: Object.assign({ PATH: process.env.PATH }, env), encoding: 'utf8' }).stdout;
+const run = env => spawnSync('node', [R('scripts', 'play-config.js'), '--check'], { env: Object.assign({ PATH: process.env.PATH, ADMOB_CONFIG_FILE: path.join(__dirname, 'yok.json') }, env), encoding: 'utf8' }).stdout;
 const REAL = { ADMOB_APP_ID: 'ca-app-pub-1234567890123456~1234567890', ADMOB_REWARDED_ID: 'ca-app-pub-1234567890123456/1111111111', ADMOB_INTERSTITIAL_ID: 'ca-app-pub-1234567890123456/2222222222', ADMOB_BANNER_ID: 'ca-app-pub-1234567890123456/3333333333' };
 assert(/TEST modu/.test(run({})), 'kimlik yok: test modu'); ok('Kimlik yoksa reklamlar TEST modunda');
 assert(/gercek kimlikler/.test(run(REAL)), 'gecerli kimlikler'); ok('4 geçerli kimlik varsa gerçek mod');
 assert(/TEST modu/.test(run(Object.assign({}, REAL, { ADMOB_BANNER_ID: '' }))), 'eksik'); ok('Biri eksikse güvenli tarafta kalır (test modu)');
 assert(/TEST modu/.test(run(Object.assign({}, REAL, { ADMOB_BANNER_ID: 'ca-app-pub-3940256099942544/6300978111' }))), 'google test'); ok('Google test kimliği yayın sürümüne yazılmaz');
 assert(/TEST modu/.test(run(Object.assign({}, REAL, { ADMOB_APP_ID: 'bozuk' }))), 'bozuk'); ok('Biçimi bozuk kimlik reddedilir');
+// dosya kaynagi: yalniz 3 birim kimligi varsa (uygulama kimligi yok) hala test modu; dort kimlik tamamsa gercek
+const tmpf = path.join(require('os').tmpdir(), 'admob-test.json'); fs.writeFileSync(tmpf, JSON.stringify({ appId: REAL.ADMOB_APP_ID, rewardedId: REAL.ADMOB_REWARDED_ID, interstitialId: REAL.ADMOB_INTERSTITIAL_ID, bannerId: REAL.ADMOB_BANNER_ID }));
+assert(/gercek kimlikler/.test(run({ ADMOB_CONFIG_FILE: tmpf })), 'dosyadan'); fs.writeFileSync(tmpf, JSON.stringify({ appId: '', rewardedId: REAL.ADMOB_REWARDED_ID, interstitialId: REAL.ADMOB_INTERSTITIAL_ID, bannerId: REAL.ADMOB_BANNER_ID }));
+assert(/TEST modu/.test(run({ ADMOB_CONFIG_FILE: tmpf })), 'appId yok'); fs.unlinkSync(tmpf); ok('config/admob.json kaynağı: dört kimlik tamamsa gerçek, uygulama kimliği yoksa test modu');
 const cfg = JSON.parse(fs.readFileSync(R('config', 'admob.json'), 'utf8')); assert(['appId', 'rewardedId', 'interstitialId', 'bannerId'].every(k => k in cfg)); ok('config/admob.json anahtarları tam');
 const files = require('child_process').execSync('git ls-files', { cwd: R('.'), encoding: 'utf8' }).split('\n');
 const bad = files.filter(f => /\.(jks|keystore|p12|pfx|pem|pepk)$/i.test(f) || /(^|\/)(pass|password|key)\.(txt|properties)$/i.test(f) || /^signing\//.test(f)); assert.deepStrictEqual(bad, [], 'depoda gizli dosya: ' + bad); ok('Depoda anahtar/sertifika/şifre dosyası yok');

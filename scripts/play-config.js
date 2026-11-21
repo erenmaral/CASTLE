@@ -7,7 +7,7 @@
 const fs = require('fs'), path = require('path');
 const file = path.join(__dirname, '..', 'www', 'js', 'monetize-config.js');
 // Oncelik: GitHub Variables (ortam degiskenleri) > config/admob.json (depoda, herkese acik kimlikler)
-let cfgFile = {}; try { cfgFile = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', 'admob.json'), 'utf8')); } catch (e) { /* dosya yok: yalniz degiskenler */ }
+let cfgFile = {}; try { cfgFile = JSON.parse(fs.readFileSync(process.env.ADMOB_CONFIG_FILE || path.join(__dirname, '..', 'config', 'admob.json'), 'utf8')); } catch (e) { /* dosya yok: yalniz degiskenler */ }
 const env = process.env, pick = (v, f) => (v && v.trim()) || (f && String(f).trim()) || '';
 const appId = pick(env.ADMOB_APP_ID, cfgFile.appId);
 const ids = { rewardedId: pick(env.ADMOB_REWARDED_ID, cfgFile.rewardedId), interstitialId: pick(env.ADMOB_INTERSTITIAL_ID, cfgFile.interstitialId), bannerId: pick(env.ADMOB_BANNER_ID, cfgFile.bannerId) };
