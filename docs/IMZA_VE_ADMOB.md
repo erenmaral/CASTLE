@@ -1,19 +1,14 @@
 # İmza anahtarını gizleme + AdMob reklam ayarı
 
-## 1) İmza anahtarı (keystore)
-**Şu an:** anahtar depoda **yok** (git geçmişi dahil temiz; `.gitignore` ve CI "Gizli dosya denetimi" adımı yeni sızıntıyı engeller). CI anahtarı kendisi üretip **Actions önbelleğinde** tutuyor. Önbellek 7 gün hiç kullanılmazsa silinir ve bir sonraki derleme *farklı* bir anahtar üretir; bu yüzden anahtarı kalıcı **Secrets**'a taşıyın (bir kez).
+## 1) İmza anahtarı (keystore) — tek secret ile kalıcı yap
+**Şu an:** anahtar depoda **yok** (git geçmişi dahil temiz; `.gitignore` ve CI "Gizli dosya denetimi" yeni sızıntıyı engeller). CI anahtarı kendisi üretip **Actions önbelleğinde** tutuyor; önbellek 7 gün kullanılmazsa silinir ve sonraki derleme *farklı* anahtar üretir. Bunu kalıcı yapmak için anahtar parolayla **şifrelenip** `config/signing.enc` olarak depoya yazılır; derleme onu aynı parolayla çözer.
 
-1. GitHub → **Settings → Secrets and variables → Actions → Secrets → New repository secret**
-   Ad: `KEYSTORE_EXPORT_PASSPHRASE`, değer: en az 16 karakterli uzun bir parola (not edin, sohbette paylaşmayın).
-2. **Actions → "Imza anahtarini guvenle disa aktar" → Run workflow.** Bitince çalışmanın sayfasından **anahtar-sifreli** artifact'ını indirin (zip içinde `anahtar.enc`; 1 gün saklanır, AES-256 şifreli).
-3. Kendi bilgisayarınızda (Git Bash / macOS / Linux terminali) şifresini çözün:
-   `openssl enc -d -aes-256-cbc -pbkdf2 -iter 300000 -in anahtar.enc -out anahtar.txt`
-   (parolayı sorar). `anahtar.txt` içinde üç satır vardır: `ALIAS=…`, `PASSWORD=…`, `KEYSTORE_B64=…`.
-4. Aynı yerden üç **Secret** oluşturun (değer = `=` işaretinden sonrası):
-   `CASTLESIEGE_KEY_ALIAS` ← ALIAS, `CASTLESIEGE_KEYSTORE_PASSWORD` ← PASSWORD, `CASTLESIEGE_KEYSTORE_B64` ← KEYSTORE_B64.
-5. `anahtar.txt` ve `anahtar.enc` dosyalarını **silin**, `KEYSTORE_EXPORT_PASSPHRASE` secret'ını silin. Anahtarın bir yedeğini parola yöneticinizde (şifreli) tutun: kaybolursa Play Console'dan "yükleme anahtarı sıfırlama" istemek gerekir.
+1. GitHub → **Settings → Secrets and variables → Actions → New repository secret**
+   Ad: `KEYSTORE_PASSPHRASE`, değer: **en az 24 karakterli, rastgele uzun bir parola** (şifreli dosya depoda durduğu için güvenlik bu parolanın gücüne bağlı; parola yöneticisiyle üretin, sohbette paylaşmayın, bir yedeğini saklayın).
+2. **Actions → "Imza anahtarini muhurle (elle calistirilir)" → Run workflow** (bu dalda). Önbellekte anahtar varsa **aynısı** şifrelenir (imza değişmez); yoksa yeni üretilir.
+3. İş akışı yeşil bitince `config/signing.enc` dalda belirir. Sonraki her derleme günlüğünde **"Muhurlu kalici anahtar (config/signing.enc) kullaniliyor"** yazar.
 
-Sonraki derlemeler günlükte "Kalici anahtar (secret) kullaniliyor" yazar; imza aynı kalır, önbellek önemini yitirir.
+Notlar: parola kaybolursa anahtar çözülemez (Play Console'dan "yükleme anahtarı sıfırlama" gerekir). Var olan `signing.enc` yanlışlıkla değiştirilmesin diye iş akışı `overwrite` işaretlenmedikçe durur. İsterseniz daha da güvenli yol: anahtarı 3 ayrı secret olarak (`CASTLESIEGE_KEYSTORE_B64`, `CASTLESIEGE_KEYSTORE_PASSWORD`, `CASTLESIEGE_KEY_ALIAS`) girmek; bunlar varsa öncelikli kullanılır.
 
 ## 2) AdMob reklam kimlikleri
 Kimlikler **gizli değildir** (APK içinde görünür); gizli olan hesap şifreniz ve imza anahtarıdır.

@@ -98,6 +98,7 @@ jobs:
           KS_B64: ${{ secrets.CASTLESIEGE_KEYSTORE_B64 }}
           KS_PASS: ${{ secrets.CASTLESIEGE_KEYSTORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.CASTLESIEGE_KEY_ALIAS }}
+          KS_PP: ${{ secrets.KEYSTORE_PASSPHRASE }}
         run: |
           KS="$RUNNER_TEMP/castlesiege.keystore"
           CD="$RUNNER_TEMP/kscache"
@@ -109,6 +110,15 @@ jobs:
             echo "$KS_B64" | base64 -d > "$KS"
             PASS="$KS_PASS"
             echo "Kalici anahtar (secret) kullaniliyor: guncellemeler eski surumun uzerine kurulur."
+          elif [ -f config/signing.enc ] && [ -n "$KS_PP" ]; then
+            # Muhurlu anahtar (docs/IMZA_VE_ADMOB.md): tek secret ile cozulur
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:KS_PP -in config/signing.enc -out "$RUNNER_TEMP/bundle.txt"
+            ALIAS=$(grep '^ALIAS=' "$RUNNER_TEMP/bundle.txt" | cut -d= -f2-)
+            PASS=$(grep '^PASSWORD=' "$RUNNER_TEMP/bundle.txt" | cut -d= -f2-)
+            echo "::add-mask::$PASS"
+            grep '^KEYSTORE_B64=' "$RUNNER_TEMP/bundle.txt" | cut -d= -f2- | base64 -d > "$KS"
+            rm -f "$RUNNER_TEMP/bundle.txt"
+            echo "Muhurlu kalici anahtar (config/signing.enc) kullaniliyor."
           elif [ -f "$CD/castlesiege.keystore" ] && [ -f "$CD/pass.txt" ]; then
             cp "$CD/castlesiege.keystore" "$KS"
             PASS=$(cat "$CD/pass.txt")

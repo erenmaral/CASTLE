@@ -3,7 +3,7 @@
 Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 
 ## 0.13.2 — İmza anahtarı gizliliği + AdMob ayarı
-- 🔐 CI'a **gizli dosya denetimi** (depoya keystore/sertifika/şifre dosyası girerse derleme durur), `.gitignore` genişletildi; **"Imza anahtarini guvenle disa aktar"** elle çalışan iş akışı: önbellekteki anahtarı AES-256 şifreli dosya olarak verir, böylece kalıcı Secrets'a taşınır (`docs/IMZA_VE_ADMOB.md`).
+- 🔐 CI'a **gizli dosya denetimi** (depoya keystore/sertifika/şifre dosyası girerse derleme durur), `.gitignore` genişletildi; **"Imza anahtarini muhurle"** elle çalışan iş akışı: önbellekteki anahtarı (yoksa yenisini) tek secret'tan (`KEYSTORE_PASSPHRASE`) AES-256 ile şifreleyip `config/signing.enc` olarak depoya yazar; derleme onu çözer, önbelleğe bağımlılık kalmaz (`docs/IMZA_VE_ADMOB.md`).
 - 📺 AdMob kimlikleri `config/admob.json` dosyasından da okunur (GitHub Variables öncelikli); dört kimlik geçerliyse `testMode=false`, Google test kimlikleri yayın sürümüne yazılmaz; `ADMOB_APP_ID` manifest yer tutucusuna da aktarılır.
 - 🧪 `tests/unit-v14.js`.
 

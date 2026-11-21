@@ -1,0 +1,52 @@
+name: Imza anahtarini muhurle (elle calistirilir)
+# Amac: imza anahtarini KALICI yapmak. Onbellekteki mevcut anahtar (yoksa yenisi) KEYSTORE_PASSPHRASE ile AES-256 sifrelenip config/signing.enc olarak depoya yazilir.
+# Android derlemesi bu dosyayi ayni secret ile cozer. Duz metin anahtar/sifre hicbir yerde (log, artifact, commit) gorunmez. Adimlar: docs/IMZA_VE_ADMOB.md bolum 1.
+on:
+  workflow_dispatch:
+    inputs:
+      overwrite:
+        description: "Var olan config/signing.enc DEGISTIRILSIN mi? (yeni anahtar uretir/yerine koyar; Play'e yukleme yapildiysa HAYIR birakin)"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+jobs:
+  seal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Onbellekteki anahtari geri yukle
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/kscache
+          key: castlesiege-keystore-v1
+          restore-keys: zafarion-keystore-v1
+      - name: Muhurle ve depoya yaz
+        env:
+          PP: ${{ secrets.KEYSTORE_PASSPHRASE }}
+          OVERWRITE: ${{ inputs.overwrite }}
+        run: |
+          set +x
+          if [ ${#PP} -lt 24 ]; then echo "::error::KEYSTORE_PASSPHRASE secret'i yok ya da 24 karakterden kisa (Settings > Secrets and variables > Actions)."; exit 1; fi
+          if [ -f config/signing.enc ] && [ "$OVERWRITE" != "true" ]; then echo "::error::config/signing.enc zaten var; anahtar korunuyor. Degistirmek icin 'overwrite' secenegini isaretleyin."; exit 1; fi
+          CD="$RUNNER_TEMP/kscache"; KS=$(ls "$CD"/*.keystore 2>/dev/null | head -1)
+          if [ -n "$KS" ] && [ -f "$CD/pass.txt" ]; then
+            PASS=$(cat "$CD/pass.txt"); echo "Onbellekteki mevcut anahtar muhurleniyor (imza degismez)."
+            ALIAS=$(keytool -list -keystore "$KS" -storepass "$PASS" 2>/dev/null | grep -E '^[A-Za-z0-9_-]+, ' | head -1 | cut -d, -f1)
+            if [ "$ALIAS" = "zafarion" ]; then keytool -changealias -keystore "$KS" -storepass "$PASS" -alias zafarion -destalias castlesiege; ALIAS=castlesiege; fi
+          else
+            echo "Onbellekte anahtar yok: YENI anahtar uretiliyor."
+            KS="$RUNNER_TEMP/new.keystore"; ALIAS=castlesiege; PASS=$(openssl rand -hex 16)
+            keytool -genkeypair -noprompt -keystore "$KS" -storetype PKCS12 -alias "$ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$PASS" -keypass "$PASS" -dname "CN=Castle Siege History, O=DM Digital, C=TR"
+          fi
+          [ -n "$ALIAS" ] || { echo "::error::Anahtar takma adi okunamadi."; exit 1; }
+          { echo "ALIAS=$ALIAS"; echo "PASSWORD=$PASS"; echo "KEYSTORE_B64=$(base64 -w0 "$KS")"; } > "$RUNNER_TEMP/bundle.txt"
+          mkdir -p config
+          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass env:PP -in "$RUNNER_TEMP/bundle.txt" -out config/signing.enc
+          # Dogrulama: geri cozulup ayni icerik cikmali
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:PP -in config/signing.enc | cmp - "$RUNNER_TEMP/bundle.txt"
+          shred -u "$RUNNER_TEMP/bundle.txt" 2>/dev/null || rm -f "$RUNNER_TEMP/bundle.txt"
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/signing.enc; git commit -m "Imza anahtari muhurlendi (config/signing.enc, AES-256) [skip ci]"; git push
+          echo "Tamam: anahtar sifreli olarak depoya yazildi (alias: $ALIAS)."

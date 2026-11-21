@@ -13,5 +13,17 @@ const cfg = JSON.parse(fs.readFileSync(R('config', 'admob.json'), 'utf8')); asse
 const files = require('child_process').execSync('git ls-files', { cwd: R('.'), encoding: 'utf8' }).split('\n');
 const bad = files.filter(f => /\.(jks|keystore|p12|pfx|pem|pepk)$/i.test(f) || /(^|\/)(pass|password|key)\.(txt|properties)$/i.test(f) || /^signing\//.test(f)); assert.deepStrictEqual(bad, [], 'depoda gizli dosya: ' + bad); ok('Depoda anahtar/sertifika/şifre dosyası yok');
 const gi = fs.readFileSync(R('.gitignore'), 'utf8'); assert(['*.keystore', '*.jks', '*.p12', '*.pem', 'pass.txt'].every(x => gi.split('\n').includes(x))); ok('.gitignore anahtar dosyalarını kapsar');
-const wf = fs.readFileSync(R('.github', 'workflows', 'export-signing-key.yml'), 'utf8'); assert(/openssl enc -aes-256-cbc -pbkdf2/.test(wf) && /retention-days: 1/.test(wf) && !/echo "\$\{?\{? ?secrets/.test(wf)); ok('Dışa aktarma iş akışı anahtarı yalnızca şifreli yazar');
+const wf = fs.readFileSync(R('.github', 'workflows', 'seal-signing-key.yml'), 'utf8'), an = fs.readFileSync(R('.github', 'workflows', 'android.yml'), 'utf8');
+assert(/openssl enc -aes-256-cbc -pbkdf2 -iter 600000/.test(wf) && /\[skip ci\]/.test(wf) && /\$\{#PP\} -lt 24/.test(wf) && !/echo "\$PASS"|cat "\$RUNNER_TEMP\/bundle/.test(wf)); ok('Mühürleme iş akışı: AES-256, ≥24 karakter parola, düz metin yazmaz, [skip ci]');
+assert(/KS_PP: \$\{\{ secrets\.KEYSTORE_PASSPHRASE \}\}/.test(an) && /config\/signing\.enc/.test(an) && an.indexOf('if [ -n "$KS_B64"') < an.indexOf('elif [ -f config/signing.enc')) ; ok('Android derlemesi mühürlü anahtarı okur (öncelik: secret > mühürlü > önbellek)');
+// mühür yuvarlama: gerçek openssl ile şifrele/çöz ve android.yml ayrıştırma satırlarını dene
+const os = require('os'), cp = require('child_process'), tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'seal-')), b64 = Buffer.from('FAKEKEYSTOREBYTES==').toString('base64');
+fs.writeFileSync(path.join(tmp, 'b.txt'), 'ALIAS=castlesiege\nPASSWORD=abc123\nKEYSTORE_B64=' + b64 + '\n');
+const E = { PATH: process.env.PATH, PP: 'x'.repeat(30) };
+cp.execSync('openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass env:PP -in b.txt -out s.enc', { cwd: tmp, env: E });
+const dec = cp.execSync('openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:PP -in s.enc', { cwd: tmp, env: E, encoding: 'utf8' });
+const k = (n) => dec.split('\n').filter(l => l.startsWith(n + '=')).map(l => l.slice(n.length + 1))[0];
+assert(k('ALIAS') === 'castlesiege' && k('PASSWORD') === 'abc123' && Buffer.from(k('KEYSTORE_B64'), 'base64').toString() === 'FAKEKEYSTOREBYTES==');
+assert.throws(() => cp.execSync('openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass pass:yanlis -in s.enc', { cwd: tmp, stdio: 'pipe' })); ok('Mühür şifrele/çöz turu doğru; yanlış parola çözemez');
+fs.rmSync(tmp, { recursive: true, force: true });
 console.log(n + ' test geçti');
