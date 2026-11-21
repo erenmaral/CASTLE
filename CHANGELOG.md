@@ -6,6 +6,7 @@ Her güncellemede yeni bir APK otomatik olarak **Releases** sayfasına eklenir.
 - 🔐 CI'a **gizli dosya denetimi** (depoya keystore/sertifika/şifre dosyası girerse derleme durur), `.gitignore` genişletildi; **"Imza anahtarini muhurle"** elle çalışan iş akışı: önbellekteki anahtarı (yoksa yenisini) tek secret'tan (`KEYSTORE_PASSPHRASE`) AES-256 ile şifreleyip `config/signing.enc` olarak depoya yazar; derleme onu çözer, önbelleğe bağımlılık kalmaz (`docs/IMZA_VE_ADMOB.md`).
 - 📺 AdMob kimlikleri `config/admob.json` dosyasından da okunur (GitHub Variables öncelikli); dört kimlik geçerliyse `testMode=false`, Google test kimlikleri yayın sürümüne yazılmaz; `ADMOB_APP_ID` manifest yer tutucusuna da aktarılır.
 - 🧪 `tests/unit-v14.js`.
+- ✅ Anahtar mühürlendi (`config/signing.enc`); derlemeler artık önbellekten bağımsız, kalıcı anahtarla imzalanır.
 
 ## 0.13.1 — Hata taraması
 Bağımsız kod incelemesi + tam test seti (birim, e2e, maymun, fuzz, denge, performans, sanat denetimi) sonrası düzeltmeler. Eski WebView (Chrome 87) uyumluluk taraması temiz çıktı.
