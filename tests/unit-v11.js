@@ -53,8 +53,8 @@ const PKG = 'com.dmdigital.castlesiege';
 // 6) CI reklam kimligi betigi: eksikse test modu + uyari, tam ise testMode=false yazilir (dosyayi bozmadan)
 { const tmp = R('www', 'js', 'monetize-config.js'), orig = fs.readFileSync(tmp, 'utf8');
   try {
-    let out = cp.execFileSync('node', [R('scripts', 'play-config.js')], { env: { PATH: process.env.PATH }, encoding: 'utf8' }); assert(/TEST modu/.test(out) && /::warning::/.test(out), 'eksik kimlik uyarisi'); assert.strictEqual(fs.readFileSync(tmp, 'utf8'), orig, 'dosya degismedi');
-    out = cp.execFileSync('node', [R('scripts', 'play-config.js')], { env: { PATH: process.env.PATH, ADMOB_APP_ID: 'ca-app-pub-1234567890123456~1234567890', ADMOB_REWARDED_ID: 'ca-app-pub-1234567890123456/1111111111', ADMOB_INTERSTITIAL_ID: 'ca-app-pub-1234567890123456/2222222222', ADMOB_BANNER_ID: 'ca-app-pub-1234567890123456/3333333333' }, encoding: 'utf8' });
+    let out = cp.execFileSync('node', [R('scripts', 'play-config.js')], { env: { PATH: process.env.PATH, ADMOB_CONFIG_FILE: R('yok.json') }, encoding: 'utf8' }); assert(/TEST modu/.test(out) && /::warning::/.test(out), 'eksik kimlik uyarisi'); assert.strictEqual(fs.readFileSync(tmp, 'utf8'), orig, 'dosya degismedi');
+    out = cp.execFileSync('node', [R('scripts', 'play-config.js')], { env: { PATH: process.env.PATH, ADMOB_CONFIG_FILE: R('yok.json'), ADMOB_APP_ID: 'ca-app-pub-1234567890123456~1234567890', ADMOB_REWARDED_ID: 'ca-app-pub-1234567890123456/1111111111', ADMOB_INTERSTITIAL_ID: 'ca-app-pub-1234567890123456/2222222222', ADMOB_BANNER_ID: 'ca-app-pub-1234567890123456/3333333333' }, encoding: 'utf8' });
     const s = fs.readFileSync(tmp, 'utf8'); assert(/testMode:\s*false/.test(s) && s.includes("rewardedId: 'ca-app-pub-1234567890123456/1111111111'") && s.includes("bannerId: 'ca-app-pub-1234567890123456/3333333333'"), 'kimlikler yazildi');
   } finally { fs.writeFileSync(tmp, orig); }
   ok('CI betiği: kimlik eksikse Google TEST modu + uyarı; tam ise gerçek kimlikler ve testMode=false'); }
